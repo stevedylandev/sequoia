@@ -118,9 +118,20 @@ export async function getContentHash(content: string): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+function shouldIgnore(relativePath: string, ignorePatterns: string[]): boolean {
+  for (const pattern of ignorePatterns) {
+    const glob = new Glob(pattern);
+    if (glob.match(relativePath)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export async function scanContentDirectory(
   contentDir: string,
-  frontmatterMapping?: FrontmatterMapping
+  frontmatterMapping?: FrontmatterMapping,
+  ignorePatterns: string[] = []
 ): Promise<BlogPost[]> {
   const patterns = ["**/*.md", "**/*.mdx"];
   const posts: BlogPost[] = [];
@@ -132,6 +143,10 @@ export async function scanContentDirectory(
       cwd: contentDir,
       absolute: false,
     })) {
+      // Skip files matching ignore patterns
+      if (shouldIgnore(relativePath, ignorePatterns)) {
+        continue;
+      }
 
       const filePath = path.join(contentDir, relativePath);
       const file = Bun.file(filePath);

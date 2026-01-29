@@ -84,7 +84,7 @@ export const publishCommand = command({
 
     // Scan for posts
     consola.start("Scanning for posts...");
-    const posts = await scanContentDirectory(contentDir, config.frontmatter);
+    const posts = await scanContentDirectory(contentDir, config.frontmatter, config.ignore);
     consola.info(`Found ${posts.length} posts`);
 
     // Determine which posts need publishing
@@ -213,7 +213,8 @@ export const publishCommand = command({
           lastPublished: new Date().toISOString(),
         };
       } catch (error) {
-        consola.error(`  Error: ${error}`);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        consola.error(`  Error publishing "${path.basename(post.filePath)}": ${errorMessage}`);
         errorCount++;
       }
     }

@@ -17,6 +17,7 @@ export interface PublisherConfig {
 	pdsUrl?: string;
 	identity?: string; // Which stored identity to use (matches identifier)
 	frontmatter?: FrontmatterMapping; // Custom frontmatter field mappings
+	ignore?: string[]; // Glob patterns for files to ignore (e.g., ["_index.md", "**/drafts/**"])
 }
 
 export interface Credentials {

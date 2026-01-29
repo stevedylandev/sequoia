@@ -67,6 +67,7 @@ export function generateConfigTemplate(options: {
 	publicationUri: string;
 	pdsUrl?: string;
 	frontmatter?: FrontmatterMapping;
+	ignore?: string[];
 }): string {
 	const config: Record<string, unknown> = {
 		siteUrl: options.siteUrl,
@@ -97,6 +98,10 @@ export function generateConfigTemplate(options: {
 
 	if (options.frontmatter && Object.keys(options.frontmatter).length > 0) {
 		config.frontmatter = options.frontmatter;
+	}
+
+	if (options.ignore && options.ignore.length > 0) {
+		config.ignore = options.ignore;
 	}
 
 	return JSON.stringify(config, null, 2);
