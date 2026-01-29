@@ -43,18 +43,45 @@ export const injectCommand = command({
 		// Load state to get atUri mappings
 		const state = await loadState(configDir);
 
+		// Generic filenames where the slug is the parent directory, not the filename
+		// Covers: SvelteKit (+page), Astro/Hugo (index), Next.js (page), etc.
+		const genericFilenames = new Set([
+			"+page",
+			"index",
+			"_index",
+			"page",
+			"readme",
+		]);
+
 		// Build a map of slug/path to atUri from state
 		const pathToAtUri = new Map<string, string>();
 		for (const [filePath, postState] of Object.entries(state.posts)) {
 			if (postState.atUri) {
 				// Extract slug from file path (e.g., ./content/blog/my-post.md -> my-post)
-				const basename = path.basename(filePath, path.extname(filePath));
+				let basename = path.basename(filePath, path.extname(filePath));
+
+				// If the filename is a generic convention name, use the parent directory as slug
+				if (genericFilenames.has(basename.toLowerCase())) {
+					// Split path and filter out route groups like (blog-article)
+					const pathParts = filePath
+						.split(/[/\\]/)
+						.filter((p) => p && !(p.startsWith("(") && p.endsWith(")")));
+					// The slug should be the second-to-last part (last is the filename)
+					if (pathParts.length >= 2) {
+						const slug = pathParts[pathParts.length - 2];
+						if (slug && slug !== "." && slug !== "content" && slug !== "routes" && slug !== "src") {
+							basename = slug;
+						}
+					}
+				}
+
 				pathToAtUri.set(basename, postState.atUri);
 
 				// Also add variations that might match HTML file paths
 				// e.g., /blog/my-post, /posts/my-post, my-post/index
 				const dirName = path.basename(path.dirname(filePath));
-				if (dirName !== "." && dirName !== "content") {
+				// Skip route groups and common directory names
+				if (dirName !== "." && dirName !== "content" && !(dirName.startsWith("(") && dirName.endsWith(")"))) {
 					pathToAtUri.set(`${dirName}/${basename}`, postState.atUri);
 				}
 			}
