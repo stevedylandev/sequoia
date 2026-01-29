@@ -1,0 +1,17 @@
+# Verifying
+
+In order for your posts to show up on indexers, the chances are you need to make sure your publication and your documents are verified. 
+
+:::tip
+You an learn more about Standard.site verification [here](https://standard.site/)
+:::
+
+## Publication Verification
+
+As specified by Standard.site, the `site.standard.publication` record is verified by placing the record `https://example.com/.well-known/site.standard.publication`. That record might look something like `at://did:plc:abc123/site.standard.publication/rkey`. Sequoia handles this for you automatically if you designate your public/static folder during the [setup](/setup). When the record is created, the record AT URI is saved in `.well-known/site.standard.publication` of your public folder. Once you deploy your site with this addition, the publication will be verified!
+
+## Document Verification
+
+Every document or blog post that is published needs a `<link>` tag in the `<head>` of your blog post HTML page. The content of that link tag needs to be the AT URI for the record we just published on your PDS. There are two ways you can handle these: 
+- `sequoia inject` (recommended) - By running this command after publishing, and after building the site with your SSG, Sequoia will inject the link tags into your finished HTML. This way you don't have to manually edit it or mess with an SSG config to set it up. Just deploy the build folder after you have run `sequoia inject`!
+- Manual - After you have run `sequoia publish` the CLI will add in a new `atUri` field to every post's frontmatter. This way you can configure your SSG to read that frontmatter and include it in the build step, similar to how it might include an opengraph image in the meta tags. This approach gives you full control over the HTML files but will take a bit more skill.

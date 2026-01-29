@@ -1,0 +1,106 @@
+# Quickstart
+
+If you have an existing blog using a static site generator (SSG) and you want to publish [Standard.site](https://standard.site) documents to the AT Protocol, you're in the right place!
+
+Sequoia is a simple CLI tool that will help get your initial publication setup, as well as publish documents as you deploy your site. Just follow these steps to get started.
+
+
+::::steps
+
+### Install Sequoia
+
+Install with your package manager of choice
+
+:::code-group
+```bash [npm]
+npm i -g sequoia-cli
+```
+ 
+```bash [pnpm]
+pnpm i -g sequoia-cli
+```
+ 
+```bash [bun]
+bun i -g sequoia-cli
+```
+:::
+
+Check to make sure it was installed correctly by running the `sequoia` command
+
+```bash [Terminal]
+sequoia
+```
+
+### Authorize
+
+In order for Sequoia to publish or update records on your PDS, you need to authoize it with your ATProto handle and an app password.
+
+:::tip
+You can create an app password [here](https://bsky.app/settings/app-passwords)
+:::
+
+```bash [Terminal]
+sequoia auth
+```
+
+### Initialize
+
+After you have authorized Sequoia, the next step is to setup your blog as a publication. First make sure you are in your main repo for your blog SSG, then run the following:
+
+```bash [Terminal]
+sequoia init
+```
+
+At this point you will be asked a series of questions to help setup Sequoia for your blog. Here is a brief overview and description for each step: 
+
+- **Site URL** - The primary URL for your blog, e.g. `https://sequoia.pub`
+- **Content directory** - This is where your markdown files live when creating blog posts, e.g. `./src/content/blog`
+- **Cover images directory** - When creating standard.site documents, there is an optional `coverImage` that is used like an Opengraph image, a preview of what is in your blog. With this setting you can give a specific path to your image folder where these live, e.g. `./src/assets`. If you don't use one, then you can just press enter to leave it blank.
+- **Public/static directory** - The path for the folder where your public items go, e.g. `./public`. Generally used for opengraph images or icons, but in this case we need it to store a `.well-known` verification for your blog, [read more here](/verifying).
+- **Build output directory** - Where you published html css and js lives, e.g. `./dist`
+- **URL path prefix for posts** - The path that goes before a post slug, e.g. the prefix for `https://sequoia.pub/blog/hello` would be `/blog`.
+- **Configure your frontmatter field mappings** - In your markdown posts there is usually frontmatter with infomation like `title`, `description`, and `publishedDate`. Follow the prompts and enter the names for your frontmatter fields so Sequoia can use them for creating standard.site documents.
+- **Publication setup** - Here you can choose to `Create a new publication` which will create a `site.standard.publication` record on your PDS, or you can `Use an existing publication AT URI`. If you haven't done this before, select `Create a new publication`. 
+  - **Publication name** - The name of your blog
+  - **Publication description** - A description for your blog
+  - **Icon image path** - An optional path to your blog icon image, e.g. `./public/icon.png`. This can be left blank if you choose not to use it. 
+  - **Show in Discover feed?** - A yes or no to mark your publication whether or not you want it to be discovered by aggregators.
+
+Once you complete the initialization step the following will happen:
+- A new `site.standard.publication` record will be created on your PDS (if you chose to in the setup)
+- A new `sequoia.json` config file will be created in your project repo
+- A `.well-known/site.standard.publication` record will be saved to your public/static folder
+
+### Publish
+
+You are now ready to publish your blog to the ATmosphere! Just run the following command to make sure the configuration has been setup correctly.
+
+```bash [Terminal]
+sequoia publish --dry-run
+```
+
+This will print out the posts that it has discovered, what will be published, and how many. Once everything looks good, send it!
+
+```bash [Terminal]
+sequoia publish
+```
+
+### Verify
+
+The standard.site records are now published on your PDS, however there is one final step in order for aggregators to find your content: verification. There are two main pieces:
+
+#### Publication Verification
+
+If you remember, Sequoia asked for your public/static directory. Once the publication was created, it stored a `.well-known/site.standard.publication` file there. This way once you build and deploy your site using your SSG, the file can be accessed with `https://sequoia.pub/.well-known/site.standard.publication` by aggregators. So you're already half way there; just build and deploy!
+
+#### Document Verification
+
+Every document or blog post that is published needs a `<link>` tag in the `<head>` of your blog post HTML page. The content of that link tag needs to be the AT URI for the record we just published on your PDS. There are two ways you can handle these: 
+- `sequoia inject` (recommended) - By running this command after publishing, and after building the site with your SSG, Sequoia will inject the link tags into your finished HTML. This way you don't have to manually edit it or mess with an SSG config to set it up. Just deploy the build folder after you have run `sequoia inject`!
+- Manual - After you have run `sequoia publish` the CLI will add in a new `atUri` field to every post's frontmatter. This way you can configure your SSG to read that frontmatter and include it in the build step, similar to how it might include an opengraph image in the meta tags. This approach gives you full control over the HTML files but will take a bit more skill.
+
+::::
+
+**Congratulations! 🎉**
+
+You just published your blog to the AT Protocol with standard.site lexicons! There is certainly much more to learn about ATProto or Sequoia, but at least you got your foot in the door. Keep reading to find out what else is possible!

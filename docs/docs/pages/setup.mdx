@@ -1,0 +1,69 @@
+# Setup
+
+This guide covers the various aspects for setting up Sequoia
+
+## Install
+
+Install with your package manager of choice
+
+:::code-group
+```bash [npm]
+npm i -g sequoia-cli
+```
+ 
+```bash [pnpm]
+pnpm i -g sequoia-cli
+```
+ 
+```bash [bun]
+bun i -g sequoia-cli
+```
+:::
+
+Check to make sure it was installed correctly by running the `sequoia` command
+
+```bash [Terminal]
+sequoia
+```
+
+## Authorize
+
+In order for Sequoia to publish or update records on your PDS, you need to authoize it with your ATProto handle and an app password.
+
+:::tip
+You can create an app password [here](https://bsky.app/settings/app-passwords)
+:::
+
+```bash [Terminal]
+sequoia auth
+```
+
+This will store credentials as a dotfile directory inside `$HOME/.config/sequoia`. If you happen to have more than one blog or publication, you can authorize additional accounts. During the initialize phase the CLI will ask which account you want to use.
+
+## Initialize
+
+After you have authorized Sequoia, the next step is to setup your blog as a publication. First make sure you are in your main repo for your blog SSG, then run the following:
+
+```bash [Terminal]
+sequoia init
+```
+
+At this point you will be asked a series of questions to help setup Sequoia for your blog. Here is a brief overview and description for each step: 
+
+- **Site URL** - The primary URL for your blog, e.g. `https://sequoia.pub`
+- **Content directory** - This is where your markdown files live when creating blog posts, e.g. `./src/content/blog`
+- **Cover images directory** - When creating standard.site documents, there is an optional `coverImage` that is used like an Opengraph image, a preview of what is in your blog. With this setting you can give a specific path to your image folder where these live, e.g. `./src/assets`. If you don't use one, then you can just press enter to leave it blank.
+- **Public/static directory** - The path for the folder where your public items go, e.g. `./public`. Generally used for opengraph images or icons, but in this case we need it to store a `.well-known` verification for your blog, [read more here](/verifying).
+- **Build output directory** - Where you published html css and js lives, e.g. `./dist`
+- **URL path prefix for posts** - The path that goes before a post slug, e.g. the prefix for `https://sequoia.pub/blog/hello` would be `/blog`.
+- **Configure your frontmatter field mappings** - In your markdown posts there is usually frontmatter with infomation like `title`, `description`, and `publishedDate`. Follow the prompts and enter the names for your frontmatter fields so Sequoia can use them for creating standard.site documents.
+- **Publication setup** - Here you can choose to `Create a new publication` which will create a `site.standard.publication` record on your PDS, or you can `Use an existing publication AT URI`. If you haven't done this before, select `Create a new publication`. 
+  - **Publication name** - The name of your blog
+  - **Publication description** - A description for your blog
+  - **Icon image path** - An optional path to your blog icon image, e.g. `./public/icon.png`. This can be left blank if you choose not to use it. 
+  - **Show in Discover feed?** - A yes or no to mark your publication whether or not you want it to be discovered by aggregators.
+
+Once you complete the initialization step the following will happen:
+- A new `site.standard.publication` record will be created on your PDS (if you chose to in the setup)
+- A new `sequoia.json` config file will be created in your project repo
+- A `.well-known/site.standard.publication` record will be saved to your public/static folder

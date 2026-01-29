@@ -1,0 +1,29 @@
+# Publishing
+
+Sequoia makes it simple to publish standard.site documents to the AT Protocol.
+
+## Basics
+
+After completing the initial [setup](/setup) for Sequoia, it's time to publish. Before you go live, try using the `--dry-run` flag to see what will be published.
+
+```bash [Terminal]
+sequoia publish --dry-run
+```
+
+This will print out the posts that it has discovered, what will be published, and how many. Once everything looks good, send it!
+
+```bash [Terminal]
+sequoia publish
+```
+
+## Updates
+
+As you publish content Sequoia will store a record of content in `.sequoia-state.json`, keeping tack of the AT URIs for each post and generating content hashes for the content inside each markdown file. When you update a post and run the publish command, Sequoia will generate hashes again, see the difference, and update the existing post rather than creating a new one. 
+
+If you happen to loose the state file or if you want to pull down records you already have published, you can use the `sync` command. 
+
+```bash [Terminal]
+seuqoia sync
+```
+
+Sync will use your ATProto handle to look through all of the `standard.site.document` records on your PDS, and pull down the records that are for the publication in the config.

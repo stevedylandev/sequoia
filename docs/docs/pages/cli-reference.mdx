@@ -1,0 +1,63 @@
+# CLI Reference
+
+## `auth`
+
+```bash [Terminal]
+sequoia auth
+> Authenticate with your ATProto PDS
+
+OPTIONS:
+  --logout <str> - Remove credentials for a specific identity (or all if only one exists) [optional]
+
+FLAGS:
+  --list     - List all stored identities [optional]
+  --help, -h - show help [optional]
+```
+
+## `init`
+
+```bash [Terminal]
+sequoia init
+> Initialize a new publisher configuration
+
+FLAGS:
+  --help, -h - show help [optional]
+```
+
+## `publish`
+
+```bash [Terminal]
+sequoia publish
+> Publish content to ATProto
+
+FLAGS:
+  --force, -f   - Force publish all posts, ignoring change detection [optional]
+  --dry-run, -n - Preview what would be published without making changes [optional]
+  --help, -h    - show help [optional]
+```
+
+## `inject`
+
+```bash [Terminal]
+sequoia inject
+> Inject site.standard.document link tags into built HTML files
+
+OPTIONS:
+  --output, -o <str> - Output directory to scan for HTML files [optional]
+
+FLAGS:
+  --dry-run, -n - Preview what would be injected without making changes [optional]
+  --help, -h    - show help [optional]
+```
+
+## `sync`
+
+```bash [Terminal]
+sequoia sync
+> Sync state from ATProto to restore .sequoia-state.json
+
+FLAGS:
+  --update-frontmatter, -u - Update frontmatter atUri fields in local markdown files [optional]
+  --dry-run, -n            - Preview what would be synced without making changes [optional]
+  --help, -h               - show help [optional]
+```

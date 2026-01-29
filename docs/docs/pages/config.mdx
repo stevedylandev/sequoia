@@ -1,0 +1,62 @@
+# Configuration Reference
+
+## `sequoia.json`
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `siteUrl` | `string` | Yes | - | Base URL of your website |
+| `contentDir` | `string` | Yes | - | Directory containing blog post files |
+| `publicationUri` | `string` | Yes | - | AT-URI of your publication record |
+| `imagesDir` | `string` | No | - | Directory containing cover images |
+| `publicDir` | `string` | No | `"./public"` | Static folder for `.well-known` files |
+| `outputDir` | `string` | No | - | Built output directory for inject command |
+| `pathPrefix` | `string` | No | `"/posts"` | URL path prefix for posts |
+| `pdsUrl` | `string` | No | `"https://bsky.social"` | PDS server URL, generated automatically |
+| `identity` | `string` | No | - | Which stored identity to use |
+| `frontmatter` | `object` | No | - | Custom frontmatter field mappings |
+
+### Example
+
+```json
+{
+  "siteUrl": "https://myblog.com",
+  "contentDir": "./content/posts",
+  "publicationUri": "at://did:plc:abc123/site.standard.publication/self",
+  "pathPrefix": "/blog"
+}
+```
+
+## Post Frontmatter
+
+| Field | Type | Required | Default Mapping | Description |
+|-------|------|----------|-----------------|-------------|
+| `title` | `string` | Yes | `"title"` | Post title |
+| `description` | `string` | No | `"description"` | Post description/summary |
+| `publishDate` | `string` | Yes | `"publishDate"`, `"pubDate"`, `"date"`, `"createdAt"`, `"created_at"` | Publication date |
+| `coverImage` | `string` | No | `"ogImage"` | Cover image filename |
+| `tags` | `string[]` | No | `"tags"` | Post tags/categories |
+
+### Example
+
+```yaml
+---
+title: My First Post
+description: An introduction to my blog
+publishDate: 2024-01-15
+ogImage: cover.jpg
+tags: [welcome, intro]
+---
+```
+
+### Custom Frontmatter Mapping
+
+Override default field names in `sequoia.json`:
+
+```json
+{
+  "frontmatter": {
+    "publishDate": "date",
+    "coverImage": "thumbnail"
+  }
+}
+```

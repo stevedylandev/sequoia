@@ -1,0 +1,136 @@
+import * as path from "path";
+import type { PublisherConfig, PublisherState, FrontmatterMapping } from "./types";
+
+const CONFIG_FILENAME = "sequoia.json";
+const STATE_FILENAME = ".sequoia-state.json";
+
+export async function findConfig(
+	startDir: string = process.cwd(),
+): Promise<string | null> {
+	let currentDir = startDir;
+
+	while (true) {
+		const configPath = path.join(currentDir, CONFIG_FILENAME);
+		const file = Bun.file(configPath);
+
+		if (await file.exists()) {
+			return configPath;
+		}
+
+		const parentDir = path.dirname(currentDir);
+		if (parentDir === currentDir) {
+			// Reached root
+			return null;
+		}
+		currentDir = parentDir;
+	}
+}
+
+export async function loadConfig(
+	configPath?: string,
+): Promise<PublisherConfig> {
+	const resolvedPath = configPath || (await findConfig());
+
+	if (!resolvedPath) {
+		throw new Error(
+			`Could not find ${CONFIG_FILENAME}. Run 'sequoia init' to create one.`,
+		);
+	}
+
+	try {
+		const file = Bun.file(resolvedPath);
+		const content = await file.text();
+		const config = JSON.parse(content) as PublisherConfig;
+
+		// Validate required fields
+		if (!config.siteUrl) throw new Error("siteUrl is required in config");
+		if (!config.contentDir) throw new Error("contentDir is required in config");
+		if (!config.publicationUri)
+			throw new Error("publicationUri is required in config");
+
+		return config;
+	} catch (error) {
+		if (error instanceof Error && error.message.includes("required")) {
+			throw error;
+		}
+		throw new Error(`Failed to load config from ${resolvedPath}: ${error}`);
+	}
+}
+
+export function generateConfigTemplate(options: {
+	siteUrl: string;
+	contentDir: string;
+	imagesDir?: string;
+	publicDir?: string;
+	outputDir?: string;
+	pathPrefix?: string;
+	publicationUri: string;
+	pdsUrl?: string;
+	location?: string;
+	frontmatter?: FrontmatterMapping;
+}): string {
+	const config: Record<string, unknown> = {
+		siteUrl: options.siteUrl,
+		contentDir: options.contentDir,
+	};
+
+	if (options.imagesDir) {
+		config.imagesDir = options.imagesDir;
+	}
+
+	if (options.publicDir && options.publicDir !== "./public") {
+		config.publicDir = options.publicDir;
+	}
+
+	if (options.outputDir) {
+		config.outputDir = options.outputDir;
+	}
+
+	if (options.pathPrefix && options.pathPrefix !== "/posts") {
+		config.pathPrefix = options.pathPrefix;
+	}
+
+	config.publicationUri = options.publicationUri;
+
+	if (options.pdsUrl && options.pdsUrl !== "https://bsky.social") {
+		config.pdsUrl = options.pdsUrl;
+	}
+
+	if (options.location) {
+		config.location = options.location;
+	}
+
+	if (options.frontmatter && Object.keys(options.frontmatter).length > 0) {
+		config.frontmatter = options.frontmatter;
+	}
+
+	return JSON.stringify(config, null, 2);
+}
+
+export async function loadState(configDir: string): Promise<PublisherState> {
+	const statePath = path.join(configDir, STATE_FILENAME);
+	const file = Bun.file(statePath);
+
+	if (!(await file.exists())) {
+		return { posts: {} };
+	}
+
+	try {
+		const content = await file.text();
+		return JSON.parse(content) as PublisherState;
+	} catch {
+		return { posts: {} };
+	}
+}
+
+export async function saveState(
+	configDir: string,
+	state: PublisherState,
+): Promise<void> {
+	const statePath = path.join(configDir, STATE_FILENAME);
+	await Bun.write(statePath, JSON.stringify(state, null, 2));
+}
+
+export function getStatePath(configDir: string): string {
+	return path.join(configDir, STATE_FILENAME);
+}

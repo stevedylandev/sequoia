@@ -1,0 +1,32 @@
+{
+	"name": "seqoia-cli",
+	"version": "0.1.0-alpha.0",
+	"module": "dist/index.js",
+	"type": "module",
+	"bin": {
+		"sequoia": "dist/sequoia"
+	},
+	"files": [
+		"dist",
+		"README.md"
+	],
+	"main": "./dist/sequoia",
+	"exports": {
+		".": "./dist/sequoia"
+	},
+	"scripts": {
+		"build": "bun build src/index.ts --compile --outfile dist/sequoia",
+		"dev": "bun run build && bun link"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@atproto/api": "^0.18.17",
+		"cmd-ts": "^0.14.3",
+		"consola": "^3.4.2"
+	}
+}
