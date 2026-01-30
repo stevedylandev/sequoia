@@ -11,14 +11,14 @@ export default defineConfig({
 	ogImageUrl: "/og.png",
 	aiCta: false,
 	editLink: {
-		pattern: "https://leaflet.org/stevedylan.dev/sequoia",
+		pattern: "https://tangled.org/stevedylan.dev/sequoia",
 		text: "Edit on Tangled",
 	},
 	topNav: [
 		{ text: "Docs", link: "/quickstart", match: "/" },
 		{ text: "Blog", link: "/blog" },
 		{ text: "Tanlged", link: "https://tangled.org/stevedylan.dev/sequoia" },
-		{ text: "GitHub", link: "https://github.com" },
+		{ text: "GitHub", link: "https://github.com/stevedylandev/sequoia" },
 	],
 	sidebar: [
 		{
