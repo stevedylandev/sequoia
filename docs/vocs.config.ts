@@ -17,7 +17,7 @@ export default defineConfig({
 	topNav: [
 		{ text: "Docs", link: "/quickstart", match: "/" },
 		{ text: "Blog", link: "/blog" },
-		{ text: "Tanlged", link: "https://tangled.org/stevedylan.dev/sequoia" },
+		{ text: "Tangled", link: "https://tangled.org/stevedylan.dev/sequoia" },
 		{ text: "GitHub", link: "https://github.com/stevedylandev/sequoia" },
 	],
 	sidebar: [

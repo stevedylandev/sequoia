@@ -33,7 +33,7 @@ sequoia
 
 ### Authorize
 
-In order for Sequoia to publish or update records on your PDS, you need to authoize it with your ATProto handle and an app password.
+In order for Sequoia to publish or update records on your PDS, you need to authorize it with your ATProto handle and an app password.
 
 :::tip
 You can create an app password [here](https://bsky.app/settings/app-passwords)
@@ -59,7 +59,7 @@ At this point you will be asked a series of questions to help setup Sequoia for 
 - **Public/static directory** - The path for the folder where your public items go, e.g. `./public`. Generally used for opengraph images or icons, but in this case we need it to store a `.well-known` verification for your blog, [read more here](/verifying).
 - **Build output directory** - Where you published html css and js lives, e.g. `./dist`
 - **URL path prefix for posts** - The path that goes before a post slug, e.g. the prefix for `https://sequoia.pub/blog/hello` would be `/blog`.
-- **Configure your frontmatter field mappings** - In your markdown posts there is usually frontmatter with infomation like `title`, `description`, and `publishedDate`. Follow the prompts and enter the names for your frontmatter fields so Sequoia can use them for creating standard.site documents.
+- **Configure your frontmatter field mappings** - In your markdown posts there is usually frontmatter with information like `title`, `description`, and `publishDate`. Follow the prompts and enter the names for your frontmatter fields so Sequoia can use them for creating standard.site documents.
 - **Publication setup** - Here you can choose to `Create a new publication` which will create a `site.standard.publication` record on your PDS, or you can `Use an existing publication AT URI`. If you haven't done this before, select `Create a new publication`. 
   - **Publication name** - The name of your blog
   - **Publication description** - A description for your blog
