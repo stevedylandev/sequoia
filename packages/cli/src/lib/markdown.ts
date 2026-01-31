@@ -1,5 +1,7 @@
+import * as fs from "fs/promises";
 import * as path from "path";
-import { Glob } from "bun";
+import { glob } from "glob";
+import { minimatch } from "minimatch";
 import type { PostFrontmatter, BlogPost, FrontmatterMapping } from "./types";
 
 export function parseFrontmatter(content: string, mapping?: FrontmatterMapping): {
@@ -120,8 +122,7 @@ export async function getContentHash(content: string): Promise<string> {
 
 function shouldIgnore(relativePath: string, ignorePatterns: string[]): boolean {
   for (const pattern of ignorePatterns) {
-    const glob = new Glob(pattern);
-    if (glob.match(relativePath)) {
+    if (minimatch(relativePath, pattern)) {
       return true;
     }
   }
@@ -137,20 +138,19 @@ export async function scanContentDirectory(
   const posts: BlogPost[] = [];
 
   for (const pattern of patterns) {
-    const glob = new Glob(pattern);
-
-    for await (const relativePath of glob.scan({
+    const files = await glob(pattern, {
       cwd: contentDir,
       absolute: false,
-    })) {
+    });
+
+    for (const relativePath of files) {
       // Skip files matching ignore patterns
       if (shouldIgnore(relativePath, ignorePatterns)) {
         continue;
       }
 
       const filePath = path.join(contentDir, relativePath);
-      const file = Bun.file(filePath);
-      const rawContent = await file.text();
+      const rawContent = await fs.readFile(filePath, "utf-8");
 
       try {
         const { frontmatter, body } = parseFrontmatter(rawContent, frontmatterMapping);

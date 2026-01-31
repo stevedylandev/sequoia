@@ -1,7 +1,18 @@
 import { AtpAgent } from "@atproto/api";
+import * as fs from "fs/promises";
 import * as path from "path";
+import * as mimeTypes from "mime-types";
 import type { Credentials, BlogPost, BlobObject, PublisherConfig } from "./types";
 import { stripMarkdownForText } from "./markdown";
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export async function resolveHandleToPDS(handle: string): Promise<string> {
   // First, resolve the handle to a DID
@@ -87,15 +98,13 @@ export async function uploadImage(
   agent: AtpAgent,
   imagePath: string
 ): Promise<BlobObject | undefined> {
-  const file = Bun.file(imagePath);
-
-  if (!(await file.exists())) {
+  if (!(await fileExists(imagePath))) {
     return undefined;
   }
 
   try {
-    const imageBuffer = await file.arrayBuffer();
-    const mimeType = file.type || "application/octet-stream";
+    const imageBuffer = await fs.readFile(imagePath);
+    const mimeType = mimeTypes.lookup(imagePath) || "application/octet-stream";
 
     const response = await agent.com.atproto.repo.uploadBlob(
       new Uint8Array(imageBuffer),
@@ -118,24 +127,22 @@ export async function uploadImage(
   }
 }
 
-export function resolveImagePath(
+export async function resolveImagePath(
   ogImage: string,
   imagesDir: string | undefined,
   contentDir: string
-): string | null {
+): Promise<string | null> {
   // Try multiple resolution strategies
   const filename = path.basename(ogImage);
 
   // 1. If imagesDir is specified, look there
   if (imagesDir) {
     const imagePath = path.join(imagesDir, filename);
-    try {
-      const stat = Bun.file(imagePath);
+    if (await fileExists(imagePath)) {
+      const stat = await fs.stat(imagePath);
       if (stat.size > 0) {
         return imagePath;
       }
-    } catch {
-      // File doesn't exist, continue
     }
   }
 
@@ -146,13 +153,11 @@ export function resolveImagePath(
 
   // 3. Try relative to content directory
   const contentRelative = path.join(contentDir, ogImage);
-  try {
-    const stat = Bun.file(contentRelative);
+  if (await fileExists(contentRelative)) {
+    const stat = await fs.stat(contentRelative);
     if (stat.size > 0) {
       return contentRelative;
     }
-  } catch {
-    // File doesn't exist
   }
 
   return null;

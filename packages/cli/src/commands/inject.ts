@@ -1,7 +1,8 @@
+import * as fs from "fs/promises";
 import { command, flag, option, optional, string } from "cmd-ts";
 import { log } from "@clack/prompts";
 import * as path from "path";
-import { Glob } from "bun";
+import { glob } from "glob";
 import { loadConfig, loadState, findConfig } from "../lib/config";
 
 export const injectCommand = command({
@@ -97,12 +98,10 @@ export const injectCommand = command({
 		log.info(`Found ${pathToAtUri.size} published posts in state`);
 
 		// Scan for HTML files
-		const glob = new Glob("**/*.html");
-		const htmlFiles: string[] = [];
-
-		for await (const file of glob.scan(resolvedOutputDir)) {
-			htmlFiles.push(path.join(resolvedOutputDir, file));
-		}
+		const htmlFiles = await glob("**/*.html", {
+			cwd: resolvedOutputDir,
+			absolute: false,
+		});
 
 		if (htmlFiles.length === 0) {
 			log.warn(`No HTML files found in ${resolvedOutputDir}`);
@@ -115,9 +114,10 @@ export const injectCommand = command({
 		let skippedCount = 0;
 		let alreadyHasCount = 0;
 
-		for (const htmlPath of htmlFiles) {
+		for (const file of htmlFiles) {
+			const htmlPath = path.join(resolvedOutputDir, file);
 			// Try to match this HTML file to a published post
-			const relativePath = path.relative(resolvedOutputDir, htmlPath);
+			const relativePath = file;
 			const htmlDir = path.dirname(relativePath);
 			const htmlBasename = path.basename(relativePath, ".html");
 
@@ -152,8 +152,7 @@ export const injectCommand = command({
 			}
 
 			// Read the HTML file
-			const file = Bun.file(htmlPath);
-			let content = await file.text();
+			let content = await fs.readFile(htmlPath, "utf-8");
 
 			// Check if link tag already exists
 			const linkTag = `<link rel="site.standard.document" href="${atUri}">`;
@@ -184,7 +183,7 @@ export const injectCommand = command({
 				`${indent}${linkTag}\n${indent}` +
 				content.slice(headCloseIndex);
 
-			await Bun.write(htmlPath, content);
+			await fs.writeFile(htmlPath, content);
 			log.success(`  Injected into: ${relativePath}`);
 			injectedCount++;
 		}

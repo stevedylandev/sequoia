@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
 import { run, subcommands } from "cmd-ts";
 import { authCommand } from "./commands/auth";

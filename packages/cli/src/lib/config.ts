@@ -1,8 +1,18 @@
+import * as fs from "fs/promises";
 import * as path from "path";
 import type { PublisherConfig, PublisherState, FrontmatterMapping } from "./types";
 
 const CONFIG_FILENAME = "sequoia.json";
 const STATE_FILENAME = ".sequoia-state.json";
+
+async function fileExists(filePath: string): Promise<boolean> {
+	try {
+		await fs.access(filePath);
+		return true;
+	} catch {
+		return false;
+	}
+}
 
 export async function findConfig(
 	startDir: string = process.cwd(),
@@ -11,9 +21,8 @@ export async function findConfig(
 
 	while (true) {
 		const configPath = path.join(currentDir, CONFIG_FILENAME);
-		const file = Bun.file(configPath);
 
-		if (await file.exists()) {
+		if (await fileExists(configPath)) {
 			return configPath;
 		}
 
@@ -38,8 +47,7 @@ export async function loadConfig(
 	}
 
 	try {
-		const file = Bun.file(resolvedPath);
-		const content = await file.text();
+		const content = await fs.readFile(resolvedPath, "utf-8");
 		const config = JSON.parse(content) as PublisherConfig;
 
 		// Validate required fields
@@ -109,14 +117,13 @@ export function generateConfigTemplate(options: {
 
 export async function loadState(configDir: string): Promise<PublisherState> {
 	const statePath = path.join(configDir, STATE_FILENAME);
-	const file = Bun.file(statePath);
 
-	if (!(await file.exists())) {
+	if (!(await fileExists(statePath))) {
 		return { posts: {} };
 	}
 
 	try {
-		const content = await file.text();
+		const content = await fs.readFile(statePath, "utf-8");
 		return JSON.parse(content) as PublisherState;
 	} catch {
 		return { posts: {} };
@@ -128,7 +135,7 @@ export async function saveState(
 	state: PublisherState,
 ): Promise<void> {
 	const statePath = path.join(configDir, STATE_FILENAME);
-	await Bun.write(statePath, JSON.stringify(state, null, 2));
+	await fs.writeFile(statePath, JSON.stringify(state, null, 2));
 }
 
 export function getStatePath(configDir: string): string {

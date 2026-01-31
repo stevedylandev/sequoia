@@ -1,33 +1,36 @@
 {
 	"name": "sequoia-cli",
 	"version": "0.1.0",
-	"module": "dist/index.js",
 	"type": "module",
 	"bin": {
-		"sequoia": "dist/sequoia"
+		"sequoia": "dist/index.js"
 	},
 	"files": [
 		"dist",
 		"README.md"
 	],
-	"main": "./dist/sequoia",
+	"main": "./dist/index.js",
 	"exports": {
-		".": "./dist/sequoia"
+		".": "./dist/index.js"
 	},
 	"scripts": {
-		"build": "bun build src/index.ts --compile --outfile dist/sequoia",
+		"build": "bun build src/index.ts --target node --outdir dist",
 		"dev": "bun run build && bun link",
 		"deploy": "bun run build && bun publish"
 	},
 	"devDependencies": {
-		"@types/bun": "latest"
+		"@types/mime-types": "^3.0.1",
+		"@types/node": "^20"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
 	},
 	"dependencies": {
 		"@atproto/api": "^0.18.17",
+		"@clack/prompts": "^1.0.0",
 		"cmd-ts": "^0.14.3",
-		"@clack/prompts": "^1.0.0"
+		"glob": "^13.0.0",
+		"mime-types": "^2.1.35",
+		"minimatch": "^10.1.1"
 	}
 }

@@ -1,3 +1,4 @@
+import * as fs from "fs/promises";
 import { command, flag } from "cmd-ts";
 import { select, spinner, log } from "@clack/prompts";
 import * as path from "path";
@@ -169,10 +170,9 @@ export const syncCommand = command({
     if (frontmatterUpdates.length > 0) {
       s.start(`Updating frontmatter in ${frontmatterUpdates.length} files...`);
       for (const { filePath, atUri } of frontmatterUpdates) {
-        const file = Bun.file(filePath);
-        const content = await file.text();
+        const content = await fs.readFile(filePath, "utf-8");
         const updated = updateFrontmatterWithAtUri(content, atUri);
-        await Bun.write(filePath, updated);
+        await fs.writeFile(filePath, updated);
         log.message(`  Updated: ${path.basename(filePath)}`);
       }
       s.stop("Frontmatter updated");

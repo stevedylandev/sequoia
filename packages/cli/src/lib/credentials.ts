@@ -1,3 +1,4 @@
+import * as fs from "fs/promises";
 import * as path from "path";
 import * as os from "os";
 import type { Credentials } from "./types";
@@ -8,17 +9,25 @@ const CREDENTIALS_FILE = path.join(CONFIG_DIR, "credentials.json");
 // Stored credentials keyed by identifier
 type CredentialsStore = Record<string, Credentials>;
 
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Load all stored credentials
  */
 async function loadCredentialsStore(): Promise<CredentialsStore> {
-  const file = Bun.file(CREDENTIALS_FILE);
-  if (!(await file.exists())) {
+  if (!(await fileExists(CREDENTIALS_FILE))) {
     return {};
   }
 
   try {
-    const content = await file.text();
+    const content = await fs.readFile(CREDENTIALS_FILE, "utf-8");
     const parsed = JSON.parse(content);
 
     // Handle legacy single-credential format (migrate on read)
@@ -37,9 +46,9 @@ async function loadCredentialsStore(): Promise<CredentialsStore> {
  * Save the entire credentials store
  */
 async function saveCredentialsStore(store: CredentialsStore): Promise<void> {
-  await Bun.$`mkdir -p ${CONFIG_DIR}`;
-  await Bun.write(CREDENTIALS_FILE, JSON.stringify(store, null, 2));
-  await Bun.$`chmod 600 ${CREDENTIALS_FILE}`;
+  await fs.mkdir(CONFIG_DIR, { recursive: true });
+  await fs.writeFile(CREDENTIALS_FILE, JSON.stringify(store, null, 2));
+  await fs.chmod(CREDENTIALS_FILE, 0o600);
 }
 
 /**

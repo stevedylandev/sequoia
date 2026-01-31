@@ -1,3 +1,4 @@
+import * as fs from "fs/promises";
 import { command } from "cmd-ts";
 import {
 	intro,
@@ -15,6 +16,15 @@ import { findConfig, generateConfigTemplate } from "../lib/config";
 import { loadCredentials } from "../lib/credentials";
 import { createAgent, createPublication } from "../lib/atproto";
 import type { FrontmatterMapping } from "../lib/types";
+
+async function fileExists(filePath: string): Promise<boolean> {
+	try {
+		await fs.access(filePath);
+		return true;
+	} catch {
+		return false;
+	}
+}
 
 const onCancel = () => {
 	outro("Setup cancelled");
@@ -270,7 +280,7 @@ export const initCommand = command({
 		});
 
 		const configPath = path.join(process.cwd(), "sequoia.json");
-		await Bun.write(configPath, configContent);
+		await fs.writeFile(configPath, configContent);
 
 		log.success(`Configuration saved to ${configPath}`);
 
@@ -283,27 +293,27 @@ export const initCommand = command({
 		const wellKnownPath = path.join(wellKnownDir, "site.standard.publication");
 
 		// Ensure .well-known directory exists
-		await Bun.write(path.join(wellKnownDir, ".gitkeep"), "");
-		await Bun.write(wellKnownPath, publicationUri);
+		await fs.mkdir(wellKnownDir, { recursive: true });
+		await fs.writeFile(path.join(wellKnownDir, ".gitkeep"), "");
+		await fs.writeFile(wellKnownPath, publicationUri);
 
 		log.success(`Created ${wellKnownPath}`);
 
 		// Update .gitignore
 		const gitignorePath = path.join(process.cwd(), ".gitignore");
-		const gitignoreFile = Bun.file(gitignorePath);
 		const stateFilename = ".sequoia-state.json";
 
-		if (await gitignoreFile.exists()) {
-			const gitignoreContent = await gitignoreFile.text();
+		if (await fileExists(gitignorePath)) {
+			const gitignoreContent = await fs.readFile(gitignorePath, "utf-8");
 			if (!gitignoreContent.includes(stateFilename)) {
-				await Bun.write(
+				await fs.writeFile(
 					gitignorePath,
 					gitignoreContent + `\n${stateFilename}\n`,
 				);
 				log.info(`Added ${stateFilename} to .gitignore`);
 			}
 		} else {
-			await Bun.write(gitignorePath, `${stateFilename}\n`);
+			await fs.writeFile(gitignorePath, `${stateFilename}\n`);
 			log.info(`Created .gitignore with ${stateFilename}`);
 		}
 

@@ -1,3 +1,4 @@
+import * as fs from "fs/promises";
 import { command, flag } from "cmd-ts";
 import { select, spinner, log } from "@clack/prompts";
 import * as path from "path";
@@ -164,7 +165,7 @@ export const publishCommand = command({
         // Handle cover image upload
         let coverImage: BlobObject | undefined;
         if (post.frontmatter.ogImage) {
-          const imagePath = resolveImagePath(
+          const imagePath = await resolveImagePath(
             post.frontmatter.ogImage,
             imagesDir,
             contentDir
@@ -191,7 +192,7 @@ export const publishCommand = command({
 
           // Update frontmatter with atUri
           const updatedContent = updateFrontmatterWithAtUri(post.rawContent, atUri);
-          await Bun.write(post.filePath, updatedContent);
+          await fs.writeFile(post.filePath, updatedContent);
           log.info(`  Updated frontmatter in ${path.basename(post.filePath)}`);
 
           // Use updated content (with atUri) for hash so next run sees matching hash
