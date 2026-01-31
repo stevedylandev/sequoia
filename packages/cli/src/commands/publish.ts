@@ -87,7 +87,13 @@ export const publishCommand = command({
     // Scan for posts
     const s = spinner();
     s.start("Scanning for posts...");
-    const posts = await scanContentDirectory(contentDir, config.frontmatter, config.ignore);
+    const posts = await scanContentDirectory(contentDir, {
+      frontmatterMapping: config.frontmatter,
+      ignorePatterns: config.ignore,
+      slugSource: config.slugSource,
+      slugField: config.slugField,
+      removeIndexFromSlug: config.removeIndexFromSlug,
+    });
     s.stop(`Found ${posts.length} posts`);
 
     // Determine which posts need publishing

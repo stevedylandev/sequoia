@@ -18,6 +18,10 @@ export interface PublisherConfig {
 	identity?: string; // Which stored identity to use (matches identifier)
 	frontmatter?: FrontmatterMapping; // Custom frontmatter field mappings
 	ignore?: string[]; // Glob patterns for files to ignore (e.g., ["_index.md", "**/drafts/**"])
+	slugSource?: "filename" | "path" | "frontmatter"; // How to generate slugs (default: "filename")
+	slugField?: string; // Frontmatter field to use when slugSource is "frontmatter" (default: "slug")
+	removeIndexFromSlug?: boolean; // Remove "/index" or "/_index" suffix from paths (default: false)
+	textContentField?: string; // Frontmatter field to use for textContent instead of markdown body
 }
 
 export interface Credentials {
@@ -41,6 +45,7 @@ export interface BlogPost {
 	frontmatter: PostFrontmatter;
 	content: string;
 	rawContent: string;
+	rawFrontmatter: Record<string, unknown>; // For accessing custom fields like textContentField
 }
 
 export interface BlobRef {

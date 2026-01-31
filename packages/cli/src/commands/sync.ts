@@ -90,14 +90,21 @@ export const syncCommand = command({
 
     // Scan local posts
     s.start("Scanning local content...");
-    const localPosts = await scanContentDirectory(contentDir, config.frontmatter);
+    const localPosts = await scanContentDirectory(contentDir, {
+      frontmatterMapping: config.frontmatter,
+      ignorePatterns: config.ignore,
+      slugSource: config.slugSource,
+      slugField: config.slugField,
+      removeIndexFromSlug: config.removeIndexFromSlug,
+    });
     s.stop(`Found ${localPosts.length} local posts`);
 
     // Build a map of path -> local post for matching
-    // Document path is like /posts/my-post-slug
+    // Document path is like /posts/my-post-slug (or custom pathPrefix)
+    const pathPrefix = config.pathPrefix || "/posts";
     const postsByPath = new Map<string, typeof localPosts[0]>();
     for (const post of localPosts) {
-      const postPath = `/posts/${post.slug}`;
+      const postPath = `${pathPrefix}/${post.slug}`;
       postsByPath.set(postPath, post);
     }
 

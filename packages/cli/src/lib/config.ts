@@ -76,6 +76,10 @@ export function generateConfigTemplate(options: {
 	pdsUrl?: string;
 	frontmatter?: FrontmatterMapping;
 	ignore?: string[];
+	slugSource?: "filename" | "path" | "frontmatter";
+	slugField?: string;
+	removeIndexFromSlug?: boolean;
+	textContentField?: string;
 }): string {
 	const config: Record<string, unknown> = {
 		siteUrl: options.siteUrl,
@@ -110,6 +114,22 @@ export function generateConfigTemplate(options: {
 
 	if (options.ignore && options.ignore.length > 0) {
 		config.ignore = options.ignore;
+	}
+
+	if (options.slugSource && options.slugSource !== "filename") {
+		config.slugSource = options.slugSource;
+	}
+
+	if (options.slugField && options.slugField !== "slug") {
+		config.slugField = options.slugField;
+	}
+
+	if (options.removeIndexFromSlug) {
+		config.removeIndexFromSlug = options.removeIndexFromSlug;
+	}
+
+	if (options.textContentField) {
+		config.textContentField = options.textContentField;
 	}
 
 	return JSON.stringify(config, null, 2);

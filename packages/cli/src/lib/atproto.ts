@@ -171,8 +171,15 @@ export async function createDocument(
 ): Promise<string> {
   const pathPrefix = config.pathPrefix || "/posts";
   const postPath = `${pathPrefix}/${post.slug}`;
-  const textContent = stripMarkdownForText(post.content);
   const publishDate = new Date(post.frontmatter.publishDate);
+
+  // Determine textContent: use configured field from frontmatter, or fallback to markdown body
+  let textContent: string;
+  if (config.textContentField && post.rawFrontmatter?.[config.textContentField]) {
+    textContent = String(post.rawFrontmatter[config.textContentField]);
+  } else {
+    textContent = stripMarkdownForText(post.content);
+  }
 
   const record: Record<string, unknown> = {
     $type: "site.standard.document",
@@ -183,6 +190,10 @@ export async function createDocument(
     publishedAt: publishDate.toISOString(),
     canonicalUrl: `${config.siteUrl}${postPath}`,
   };
+
+  if (post.frontmatter.description) {
+    record.description = post.frontmatter.description;
+  }
 
   if (coverImage) {
     record.coverImage = coverImage;
@@ -219,8 +230,15 @@ export async function updateDocument(
 
   const pathPrefix = config.pathPrefix || "/posts";
   const postPath = `${pathPrefix}/${post.slug}`;
-  const textContent = stripMarkdownForText(post.content);
   const publishDate = new Date(post.frontmatter.publishDate);
+
+  // Determine textContent: use configured field from frontmatter, or fallback to markdown body
+  let textContent: string;
+  if (config.textContentField && post.rawFrontmatter?.[config.textContentField]) {
+    textContent = String(post.rawFrontmatter[config.textContentField]);
+  } else {
+    textContent = stripMarkdownForText(post.content);
+  }
 
   const record: Record<string, unknown> = {
     $type: "site.standard.document",
@@ -231,6 +249,10 @@ export async function updateDocument(
     publishedAt: publishDate.toISOString(),
     canonicalUrl: `${config.siteUrl}${postPath}`,
   };
+
+  if (post.frontmatter.description) {
+    record.description = post.frontmatter.description;
+  }
 
   if (coverImage) {
     record.coverImage = coverImage;
@@ -266,6 +288,7 @@ export interface DocumentRecord {
   textContent: string;
   publishedAt: string;
   canonicalUrl?: string;
+  description?: string;
   coverImage?: BlobObject;
   tags?: string[];
   location?: string;
