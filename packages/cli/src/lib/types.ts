@@ -67,6 +67,7 @@ export interface PostState {
 	contentHash: string;
 	atUri?: string;
 	lastPublished?: string;
+	slug?: string; // The generated slug for this post (used by inject command)
 }
 
 export interface PublicationRecord {

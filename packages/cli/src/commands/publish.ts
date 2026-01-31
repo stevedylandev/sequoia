@@ -221,6 +221,7 @@ export const publishCommand = command({
           contentHash,
           atUri,
           lastPublished: new Date().toISOString(),
+          slug: post.slug,
         };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);

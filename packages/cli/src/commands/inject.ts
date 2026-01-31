@@ -44,58 +44,36 @@ export const injectCommand = command({
 		// Load state to get atUri mappings
 		const state = await loadState(configDir);
 
-		// Generic filenames where the slug is the parent directory, not the filename
-		// Covers: SvelteKit (+page), Astro/Hugo (index), Next.js (page), etc.
-		const genericFilenames = new Set([
-			"+page",
-			"index",
-			"_index",
-			"page",
-			"readme",
-		]);
-
-		// Build a map of slug/path to atUri from state
-		const pathToAtUri = new Map<string, string>();
+		// Build a map of slug to atUri from state
+		// The slug is stored in state by the publish command, using the configured slug options
+		const slugToAtUri = new Map<string, string>();
 		for (const [filePath, postState] of Object.entries(state.posts)) {
-			if (postState.atUri) {
+			if (postState.atUri && postState.slug) {
+				// Use the slug stored in state (computed by publish with config options)
+				slugToAtUri.set(postState.slug, postState.atUri);
+
+				// Also add the last segment for simpler matching
+				// e.g., "40th-puzzle-box/what-a-gift" -> also map "what-a-gift"
+				const lastSegment = postState.slug.split("/").pop();
+				if (lastSegment && lastSegment !== postState.slug) {
+					slugToAtUri.set(lastSegment, postState.atUri);
+				}
+			} else if (postState.atUri) {
+				// Fallback for older state files without slug field
 				// Extract slug from file path (e.g., ./content/blog/my-post.md -> my-post)
-				let basename = path.basename(filePath, path.extname(filePath));
-
-				// If the filename is a generic convention name, use the parent directory as slug
-				if (genericFilenames.has(basename.toLowerCase())) {
-					// Split path and filter out route groups like (blog-article)
-					const pathParts = filePath
-						.split(/[/\\]/)
-						.filter((p) => p && !(p.startsWith("(") && p.endsWith(")")));
-					// The slug should be the second-to-last part (last is the filename)
-					if (pathParts.length >= 2) {
-						const slug = pathParts[pathParts.length - 2];
-						if (slug && slug !== "." && slug !== "content" && slug !== "routes" && slug !== "src") {
-							basename = slug;
-						}
-					}
-				}
-
-				pathToAtUri.set(basename, postState.atUri);
-
-				// Also add variations that might match HTML file paths
-				// e.g., /blog/my-post, /posts/my-post, my-post/index
-				const dirName = path.basename(path.dirname(filePath));
-				// Skip route groups and common directory names
-				if (dirName !== "." && dirName !== "content" && !(dirName.startsWith("(") && dirName.endsWith(")"))) {
-					pathToAtUri.set(`${dirName}/${basename}`, postState.atUri);
-				}
+				const basename = path.basename(filePath, path.extname(filePath));
+				slugToAtUri.set(basename.toLowerCase(), postState.atUri);
 			}
 		}
 
-		if (pathToAtUri.size === 0) {
+		if (slugToAtUri.size === 0) {
 			log.warn(
 				"No published posts found in state. Run 'sequoia publish' first.",
 			);
 			return;
 		}
 
-		log.info(`Found ${pathToAtUri.size} published posts in state`);
+		log.info(`Found ${slugToAtUri.size} slug mappings from published posts`);
 
 		// Scan for HTML files
 		const htmlFiles = await glob("**/*.html", {
@@ -125,25 +103,24 @@ export const injectCommand = command({
 			let atUri: string | undefined;
 
 			// Strategy 1: Direct basename match (e.g., my-post.html -> my-post)
-			atUri = pathToAtUri.get(htmlBasename);
+			atUri = slugToAtUri.get(htmlBasename);
 
-			// Strategy 2: Directory name for index.html (e.g., my-post/index.html -> my-post)
+			// Strategy 2: For index.html, try the directory path
+			// e.g., posts/40th-puzzle-box/what-a-gift/index.html -> 40th-puzzle-box/what-a-gift
 			if (!atUri && htmlBasename === "index" && htmlDir !== ".") {
-				const slug = path.basename(htmlDir);
-				atUri = pathToAtUri.get(slug);
+				// Try full directory path (for nested subdirectories)
+				atUri = slugToAtUri.get(htmlDir);
 
-				// Also try parent/slug pattern
+				// Also try just the last directory segment
 				if (!atUri) {
-					const parentDir = path.dirname(htmlDir);
-					if (parentDir !== ".") {
-						atUri = pathToAtUri.get(`${path.basename(parentDir)}/${slug}`);
-					}
+					const lastDir = path.basename(htmlDir);
+					atUri = slugToAtUri.get(lastDir);
 				}
 			}
 
 			// Strategy 3: Full path match (e.g., blog/my-post.html -> blog/my-post)
 			if (!atUri && htmlDir !== ".") {
-				atUri = pathToAtUri.get(`${htmlDir}/${htmlBasename}`);
+				atUri = slugToAtUri.get(`${htmlDir}/${htmlBasename}`);
 			}
 
 			if (!atUri) {
