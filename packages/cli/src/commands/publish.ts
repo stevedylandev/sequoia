@@ -96,8 +96,15 @@ export const publishCommand = command({
       action: "create" | "update";
       reason: string;
     }> = [];
+    const draftPosts: BlogPost[] = [];
 
     for (const post of posts) {
+      // Skip draft posts
+      if (post.frontmatter.draft) {
+        draftPosts.push(post);
+        continue;
+      }
+
       const contentHash = await getContentHash(post.rawContent);
       const relativeFilePath = path.relative(configDir, post.filePath);
       const postState = state.posts[relativeFilePath];
@@ -123,6 +130,10 @@ export const publishCommand = command({
           reason: "content changed",
         });
       }
+    }
+
+    if (draftPosts.length > 0) {
+      log.info(`Skipping ${draftPosts.length} draft post${draftPosts.length === 1 ? "" : "s"}`);
     }
 
     if (postsToPublish.length === 0) {

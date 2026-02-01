@@ -4,6 +4,7 @@ export interface FrontmatterMapping {
 	publishDate?: string; // Field name for publish date (default: "publishDate", also checks "pubDate", "date", "createdAt", "created_at")
 	coverImage?: string; // Field name for cover image (default: "ogImage")
 	tags?: string; // Field name for tags (default: "tags")
+	draft?: string; // Field name for draft status (default: "draft")
 }
 
 // Strong reference for Bluesky post (com.atproto.repo.strongRef)
@@ -46,6 +47,7 @@ export interface PostFrontmatter {
 	tags?: string[];
 	ogImage?: string;
 	atUri?: string;
+	draft?: boolean;
 }
 
 export interface BlogPost {

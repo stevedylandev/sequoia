@@ -99,6 +99,13 @@ export function parseFrontmatter(content: string, mapping?: FrontmatterMapping):
   const tagsField = mapping?.tags || "tags";
   frontmatter.tags = raw[tagsField] || raw.tags;
 
+  // Draft mapping
+  const draftField = mapping?.draft || "draft";
+  const draftValue = raw[draftField] ?? raw.draft;
+  if (draftValue !== undefined) {
+    frontmatter.draft = draftValue === true || draftValue === "true";
+  }
+
   // Always preserve atUri (internal field)
   frontmatter.atUri = raw.atUri;
 

@@ -138,6 +138,12 @@ export const initCommand = command({
 						defaultValue: "tags",
 						placeholder: "tags, categories, keywords, etc.",
 					}),
+				draftField: () =>
+					text({
+						message: "Field name for draft status:",
+						defaultValue: "draft",
+						placeholder: "draft, private, hidden, etc.",
+					}),
 			},
 			{ onCancel },
 		);
@@ -149,6 +155,7 @@ export const initCommand = command({
 			["publishDate", frontmatterConfig.dateField, "publishDate"],
 			["coverImage", frontmatterConfig.coverField, "ogImage"],
 			["tags", frontmatterConfig.tagsField, "tags"],
+			["draft", frontmatterConfig.draftField, "draft"],
 		];
 
 		const builtMapping = fieldMappings.reduce<FrontmatterMapping>(

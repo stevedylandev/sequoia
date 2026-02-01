@@ -45,6 +45,27 @@ When enabled, each new document will create a Bluesky post with the title, descr
 
 The `maxAgeDays` setting prevents flooding your feed when first setting up Sequoia. For example, if you have 40 existing blog posts, only those published within the last 30 days will be posted to Bluesky.
 
+## Draft Posts
+
+Posts with `draft: true` in their frontmatter are automatically skipped during publishing. This lets you work on content without accidentally publishing it.
+
+```yaml
+---
+title: Work in Progress
+draft: true
+---
+```
+
+If your framework uses a different field name (like `private` or `hidden`), configure it in `sequoia.json`:
+
+```json
+{
+  "frontmatter": {
+    "draft": "private"
+  }
+}
+```
+
 ## Troubleshooting
 
 - If you have files in your markdown directory that should be ignored, use the [`ignore` array in the config](/config#ignoring-files).
