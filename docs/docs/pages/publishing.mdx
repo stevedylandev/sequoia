@@ -10,7 +10,7 @@ After completing the initial [setup](/setup) for Sequoia, it's time to publish. 
 sequoia publish --dry-run
 ```
 
-This will print out the posts that it has discovered, what will be published, and how many. Once everything looks good, send it!
+This will print out the posts that it has discovered, what will be published, and how many. If Bluesky posting is enabled, it will also show which posts will be shared to Bluesky. Once everything looks good, send it!
 
 ```bash [Terminal]
 sequoia publish
@@ -27,6 +27,44 @@ sequoia sync
 ```
 
 Sync will use your ATProto handle to look through all of the `standard.site.document` records on your PDS, and pull down the records that are for the publication in the config.
+
+## Bluesky Posting
+
+Sequoia can automatically post to Bluesky when new documents are published. Enable this in your config:
+
+```json
+{
+  "bluesky": {
+    "enabled": true,
+    "maxAgeDays": 30
+  }
+}
+```
+
+When enabled, each new document will create a Bluesky post with the title, description, and canonical URL. If a cover image exists, it will be embedded in the post. The combined content is limited to 300 characters.
+
+The `maxAgeDays` setting prevents flooding your feed when first setting up Sequoia. For example, if you have 40 existing blog posts, only those published within the last 30 days will be posted to Bluesky.
+
+## Draft Posts
+
+Posts with `draft: true` in their frontmatter are automatically skipped during publishing. This lets you work on content without accidentally publishing it.
+
+```yaml
+---
+title: Work in Progress
+draft: true
+---
+```
+
+If your framework uses a different field name (like `private` or `hidden`), configure it in `sequoia.json`:
+
+```json
+{
+  "frontmatter": {
+    "draft": "private"
+  }
+}
+```
 
 ## Troubleshooting
 

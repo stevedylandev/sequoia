@@ -1,6 +1,6 @@
 import * as fs from "fs/promises";
 import * as path from "path";
-import type { PublisherConfig, PublisherState, FrontmatterMapping } from "./types";
+import type { PublisherConfig, PublisherState, FrontmatterMapping, BlueskyConfig } from "./types";
 
 const CONFIG_FILENAME = "sequoia.json";
 const STATE_FILENAME = ".sequoia-state.json";
@@ -80,6 +80,7 @@ export function generateConfigTemplate(options: {
 	slugField?: string;
 	removeIndexFromSlug?: boolean;
 	textContentField?: string;
+	bluesky?: BlueskyConfig;
 }): string {
 	const config: Record<string, unknown> = {
 		siteUrl: options.siteUrl,
@@ -130,6 +131,8 @@ export function generateConfigTemplate(options: {
 
 	if (options.textContentField) {
 		config.textContentField = options.textContentField;
+	if (options.bluesky) {
+		config.bluesky = options.bluesky;
 	}
 
 	return JSON.stringify(config, null, 2);

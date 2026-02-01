@@ -4,6 +4,19 @@ export interface FrontmatterMapping {
 	publishDate?: string; // Field name for publish date (default: "publishDate", also checks "pubDate", "date", "createdAt", "created_at")
 	coverImage?: string; // Field name for cover image (default: "ogImage")
 	tags?: string; // Field name for tags (default: "tags")
+	draft?: string; // Field name for draft status (default: "draft")
+}
+
+// Strong reference for Bluesky post (com.atproto.repo.strongRef)
+export interface StrongRef {
+	uri: string; // at:// URI format
+	cid: string; // Content ID
+}
+
+// Bluesky posting configuration
+export interface BlueskyConfig {
+	enabled: boolean;
+	maxAgeDays?: number; // Only post if published within N days (default: 7)
 }
 
 export interface PublisherConfig {
@@ -22,6 +35,7 @@ export interface PublisherConfig {
 	slugField?: string; // Frontmatter field to use when slugSource is "frontmatter" (default: "slug")
 	removeIndexFromSlug?: boolean; // Remove "/index" or "/_index" suffix from paths (default: false)
 	textContentField?: string; // Frontmatter field to use for textContent instead of markdown body
+	bluesky?: BlueskyConfig; // Optional Bluesky posting configuration
 }
 
 export interface Credentials {
@@ -37,6 +51,7 @@ export interface PostFrontmatter {
 	tags?: string[];
 	ogImage?: string;
 	atUri?: string;
+	draft?: boolean;
 }
 
 export interface BlogPost {
@@ -68,6 +83,7 @@ export interface PostState {
 	atUri?: string;
 	lastPublished?: string;
 	slug?: string; // The generated slug for this post (used by inject command)
+	bskyPostRef?: StrongRef; // Reference to corresponding Bluesky post
 }
 
 export interface PublicationRecord {

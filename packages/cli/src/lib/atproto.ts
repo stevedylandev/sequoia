@@ -2,7 +2,7 @@ import { AtpAgent } from "@atproto/api";
 import * as fs from "fs/promises";
 import * as path from "path";
 import * as mimeTypes from "mime-types";
-import type { Credentials, BlogPost, BlobObject, PublisherConfig } from "./types";
+import type { Credentials, BlogPost, BlobObject, PublisherConfig, StrongRef } from "./types";
 import { stripMarkdownForText } from "./markdown";
 
 async function fileExists(filePath: string): Promise<boolean> {
@@ -374,4 +374,179 @@ export async function createPublication(
   });
 
   return response.data.uri;
+}
+
+// --- Bluesky Post Creation ---
+
+export interface CreateBlueskyPostOptions {
+  title: string;
+  description?: string;
+  canonicalUrl: string;
+  coverImage?: BlobObject;
+  publishedAt: string; // Used as createdAt for the post
+}
+
+/**
+ * Count graphemes in a string (for Bluesky's 300 grapheme limit)
+ */
+function countGraphemes(str: string): number {
+  // Use Intl.Segmenter if available, otherwise fallback to spread operator
+  if (typeof Intl !== "undefined" && Intl.Segmenter) {
+    const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
+    return [...segmenter.segment(str)].length;
+  }
+  return [...str].length;
+}
+
+/**
+ * Truncate a string to a maximum number of graphemes
+ */
+function truncateToGraphemes(str: string, maxGraphemes: number): string {
+  if (typeof Intl !== "undefined" && Intl.Segmenter) {
+    const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
+    const segments = [...segmenter.segment(str)];
+    if (segments.length <= maxGraphemes) return str;
+    return segments.slice(0, maxGraphemes - 3).map(s => s.segment).join("") + "...";
+  }
+  // Fallback
+  const chars = [...str];
+  if (chars.length <= maxGraphemes) return str;
+  return chars.slice(0, maxGraphemes - 3).join("") + "...";
+}
+
+/**
+ * Create a Bluesky post with external link embed
+ */
+export async function createBlueskyPost(
+  agent: AtpAgent,
+  options: CreateBlueskyPostOptions
+): Promise<StrongRef> {
+  const { title, description, canonicalUrl, coverImage, publishedAt } = options;
+
+  // Build post text: title + description + URL
+  // Max 300 graphemes for Bluesky posts
+  const MAX_GRAPHEMES = 300;
+
+  let postText: string;
+  const urlPart = `\n\n${canonicalUrl}`;
+  const urlGraphemes = countGraphemes(urlPart);
+
+  if (description) {
+    // Try: title + description + URL
+    const fullText = `${title}\n\n${description}${urlPart}`;
+    if (countGraphemes(fullText) <= MAX_GRAPHEMES) {
+      postText = fullText;
+    } else {
+      // Truncate description to fit
+      const availableForDesc = MAX_GRAPHEMES - countGraphemes(title) - countGraphemes("\n\n") - urlGraphemes - countGraphemes("\n\n");
+      if (availableForDesc > 10) {
+        const truncatedDesc = truncateToGraphemes(description, availableForDesc);
+        postText = `${title}\n\n${truncatedDesc}${urlPart}`;
+      } else {
+        // Just title + URL
+        postText = `${title}${urlPart}`;
+      }
+    }
+  } else {
+    // Just title + URL
+    postText = `${title}${urlPart}`;
+  }
+
+  // Final truncation if still too long (shouldn't happen but safety check)
+  if (countGraphemes(postText) > MAX_GRAPHEMES) {
+    postText = truncateToGraphemes(postText, MAX_GRAPHEMES);
+  }
+
+  // Calculate byte indices for the URL facet
+  const encoder = new TextEncoder();
+  const urlStartInText = postText.lastIndexOf(canonicalUrl);
+  const beforeUrl = postText.substring(0, urlStartInText);
+  const byteStart = encoder.encode(beforeUrl).length;
+  const byteEnd = byteStart + encoder.encode(canonicalUrl).length;
+
+  // Build facets for the URL link
+  const facets = [
+    {
+      index: {
+        byteStart,
+        byteEnd,
+      },
+      features: [
+        {
+          $type: "app.bsky.richtext.facet#link",
+          uri: canonicalUrl,
+        },
+      ],
+    },
+  ];
+
+  // Build external embed
+  const embed: Record<string, unknown> = {
+    $type: "app.bsky.embed.external",
+    external: {
+      uri: canonicalUrl,
+      title: title.substring(0, 500), // Max 500 chars for title
+      description: (description || "").substring(0, 1000), // Max 1000 chars for description
+    },
+  };
+
+  // Add thumbnail if coverImage is available
+  if (coverImage) {
+    (embed.external as Record<string, unknown>).thumb = coverImage;
+  }
+
+  // Create the post record
+  const record: Record<string, unknown> = {
+    $type: "app.bsky.feed.post",
+    text: postText,
+    facets,
+    embed,
+    createdAt: new Date(publishedAt).toISOString(),
+  };
+
+  const response = await agent.com.atproto.repo.createRecord({
+    repo: agent.session!.did,
+    collection: "app.bsky.feed.post",
+    record,
+  });
+
+  return {
+    uri: response.data.uri,
+    cid: response.data.cid,
+  };
+}
+
+/**
+ * Add bskyPostRef to an existing document record
+ */
+export async function addBskyPostRefToDocument(
+  agent: AtpAgent,
+  documentAtUri: string,
+  bskyPostRef: StrongRef
+): Promise<void> {
+  const parsed = parseAtUri(documentAtUri);
+  if (!parsed) {
+    throw new Error(`Invalid document URI: ${documentAtUri}`);
+  }
+
+  // Fetch existing record
+  const existingRecord = await agent.com.atproto.repo.getRecord({
+    repo: parsed.did,
+    collection: parsed.collection,
+    rkey: parsed.rkey,
+  });
+
+  // Add bskyPostRef to the record
+  const updatedRecord = {
+    ...(existingRecord.data.value as Record<string, unknown>),
+    bskyPostRef,
+  };
+
+  // Update the record
+  await agent.com.atproto.repo.putRecord({
+    repo: parsed.did,
+    collection: parsed.collection,
+    rkey: parsed.rkey,
+    record: updatedRecord,
+  });
 }

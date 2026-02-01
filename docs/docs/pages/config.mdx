@@ -15,6 +15,9 @@
 | `identity` | `string` | No | - | Which stored identity to use |
 | `frontmatter` | `object` | No | - | Custom frontmatter field mappings |
 | `ignore` | `string[]` | No | - | Glob patterns for files to ignore |
+| `bluesky` | `object` | No | - | Bluesky posting configuration |
+| `bluesky.enabled` | `boolean` | No | `false` | Post to Bluesky when publishing documents |
+| `bluesky.maxAgeDays` | `number` | No | `30` | Only post documents published within this many days |
 
 ### Example
 
@@ -31,7 +34,11 @@
   "frontmatter": {
     "publishDate": "date"
   },
-  "ignore": ["_index.md"]
+  "ignore": ["_index.md"],
+  "bluesky": {
+    "enabled": true,
+    "maxAgeDays": 30
+  }
 }
 ```
 
@@ -44,6 +51,7 @@
 | `publishDate` | `string` | Yes | `"publishDate"`, `"pubDate"`, `"date"`, `"createdAt"`, `"created_at"` | Publication date |
 | `coverImage` | `string` | No | `"ogImage"` | Cover image filename |
 | `tags` | `string[]` | No | `"tags"` | Post tags/categories |
+| `draft` | `boolean` | No | `"draft"` | If `true`, post is skipped during publish |
 
 ### Example
 
@@ -54,6 +62,7 @@ description: An introduction to my blog
 publishDate: 2024-01-15
 ogImage: cover.jpg
 tags: [welcome, intro]
+draft: false
 ---
 ```
 
@@ -65,7 +74,8 @@ Override default field names in `sequoia.json`:
 {
   "frontmatter": {
     "publishDate": "date",
-    "coverImage": "thumbnail"
+    "coverImage": "thumbnail",
+    "draft": "private"
   }
 }
 ```

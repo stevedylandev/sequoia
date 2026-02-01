@@ -15,7 +15,7 @@ import * as path from "path";
 import { findConfig, generateConfigTemplate } from "../lib/config";
 import { loadCredentials } from "../lib/credentials";
 import { createAgent, createPublication } from "../lib/atproto";
-import type { FrontmatterMapping } from "../lib/types";
+import type { FrontmatterMapping, BlueskyConfig } from "../lib/types";
 
 async function fileExists(filePath: string): Promise<boolean> {
 	try {
@@ -138,6 +138,12 @@ export const initCommand = command({
 						defaultValue: "tags",
 						placeholder: "tags, categories, keywords, etc.",
 					}),
+				draftField: () =>
+					text({
+						message: "Field name for draft status:",
+						defaultValue: "draft",
+						placeholder: "draft, private, hidden, etc.",
+					}),
 			},
 			{ onCancel },
 		);
@@ -149,6 +155,7 @@ export const initCommand = command({
 			["publishDate", frontmatterConfig.dateField, "publishDate"],
 			["coverImage", frontmatterConfig.coverField, "ogImage"],
 			["tags", frontmatterConfig.tagsField, "tags"],
+			["draft", frontmatterConfig.draftField, "draft"],
 		];
 
 		const builtMapping = fieldMappings.reduce<FrontmatterMapping>(
@@ -263,6 +270,41 @@ export const initCommand = command({
 			publicationUri = uri as string;
 		}
 
+		// Bluesky posting configuration
+		const enableBluesky = await confirm({
+			message: "Enable automatic Bluesky posting when publishing?",
+			initialValue: false,
+		});
+
+		if (enableBluesky === Symbol.for("cancel")) {
+			onCancel();
+		}
+
+		let blueskyConfig: BlueskyConfig | undefined;
+		if (enableBluesky) {
+			const maxAgeDaysInput = await text({
+				message: "Maximum age (in days) for posts to be shared on Bluesky:",
+				defaultValue: "7",
+				placeholder: "7",
+				validate: (value) => {
+					const num = parseInt(value, 10);
+					if (isNaN(num) || num < 1) {
+						return "Please enter a positive number";
+					}
+				},
+			});
+
+			if (maxAgeDaysInput === Symbol.for("cancel")) {
+				onCancel();
+			}
+
+			const maxAgeDays = parseInt(maxAgeDaysInput as string, 10);
+			blueskyConfig = {
+				enabled: true,
+				...(maxAgeDays !== 7 && { maxAgeDays }),
+			};
+		}
+
 		// Get PDS URL from credentials (already loaded earlier)
 		const pdsUrl = credentials?.pdsUrl;
 
@@ -277,6 +319,7 @@ export const initCommand = command({
 			publicationUri,
 			pdsUrl,
 			frontmatter: frontmatterMapping,
+			bluesky: blueskyConfig,
 		});
 
 		const configPath = path.join(process.cwd(), "sequoia.json");
