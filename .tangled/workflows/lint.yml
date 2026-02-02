@@ -17,6 +17,6 @@ steps:
   - name: "Install dependencies"
     command: "bun install"
   - name: "Lint check"
-    command: "biome lint ./packages/cli"
+    command: "cd packages/cli && biome lint ."
   - name: "Format check"
-    command: "biome format ./packages/cli"
+    command: "cd packages/cli && biome format ."
