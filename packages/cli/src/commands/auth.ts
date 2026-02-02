@@ -158,6 +158,7 @@ export const authCommand = command({
 
 			// Save credentials
 			await saveCredentials({
+				type: "app-password",
 				pdsUrl,
 				identifier: identifier,
 				password: appPassword,

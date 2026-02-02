@@ -1,8 +1,9 @@
-import { AtpAgent } from "@atproto/api";
+import { Agent, AtpAgent } from "@atproto/api";
 import * as mimeTypes from "mime-types";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { stripMarkdownForText } from "./markdown";
+import { getOAuthClient } from "./oauth-client";
 import type {
 	BlobObject,
 	BlogPost,
@@ -10,6 +11,7 @@ import type {
 	PublisherConfig,
 	StrongRef,
 } from "./types";
+import { isAppPasswordCredentials, isOAuthCredentials } from "./types";
 
 async function fileExists(filePath: string): Promise<boolean> {
 	try {
@@ -20,22 +22,27 @@ async function fileExists(filePath: string): Promise<boolean> {
 	}
 }
 
+/**
+ * Resolve a handle to a DID
+ */
+export async function resolveHandleToDid(handle: string): Promise<string> {
+	if (handle.startsWith("did:")) {
+		return handle;
+	}
+
+	// Try to resolve handle via Bluesky API
+	const resolveUrl = `https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle=${encodeURIComponent(handle)}`;
+	const resolveResponse = await fetch(resolveUrl);
+	if (!resolveResponse.ok) {
+		throw new Error("Could not resolve handle");
+	}
+	const resolveData = (await resolveResponse.json()) as { did: string };
+	return resolveData.did;
+}
+
 export async function resolveHandleToPDS(handle: string): Promise<string> {
 	// First, resolve the handle to a DID
-	let did: string;
-
-	if (handle.startsWith("did:")) {
-		did = handle;
-	} else {
-		// Try to resolve handle via Bluesky API
-		const resolveUrl = `https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle=${encodeURIComponent(handle)}`;
-		const resolveResponse = await fetch(resolveUrl);
-		if (!resolveResponse.ok) {
-			throw new Error("Could not resolve handle");
-		}
-		const resolveData = (await resolveResponse.json()) as { did: string };
-		did = resolveData.did;
-	}
+	const did = await resolveHandleToDid(handle);
 
 	// Now resolve the DID to get the PDS URL from the DID document
 	let pdsUrl: string | undefined;
@@ -90,6 +97,45 @@ export interface CreatePublicationOptions {
 }
 
 export async function createAgent(credentials: Credentials): Promise<AtpAgent> {
+	if (isOAuthCredentials(credentials)) {
+		// OAuth flow - restore session from stored tokens
+		const client = await getOAuthClient();
+		try {
+			const oauthSession = await client.restore(credentials.did);
+			// Wrap the OAuth session in an Agent which provides the atproto API
+			const agent = new Agent(oauthSession) as unknown as AtpAgent;
+
+			// The Agent class doesn't have session.did like AtpAgent does
+			// We need to set up a compatible session object for the rest of our code
+			agent.session = {
+				did: oauthSession.did,
+				handle: credentials.handle,
+				accessJwt: "",
+				refreshJwt: "",
+				active: true,
+			};
+
+			return agent;
+		} catch (error) {
+			if (error instanceof Error) {
+				// Check for common OAuth errors
+				if (
+					error.message.includes("expired") ||
+					error.message.includes("revoked")
+				) {
+					throw new Error(
+						`OAuth session expired or revoked. Please run 'sequoia login' to re-authenticate.`,
+					);
+				}
+			}
+			throw error;
+		}
+	}
+
+	// App password flow
+	if (!isAppPasswordCredentials(credentials)) {
+		throw new Error("Invalid credential type");
+	}
 	const agent = new AtpAgent({ service: credentials.pdsUrl });
 
 	await agent.login({

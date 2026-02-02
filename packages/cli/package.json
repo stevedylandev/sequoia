@@ -30,10 +30,12 @@
 	},
 	"dependencies": {
 		"@atproto/api": "^0.18.17",
+		"@atproto/oauth-client-node": "^0.3.16",
 		"@clack/prompts": "^1.0.0",
 		"cmd-ts": "^0.14.3",
 		"glob": "^13.0.0",
 		"mime-types": "^2.1.35",
-		"minimatch": "^10.1.1"
+		"minimatch": "^10.1.1",
+		"open": "^11.0.0"
 	}
 }

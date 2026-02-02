@@ -37,10 +37,43 @@ export interface PublisherConfig {
 	bluesky?: BlueskyConfig; // Optional Bluesky posting configuration
 }
 
-export interface Credentials {
+// Legacy credentials format (for backward compatibility during migration)
+export interface LegacyCredentials {
 	pdsUrl: string;
 	identifier: string;
 	password: string;
+}
+
+// App password credentials (explicit type)
+export interface AppPasswordCredentials {
+	type: "app-password";
+	pdsUrl: string;
+	identifier: string;
+	password: string;
+}
+
+// OAuth credentials (references stored OAuth session)
+export interface OAuthCredentials {
+	type: "oauth";
+	did: string;
+	handle: string;
+	pdsUrl: string;
+}
+
+// Union type for all credential types
+export type Credentials = AppPasswordCredentials | OAuthCredentials;
+
+// Helper to check credential type
+export function isOAuthCredentials(
+	creds: Credentials,
+): creds is OAuthCredentials {
+	return creds.type === "oauth";
+}
+
+export function isAppPasswordCredentials(
+	creds: Credentials,
+): creds is AppPasswordCredentials {
+	return creds.type === "app-password";
 }
 
 export interface PostFrontmatter {
