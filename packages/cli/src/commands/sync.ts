@@ -76,7 +76,7 @@ export const syncCommand = command({
 		let agent: Awaited<ReturnType<typeof createAgent>> | undefined;
 		try {
 			agent = await createAgent(credentials);
-			s.stop(`Logged in as ${agent.session?.handle}`);
+			s.stop(`Logged in as ${agent.did}`);
 		} catch (error) {
 			s.stop("Failed to login");
 			log.error(`Failed to login: ${error}`);

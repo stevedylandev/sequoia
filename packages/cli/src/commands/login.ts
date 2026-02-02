@@ -4,7 +4,6 @@ import { command, flag, option, optional, string } from "cmd-ts";
 import { resolveHandleToDid } from "../lib/atproto";
 import {
 	getCallbackPort,
-	getCallbackUrl,
 	getOAuthClient,
 	getOAuthScope,
 } from "../lib/oauth-client";

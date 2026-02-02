@@ -287,7 +287,10 @@ export const initCommand = command({
 				defaultValue: "7",
 				placeholder: "7",
 				validate: (value) => {
-					const num = parseInt(value, 10);
+					if (!value) {
+						return "Please enter a number";
+					}
+					const num = Number.parseInt(value, 10);
 					if (Number.isNaN(num) || num < 1) {
 						return "Please enter a positive number";
 					}

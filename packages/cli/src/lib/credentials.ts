@@ -95,14 +95,9 @@ async function tryLoadOAuthCredentials(
 		}
 	}
 
-	// Otherwise, check all OAuth sessions to find a matching handle
-	// (This is a fallback - handle matching isn't perfect without storing handles)
-	const sessions = await listOAuthSessions();
-	for (const did of sessions) {
-		// Could enhance this by storing handle with session, but for now
-		// just return null if profile isn't a DID
-	}
-
+	// Otherwise, we would need to check all OAuth sessions to find a matching handle,
+	// but handle matching isn't perfect without storing handles alongside sessions.
+	// For now, just return null if profile isn't a DID.
 	return null;
 }
 
