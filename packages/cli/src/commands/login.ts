@@ -228,8 +228,12 @@ function waitForCallback(): Promise<CallbackResult> {
 					res.writeHead(200, { "Content-Type": "text/html" });
 					res.end(`
 						<html>
-							<body style="font-family: system-ui; padding: 2rem; text-align: center;">
-								<h1>Authentication Failed</h1>
+							<head>
+								<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;700&display=swap" rel="stylesheet">
+							</head>
+							<body style="background: #1A1A1A; color: #F5F3EF; font-family: 'Josefin Sans', system-ui; padding: 2rem; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0;">
+					  <img src="https://sequoia.pub/icon-dark.png" alt="sequoia icon" style="width: 100px; height: 100px;" />
+								<h1 style="font-weight: 400;">Authentication Failed</h1>
 								<p>${params.error_description || params.error}</p>
 								<p>You can close this window.</p>
 							</body>
@@ -248,8 +252,12 @@ function waitForCallback(): Promise<CallbackResult> {
 				res.writeHead(200, { "Content-Type": "text/html" });
 				res.end(`
 					<html>
-						<body style="font-family: system-ui; padding: 2rem; text-align: center;">
-							<h1>Authentication Successful</h1>
+						<head>
+							<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;700&display=swap" rel="stylesheet">
+						</head>
+						<body style="background: #1A1A1A; color: #F5F3EF; font-family: 'Josefin Sans', system-ui; padding: 2rem; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0;">
+						  <img src="https://sequoia.pub/icon-dark.png" alt="sequoia icon" style="width: 100px; height: 100px;" />
+							<h1 style="font-weight: 400;">Authentication Successful</h1>
 							<p>You can close this window and return to the terminal.</p>
 						</body>
 					</html>
