@@ -1,10 +1,26 @@
 # CLI Reference
 
+## `login`
+
+```bash [Terminal]
+sequoia login
+> Login with OAuth (browser-based authentication)
+
+OPTIONS:
+  --logout <str> - Remove OAuth session for a specific DID [optional]
+
+FLAGS:
+  --list     - List all stored OAuth sessions [optional]
+  --help, -h - show help [optional]
+```
+
+OAuth is the recommended authentication method as it scopes permissions and refreshes tokens automatically. 
+
 ## `auth`
 
 ```bash [Terminal]
 sequoia auth
-> Authenticate with your ATProto PDS
+> Authenticate with your ATProto PDS using an app password
 
 OPTIONS:
   --logout <str> - Remove credentials for a specific identity (or all if only one exists) [optional]
@@ -13,6 +29,8 @@ FLAGS:
   --list     - List all stored identities [optional]
   --help, -h - show help [optional]
 ```
+
+Use this as an alternative to `login` when OAuth isn't available or for CI environments.
 
 ## `init`
 

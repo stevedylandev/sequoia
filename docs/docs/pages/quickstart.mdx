@@ -31,17 +31,19 @@ Check to make sure it was installed correctly by running the `sequoia` command
 sequoia
 ```
 
-### Authorize
+### Login
 
-In order for Sequoia to publish or update records on your PDS, you need to authorize it with your ATProto handle and an app password.
-
-:::tip
-You can create an app password [here](https://bsky.app/settings/app-passwords)
-:::
+In order for Sequoia to publish or update records on your PDS, you need to authenticate with your ATProto account.
 
 ```bash [Terminal]
-sequoia auth
+sequoia login
 ```
+
+This will open your browser to complete OAuth authentication, and your sessions will refresh automatically as you use the CLI.
+
+:::tip
+Alternatively, you can use `sequoia auth` to authenticate with an [app password](https://bsky.app/settings/app-passwords) instead of OAuth.
+:::
 
 ### Initialize
 
