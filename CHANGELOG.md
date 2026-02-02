@@ -1,3 +1,13 @@
+## [0.2.1] - 2026-02-02
+
+### ⚙️ Miscellaneous Tasks
+
+- Added CHANGELOG
+- Merge main into chore/fronmatter-config-updates
+- Added linting and formatting
+- Linting updates
+- Refactored to use fallback approach if frontmatter.slugField is provided or not
+- Version bump
 ## [0.2.0] - 2026-02-01
 
 ### 🚀 Features
@@ -7,6 +17,10 @@
 
 ### ⚙️ Miscellaneous Tasks
 
+- Resolved action items from issue #3
+- Adjusted tags to accept yaml multiline arrays for tags
+- Updated inject to handle new slug options
+- Updated comments
 - Update blog post
 - Fix blog build error
 - Adjust blog post
