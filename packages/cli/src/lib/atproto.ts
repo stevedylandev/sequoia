@@ -13,6 +13,22 @@ import type {
 } from "./types";
 import { isAppPasswordCredentials, isOAuthCredentials } from "./types";
 
+/**
+ * Type guard to check if a record value is a DocumentRecord
+ */
+function isDocumentRecord(value: unknown): value is DocumentRecord {
+	if (!value || typeof value !== "object") return false;
+	const v = value as Record<string, unknown>;
+	return (
+		v.$type === "site.standard.document" &&
+		typeof v.title === "string" &&
+		typeof v.site === "string" &&
+		typeof v.path === "string" &&
+		typeof v.textContent === "string" &&
+		typeof v.publishedAt === "string"
+	);
+}
+
 async function fileExists(filePath: string): Promise<boolean> {
 	try {
 		await fs.access(filePath);
@@ -96,26 +112,14 @@ export interface CreatePublicationOptions {
 	showInDiscover?: boolean;
 }
 
-export async function createAgent(credentials: Credentials): Promise<AtpAgent> {
+export async function createAgent(credentials: Credentials): Promise<Agent> {
 	if (isOAuthCredentials(credentials)) {
 		// OAuth flow - restore session from stored tokens
 		const client = await getOAuthClient();
 		try {
 			const oauthSession = await client.restore(credentials.did);
 			// Wrap the OAuth session in an Agent which provides the atproto API
-			const agent = new Agent(oauthSession) as unknown as AtpAgent;
-
-			// The Agent class doesn't have session.did like AtpAgent does
-			// We need to set up a compatible session object for the rest of our code
-			agent.session = {
-				did: oauthSession.did,
-				handle: credentials.handle,
-				accessJwt: "",
-				refreshJwt: "",
-				active: true,
-			};
-
-			return agent;
+			return new Agent(oauthSession);
 		} catch (error) {
 			if (error instanceof Error) {
 				// Check for common OAuth errors
@@ -147,7 +151,7 @@ export async function createAgent(credentials: Credentials): Promise<AtpAgent> {
 }
 
 export async function uploadImage(
-	agent: AtpAgent,
+	agent: Agent,
 	imagePath: string,
 ): Promise<BlobObject | undefined> {
 	if (!(await fileExists(imagePath))) {
@@ -216,7 +220,7 @@ export async function resolveImagePath(
 }
 
 export async function createDocument(
-	agent: AtpAgent,
+	agent: Agent,
 	post: BlogPost,
 	config: PublisherConfig,
 	coverImage?: BlobObject,
@@ -259,7 +263,7 @@ export async function createDocument(
 	}
 
 	const response = await agent.com.atproto.repo.createRecord({
-		repo: agent.session!.did,
+		repo: agent.did!,
 		collection: "site.standard.document",
 		record,
 	});
@@ -268,7 +272,7 @@ export async function createDocument(
 }
 
 export async function updateDocument(
-	agent: AtpAgent,
+	agent: Agent,
 	post: BlogPost,
 	atUri: string,
 	config: PublisherConfig,
@@ -321,7 +325,7 @@ export async function updateDocument(
 	}
 
 	await agent.com.atproto.repo.putRecord({
-		repo: agent.session!.did,
+		repo: agent.did!,
 		collection: collection!,
 		rkey: rkey!,
 		record,
@@ -361,7 +365,7 @@ export interface ListDocumentsResult {
 }
 
 export async function listDocuments(
-	agent: AtpAgent,
+	agent: Agent,
 	publicationUri?: string,
 ): Promise<ListDocumentsResult[]> {
 	const documents: ListDocumentsResult[] = [];
@@ -369,24 +373,26 @@ export async function listDocuments(
 
 	do {
 		const response = await agent.com.atproto.repo.listRecords({
-			repo: agent.session!.did,
+			repo: agent.did!,
 			collection: "site.standard.document",
 			limit: 100,
 			cursor,
 		});
 
 		for (const record of response.data.records) {
-			const value = record.value as unknown as DocumentRecord;
+			if (!isDocumentRecord(record.value)) {
+				continue;
+			}
 
 			// If publicationUri is specified, only include documents from that publication
-			if (publicationUri && value.site !== publicationUri) {
+			if (publicationUri && record.value.site !== publicationUri) {
 				continue;
 			}
 
 			documents.push({
 				uri: record.uri,
 				cid: record.cid,
-				value,
+				value: record.value,
 			});
 		}
 
@@ -397,7 +403,7 @@ export async function listDocuments(
 }
 
 export async function createPublication(
-	agent: AtpAgent,
+	agent: Agent,
 	options: CreatePublicationOptions,
 ): Promise<string> {
 	let icon: BlobObject | undefined;
@@ -428,7 +434,7 @@ export async function createPublication(
 	}
 
 	const response = await agent.com.atproto.repo.createRecord({
-		repo: agent.session!.did,
+		repo: agent.did!,
 		collection: "site.standard.publication",
 		record,
 	});
@@ -481,7 +487,7 @@ function truncateToGraphemes(str: string, maxGraphemes: number): string {
  * Create a Bluesky post with external link embed
  */
 export async function createBlueskyPost(
-	agent: AtpAgent,
+	agent: Agent,
 	options: CreateBlueskyPostOptions,
 ): Promise<StrongRef> {
 	const { title, description, canonicalUrl, coverImage, publishedAt } = options;
@@ -576,7 +582,7 @@ export async function createBlueskyPost(
 	};
 
 	const response = await agent.com.atproto.repo.createRecord({
-		repo: agent.session!.did,
+		repo: agent.did!,
 		collection: "app.bsky.feed.post",
 		record,
 	});
@@ -591,7 +597,7 @@ export async function createBlueskyPost(
  * Add bskyPostRef to an existing document record
  */
 export async function addBskyPostRefToDocument(
-	agent: AtpAgent,
+	agent: Agent,
 	documentAtUri: string,
 	bskyPostRef: StrongRef,
 ): Promise<void> {

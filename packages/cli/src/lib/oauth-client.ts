@@ -18,7 +18,10 @@ let oauthClient: NodeOAuthClient | null = null;
 // This prevents the "No lock mechanism provided" warning
 const locks = new Map<string, Promise<void>>();
 
-async function requestLock(key: string, fn: () => Promise<void>): Promise<void> {
+async function requestLock<T>(
+	key: string,
+	fn: () => T | PromiseLike<T>,
+): Promise<T> {
 	// Wait for any existing lock on this key
 	while (locks.has(key)) {
 		await locks.get(key);
@@ -32,7 +35,7 @@ async function requestLock(key: string, fn: () => Promise<void>): Promise<void> 
 	locks.set(key, lockPromise);
 
 	try {
-		await fn();
+		return await fn();
 	} finally {
 		locks.delete(key);
 		resolve!();
