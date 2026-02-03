@@ -105,6 +105,7 @@ export const syncCommand = command({
 			ignorePatterns: config.ignore,
 			slugField: config.frontmatter?.slugField,
 			removeIndexFromSlug: config.removeIndexFromSlug,
+			stripDatePrefix: config.stripDatePrefix,
 		});
 		s.stop(`Found ${localPosts.length} local posts`);
 

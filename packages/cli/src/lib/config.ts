@@ -82,6 +82,7 @@ export function generateConfigTemplate(options: {
 	frontmatter?: FrontmatterMapping;
 	ignore?: string[];
 	removeIndexFromSlug?: boolean;
+	stripDatePrefix?: boolean;
 	textContentField?: string;
 	bluesky?: BlueskyConfig;
 }): string {
@@ -122,6 +123,10 @@ export function generateConfigTemplate(options: {
 
 	if (options.removeIndexFromSlug) {
 		config.removeIndexFromSlug = options.removeIndexFromSlug;
+	}
+
+	if (options.stripDatePrefix) {
+		config.stripDatePrefix = options.stripDatePrefix;
 	}
 
 	if (options.textContentField) {

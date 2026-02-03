@@ -178,6 +178,7 @@ export function getSlugFromFilename(filename: string): string {
 export interface SlugOptions {
 	slugField?: string;
 	removeIndexFromSlug?: boolean;
+	stripDatePrefix?: boolean;
 }
 
 export function getSlugFromOptions(
@@ -185,7 +186,7 @@ export function getSlugFromOptions(
 	rawFrontmatter: Record<string, unknown>,
 	options: SlugOptions = {},
 ): string {
-	const { slugField, removeIndexFromSlug = false } = options;
+	const { slugField, removeIndexFromSlug = false, stripDatePrefix = false } = options;
 
 	let slug: string;
 
@@ -218,6 +219,11 @@ export function getSlugFromOptions(
 		slug = slug.replace(/\/_?index$/, "");
 	}
 
+	// Strip Jekyll-style date prefix (YYYY-MM-DD-) from filename
+	if (stripDatePrefix) {
+		slug = slug.replace(/(^|\/)(\d{4}-\d{2}-\d{2})-/g, "$1");
+	}
+
 	return slug;
 }
 
@@ -243,6 +249,7 @@ export interface ScanOptions {
 	ignorePatterns?: string[];
 	slugField?: string;
 	removeIndexFromSlug?: boolean;
+	stripDatePrefix?: boolean;
 }
 
 export async function scanContentDirectory(
@@ -274,6 +281,7 @@ export async function scanContentDirectory(
 		ignorePatterns: ignore = [],
 		slugField,
 		removeIndexFromSlug,
+		stripDatePrefix,
 	} = options;
 
 	const patterns = ["**/*.md", "**/*.mdx"];
@@ -302,6 +310,7 @@ export async function scanContentDirectory(
 				const slug = getSlugFromOptions(relativePath, rawFrontmatter, {
 					slugField,
 					removeIndexFromSlug,
+					stripDatePrefix,
 				});
 
 				posts.push({

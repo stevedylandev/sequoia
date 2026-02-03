@@ -110,6 +110,7 @@ export const publishCommand = command({
 			ignorePatterns: config.ignore,
 			slugField: config.frontmatter?.slugField,
 			removeIndexFromSlug: config.removeIndexFromSlug,
+			stripDatePrefix: config.stripDatePrefix,
 		});
 		s.stop(`Found ${posts.length} posts`);
 
