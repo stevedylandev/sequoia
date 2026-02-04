@@ -1,7 +1,12 @@
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
-import { getOAuthSession, listOAuthSessions } from "./oauth-store";
+import {
+	getOAuthHandle,
+	getOAuthSession,
+	listOAuthSessions,
+	listOAuthSessionsWithHandles,
+} from "./oauth-store";
 import type {
 	AppPasswordCredentials,
 	Credentials,
@@ -86,18 +91,28 @@ async function tryLoadOAuthCredentials(
 	if (profile.startsWith("did:")) {
 		const session = await getOAuthSession(profile);
 		if (session) {
+			const handle = await getOAuthHandle(profile);
 			return {
 				type: "oauth",
 				did: profile,
-				handle: profile, // We don't have the handle stored, use DID
+				handle: handle || profile,
 				pdsUrl: "https://bsky.social", // Will be resolved from DID doc
 			};
 		}
 	}
 
-	// Otherwise, we would need to check all OAuth sessions to find a matching handle,
-	// but handle matching isn't perfect without storing handles alongside sessions.
-	// For now, just return null if profile isn't a DID.
+	// Try to find OAuth session by handle
+	const sessions = await listOAuthSessionsWithHandles();
+	const match = sessions.find((s) => s.handle === profile);
+	if (match) {
+		return {
+			type: "oauth",
+			did: match.did,
+			handle: match.handle || match.did,
+			pdsUrl: "https://bsky.social",
+		};
+	}
+
 	return null;
 }
 
@@ -166,10 +181,11 @@ export async function loadCredentials(
 		if (oauthDids.length === 1 && oauthDids[0]) {
 			const session = await getOAuthSession(oauthDids[0]);
 			if (session) {
+				const handle = await getOAuthHandle(oauthDids[0]);
 				return {
 					type: "oauth",
 					did: oauthDids[0],
-					handle: oauthDids[0],
+					handle: handle || oauthDids[0],
 					pdsUrl: "https://bsky.social",
 				};
 			}

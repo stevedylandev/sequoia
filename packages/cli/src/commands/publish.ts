@@ -5,9 +5,10 @@ import * as path from "node:path";
 import { loadConfig, loadState, saveState, findConfig } from "../lib/config";
 import {
 	loadCredentials,
-	listCredentials,
+	listAllCredentials,
 	getCredentials,
 } from "../lib/credentials";
+import { getOAuthHandle, getOAuthSession } from "../lib/oauth-store";
 import {
 	createAgent,
 	createDocument,
@@ -59,32 +60,71 @@ export const publishCommand = command({
 
 		// If no credentials resolved, check if we need to prompt for identity selection
 		if (!credentials) {
-			const identities = await listCredentials();
+			const identities = await listAllCredentials();
 			if (identities.length === 0) {
-				log.error("No credentials found. Run 'sequoia auth' first.");
+				log.error(
+					"No credentials found. Run 'sequoia login' or 'sequoia auth' first.",
+				);
 				log.info(
 					"Or set ATP_IDENTIFIER and ATP_APP_PASSWORD environment variables.",
 				);
 				process.exit(1);
 			}
 
+			// Build labels with handles for OAuth sessions
+			const options = await Promise.all(
+				identities.map(async (cred) => {
+					if (cred.type === "oauth") {
+						const handle = await getOAuthHandle(cred.id);
+						return {
+							value: cred.id,
+							label: `${handle || cred.id} (OAuth)`,
+						};
+					}
+					return {
+						value: cred.id,
+						label: `${cred.id} (App Password)`,
+					};
+				}),
+			);
+
 			// Multiple identities exist but none selected - prompt user
 			log.info("Multiple identities found. Select one to use:");
 			const selected = exitOnCancel(
 				await select({
 					message: "Identity:",
-					options: identities.map((id) => ({ value: id, label: id })),
+					options,
 				}),
 			);
 
-			credentials = await getCredentials(selected);
+			// Load the selected credentials
+			const selectedCred = identities.find((c) => c.id === selected);
+			if (selectedCred?.type === "oauth") {
+				const session = await getOAuthSession(selected);
+				if (session) {
+					const handle = await getOAuthHandle(selected);
+					credentials = {
+						type: "oauth",
+						did: selected,
+						handle: handle || selected,
+						pdsUrl: "https://bsky.social",
+					};
+				}
+			} else {
+				credentials = await getCredentials(selected);
+			}
+
 			if (!credentials) {
 				log.error("Failed to load selected credentials.");
 				process.exit(1);
 			}
 
+			const displayId =
+				credentials.type === "oauth"
+					? credentials.handle || credentials.did
+					: credentials.identifier;
 			log.info(
-				`Tip: Add "identity": "${selected}" to sequoia.json to use this by default.`,
+				`Tip: Add "identity": "${displayId}" to sequoia.json to use this by default.`,
 			);
 		}
 

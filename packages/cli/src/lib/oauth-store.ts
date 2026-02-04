@@ -14,6 +14,7 @@ const OAUTH_FILE = path.join(CONFIG_DIR, "oauth.json");
 interface OAuthStore {
 	states: Record<string, NodeSavedState>;
 	sessions: Record<string, NodeSavedSession>;
+	handles?: Record<string, string>; // DID -> handle mapping (optional for backwards compat)
 }
 
 async function fileExists(filePath: string): Promise<boolean> {
@@ -121,4 +122,40 @@ export async function deleteOAuthSession(did: string): Promise<boolean> {
 
 export function getOAuthStorePath(): string {
 	return OAUTH_FILE;
+}
+
+/**
+ * Store handle for an OAuth session (DID -> handle mapping)
+ */
+export async function setOAuthHandle(
+	did: string,
+	handle: string,
+): Promise<void> {
+	const store = await loadOAuthStore();
+	if (!store.handles) {
+		store.handles = {};
+	}
+	store.handles[did] = handle;
+	await saveOAuthStore(store);
+}
+
+/**
+ * Get handle for an OAuth session by DID
+ */
+export async function getOAuthHandle(did: string): Promise<string | undefined> {
+	const store = await loadOAuthStore();
+	return store.handles?.[did];
+}
+
+/**
+ * List all stored OAuth sessions with their handles
+ */
+export async function listOAuthSessionsWithHandles(): Promise<
+	Array<{ did: string; handle?: string }>
+> {
+	const store = await loadOAuthStore();
+	return Object.keys(store.sessions).map((did) => ({
+		did,
+		handle: store.handles?.[did],
+	}));
 }

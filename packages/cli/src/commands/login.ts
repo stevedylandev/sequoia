@@ -11,6 +11,8 @@ import {
 	deleteOAuthSession,
 	getOAuthStorePath,
 	listOAuthSessions,
+	listOAuthSessionsWithHandles,
+	setOAuthHandle,
 } from "../lib/oauth-store";
 import { exitOnCancel } from "../lib/prompts";
 
@@ -33,13 +35,13 @@ export const loginCommand = command({
 	handler: async ({ logout, list }) => {
 		// List sessions
 		if (list) {
-			const sessions = await listOAuthSessions();
+			const sessions = await listOAuthSessionsWithHandles();
 			if (sessions.length === 0) {
 				log.info("No OAuth sessions stored");
 			} else {
 				log.info("OAuth sessions:");
-				for (const did of sessions) {
-					console.log(`  - ${did}`);
+				for (const { did, handle } of sessions) {
+					console.log(`  - ${handle || did} (${did})`);
 				}
 			}
 			return;
@@ -171,15 +173,15 @@ export const loginCommand = command({
 				new URLSearchParams(result.params!),
 			);
 
-			// Try to get the handle for display (use the original handle input as fallback)
-			let displayName = handle;
-			try {
-				// The session should have the DID, we can use the original handle they entered
-				// or we could fetch the profile to get the current handle
-				displayName = handle.startsWith("did:") ? session.did : handle;
-			} catch {
-				displayName = session.did;
+			// Store the handle for friendly display
+			// Use the original handle input (unless it was a DID)
+			const handleToStore = handle.startsWith("did:") ? undefined : handle;
+			if (handleToStore) {
+				await setOAuthHandle(session.did, handleToStore);
 			}
+
+			// Try to get the handle for display (use the original handle input as fallback)
+			const displayName = handleToStore || session.did;
 
 			s.stop(`Logged in as ${displayName}`);
 
