@@ -7,6 +7,7 @@ import { injectCommand } from "./commands/inject";
 import { loginCommand } from "./commands/login";
 import { publishCommand } from "./commands/publish";
 import { syncCommand } from "./commands/sync";
+import { updateCommand } from "./commands/update";
 
 const app = subcommands({
 	name: "sequoia",
@@ -42,6 +43,7 @@ Publish evergreen content to the ATmosphere
 		login: loginCommand,
 		publish: publishCommand,
 		sync: syncCommand,
+		update: updateCommand,
 	},
 });
 

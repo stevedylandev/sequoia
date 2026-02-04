@@ -8,6 +8,7 @@ import type {
 	BlobObject,
 	BlogPost,
 	Credentials,
+	PublicationRecord,
 	PublisherConfig,
 	StrongRef,
 } from "./types";
@@ -440,6 +441,102 @@ export async function createPublication(
 	});
 
 	return response.data.uri;
+}
+
+export interface GetPublicationResult {
+	uri: string;
+	cid: string;
+	value: PublicationRecord;
+}
+
+export async function getPublication(
+	agent: Agent,
+	publicationUri: string,
+): Promise<GetPublicationResult | null> {
+	const parsed = parseAtUri(publicationUri);
+	if (!parsed) {
+		return null;
+	}
+
+	try {
+		const response = await agent.com.atproto.repo.getRecord({
+			repo: parsed.did,
+			collection: parsed.collection,
+			rkey: parsed.rkey,
+		});
+
+		return {
+			uri: publicationUri,
+			cid: response.data.cid!,
+			value: response.data.value as unknown as PublicationRecord,
+		};
+	} catch {
+		return null;
+	}
+}
+
+export interface UpdatePublicationOptions {
+	url?: string;
+	name?: string;
+	description?: string;
+	iconPath?: string;
+	showInDiscover?: boolean;
+}
+
+export async function updatePublication(
+	agent: Agent,
+	publicationUri: string,
+	options: UpdatePublicationOptions,
+	existingRecord: PublicationRecord,
+): Promise<void> {
+	const parsed = parseAtUri(publicationUri);
+	if (!parsed) {
+		throw new Error(`Invalid publication URI: ${publicationUri}`);
+	}
+
+	// Build updated record, preserving createdAt and $type
+	const record: Record<string, unknown> = {
+		$type: existingRecord.$type,
+		url: options.url ?? existingRecord.url,
+		name: options.name ?? existingRecord.name,
+		createdAt: existingRecord.createdAt,
+	};
+
+	// Handle description - can be cleared with empty string
+	if (options.description !== undefined) {
+		if (options.description) {
+			record.description = options.description;
+		}
+		// If empty string, don't include description (clears it)
+	} else if (existingRecord.description) {
+		record.description = existingRecord.description;
+	}
+
+	// Handle icon - upload new if provided, otherwise keep existing
+	if (options.iconPath) {
+		const icon = await uploadImage(agent, options.iconPath);
+		if (icon) {
+			record.icon = icon;
+		}
+	} else if (existingRecord.icon) {
+		record.icon = existingRecord.icon;
+	}
+
+	// Handle preferences
+	if (options.showInDiscover !== undefined) {
+		record.preferences = {
+			showInDiscover: options.showInDiscover,
+		};
+	} else if (existingRecord.preferences) {
+		record.preferences = existingRecord.preferences;
+	}
+
+	await agent.com.atproto.repo.putRecord({
+		repo: parsed.did,
+		collection: parsed.collection,
+		rkey: parsed.rkey,
+		record,
+	});
 }
 
 // --- Bluesky Post Creation ---

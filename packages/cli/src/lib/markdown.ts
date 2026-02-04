@@ -186,7 +186,11 @@ export function getSlugFromOptions(
 	rawFrontmatter: Record<string, unknown>,
 	options: SlugOptions = {},
 ): string {
-	const { slugField, removeIndexFromSlug = false, stripDatePrefix = false } = options;
+	const {
+		slugField,
+		removeIndexFromSlug = false,
+		stripDatePrefix = false,
+	} = options;
 
 	let slug: string;
 
