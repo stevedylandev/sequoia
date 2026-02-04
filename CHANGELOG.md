@@ -1,4 +1,14 @@
-## [0.3.0] - 2026-02-03
+## [0.3.1] - 2026-02-04
+
+### 🐛 Bug Fixes
+
+- Asset subdirectories
+
+### ⚙️ Miscellaneous Tasks
+
+- Updated authentication ux
+
+## [0.3.0] - 2026-02-04
 
 ### 🚀 Features
 
@@ -17,7 +27,7 @@
 - Updated og image
 - Updated docs
 - Docs updates
-
+- Bumped version
 ## [0.2.1] - 2026-02-02
 
 ### ⚙️ Miscellaneous Tasks
