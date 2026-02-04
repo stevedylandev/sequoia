@@ -1,3 +1,23 @@
+## [0.3.0] - 2026-02-03
+
+### 🚀 Features
+
+- Initial oauth implementation
+- Add stripDatePrefix option for Jekyll-style filenames
+- Add `update` command
+
+### ⚙️ Miscellaneous Tasks
+
+- Update changelog
+- Added workflows
+- Updated workflows
+- Updated workflows
+- Cleaned up types
+- Updated icon styles
+- Updated og image
+- Updated docs
+- Docs updates
+
 ## [0.2.1] - 2026-02-02
 
 ### ⚙️ Miscellaneous Tasks

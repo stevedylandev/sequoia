@@ -35,7 +35,7 @@ Publish evergreen content to the ATmosphere
 
 > https://tangled.org/stevedylan.dev/sequoia
 	`,
-	version: "0.2.1",
+	version: "0.3.0",
 	cmds: {
 		auth: authCommand,
 		init: initCommand,
