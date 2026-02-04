@@ -190,11 +190,30 @@ export async function resolveImagePath(
 	contentDir: string,
 ): Promise<string | null> {
 	// Try multiple resolution strategies
-	const filename = path.basename(ogImage);
 
 	// 1. If imagesDir is specified, look there
 	if (imagesDir) {
-		const imagePath = path.join(imagesDir, filename);
+		// Get the base name of the images directory (e.g., "blog-images" from "public/blog-images")
+		const imagesDirBaseName = path.basename(imagesDir);
+
+		// Check if ogImage contains the images directory name and extract the relative path
+		// e.g., "/blog-images/other/file.png" with imagesDirBaseName "blog-images" -> "other/file.png"
+		const imagesDirIndex = ogImage.indexOf(imagesDirBaseName);
+		let relativePath: string;
+
+		if (imagesDirIndex !== -1) {
+			// Extract everything after "blog-images/"
+			const afterImagesDir = ogImage.substring(
+				imagesDirIndex + imagesDirBaseName.length,
+			);
+			// Remove leading slash if present
+			relativePath = afterImagesDir.replace(/^[/\\]/, "");
+		} else {
+			// Fall back to just the filename
+			relativePath = path.basename(ogImage);
+		}
+
+		const imagePath = path.join(imagesDir, relativePath);
 		if (await fileExists(imagePath)) {
 			const stat = await fs.stat(imagePath);
 			if (stat.size > 0) {
