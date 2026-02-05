@@ -13,8 +13,9 @@ import {
 } from "@clack/prompts";
 import * as path from "node:path";
 import { findConfig, generateConfigTemplate } from "../lib/config";
-import { loadCredentials } from "../lib/credentials";
+import { loadCredentials, listAllCredentials } from "../lib/credentials";
 import { createAgent, createPublication } from "../lib/atproto";
+import { selectCredential } from "../lib/credential-select";
 import type { FrontmatterMapping, BlueskyConfig } from "../lib/types";
 
 async function fileExists(filePath: string): Promise<boolean> {
@@ -186,13 +187,29 @@ export const initCommand = command({
 		}
 
 		let publicationUri: string;
-		const credentials = await loadCredentials();
+		let credentials = await loadCredentials();
 
 		if (publicationChoice === "create") {
 			// Need credentials to create a publication
 			if (!credentials) {
+				// Check if there are multiple identities - if so, prompt to select
+				const allCredentials = await listAllCredentials();
+				if (allCredentials.length > 1) {
+					credentials = await selectCredential(allCredentials);
+				} else if (allCredentials.length === 1) {
+					// Single credential exists but couldn't be loaded - try to load it explicitly
+					credentials = await selectCredential(allCredentials);
+				} else {
+					log.error(
+						"You must authenticate first. Run 'sequoia login' (recommended) or 'sequoia auth' before creating a publication.",
+					);
+					process.exit(1);
+				}
+			}
+
+			if (!credentials) {
 				log.error(
-					"You must authenticate first. Run 'sequoia auth' before creating a publication.",
+					"Could not load credentials. Try running 'sequoia login' again to re-authenticate.",
 				);
 				process.exit(1);
 			}
@@ -206,7 +223,7 @@ export const initCommand = command({
 			} catch (_error) {
 				s.stop("Failed to connect");
 				log.error(
-					"Failed to connect. Check your credentials with 'sequoia auth'.",
+					"Failed to connect. Try re-authenticating with 'sequoia login' or 'sequoia auth'.",
 				);
 				process.exit(1);
 			}
