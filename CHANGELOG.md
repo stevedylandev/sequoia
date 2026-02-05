@@ -1,9 +1,19 @@
-## [0.3.2] - 2026-02-04
+## [0.3.3.] - 2026-02-04
+
+### ⚙️ Miscellaneous Tasks
+
+- Cleaned up remaining auth implementations
+- Format
+
+## [0.3.2] - 2026-02-05
 
 ### 🐛 Bug Fixes
 
 - Fixed issue with auth selection in init command
 
+### ⚙️ Miscellaneous Tasks
+
+- Release 0.3.2
 ## [0.3.1] - 2026-02-04
 
 ### 🐛 Bug Fixes
