@@ -1,3 +1,9 @@
+## [0.3.2] - 2026-02-04
+
+### 🐛 Bug Fixes
+
+- Fixed issue with auth selection in init command
+
 ## [0.3.1] - 2026-02-04
 
 ### 🐛 Bug Fixes
@@ -7,7 +13,8 @@
 ### ⚙️ Miscellaneous Tasks
 
 - Updated authentication ux
-
+- Release 0.3.1
+- Bumped version
 ## [0.3.0] - 2026-02-04
 
 ### 🚀 Features
