@@ -35,3 +35,4 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Bun lockfile - keep but binary cache
 bun.lockb
+packages/ui
