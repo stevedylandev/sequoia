@@ -246,9 +246,7 @@ export const publishCommand = command({
 
 		// Create agent
 		const connectingTo =
-			credentials.type === "oauth"
-				? credentials.handle
-				: credentials.pdsUrl;
+			credentials.type === "oauth" ? credentials.handle : credentials.pdsUrl;
 		s.start(`Connecting as ${connectingTo}...`);
 		let agent: Awaited<ReturnType<typeof createAgent>> | undefined;
 		try {

@@ -108,9 +108,7 @@ export const syncCommand = command({
 		// Create agent
 		const s = spinner();
 		const connectingTo =
-			credentials.type === "oauth"
-				? credentials.handle
-				: credentials.pdsUrl;
+			credentials.type === "oauth" ? credentials.handle : credentials.pdsUrl;
 		s.start(`Connecting as ${connectingTo}...`);
 		let agent: Awaited<ReturnType<typeof createAgent>> | undefined;
 		try {
