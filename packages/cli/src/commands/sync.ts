@@ -93,7 +93,6 @@ export const syncCommand = command({
 						type: "oauth",
 						did: selected,
 						handle: handle || selected,
-						pdsUrl: "https://bsky.social",
 					};
 				}
 			} else {
@@ -108,7 +107,11 @@ export const syncCommand = command({
 
 		// Create agent
 		const s = spinner();
-		s.start(`Connecting to ${credentials.pdsUrl}...`);
+		const connectingTo =
+			credentials.type === "oauth"
+				? credentials.handle
+				: credentials.pdsUrl;
+		s.start(`Connecting as ${connectingTo}...`);
 		let agent: Awaited<ReturnType<typeof createAgent>> | undefined;
 		try {
 			agent = await createAgent(credentials);

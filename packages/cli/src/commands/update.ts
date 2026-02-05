@@ -11,7 +11,12 @@ import {
 	log,
 } from "@clack/prompts";
 import { findConfig, loadConfig, generateConfigTemplate } from "../lib/config";
-import { loadCredentials } from "../lib/credentials";
+import {
+	loadCredentials,
+	listAllCredentials,
+	getCredentials,
+} from "../lib/credentials";
+import { getOAuthHandle, getOAuthSession } from "../lib/oauth-store";
 import { createAgent, getPublication, updatePublication } from "../lib/atproto";
 import { exitOnCancel } from "../lib/prompts";
 import type {
@@ -438,12 +443,62 @@ async function editBluesky(config: PublisherConfig): Promise<PublisherConfig> {
 
 async function updatePublicationFlow(config: PublisherConfig): Promise<void> {
 	// Load credentials
-	const credentials = await loadCredentials(config.identity);
+	let credentials = await loadCredentials(config.identity);
+
 	if (!credentials) {
-		log.error(
-			"No credentials found. Run 'sequoia auth' or 'sequoia login' first.",
+		const identities = await listAllCredentials();
+		if (identities.length === 0) {
+			log.error(
+				"No credentials found. Run 'sequoia login' or 'sequoia auth' first.",
+			);
+			process.exit(1);
+		}
+
+		// Build labels with handles for OAuth sessions
+		const options = await Promise.all(
+			identities.map(async (cred) => {
+				if (cred.type === "oauth") {
+					const handle = await getOAuthHandle(cred.id);
+					return {
+						value: cred.id,
+						label: `${handle || cred.id} (OAuth)`,
+					};
+				}
+				return {
+					value: cred.id,
+					label: `${cred.id} (App Password)`,
+				};
+			}),
 		);
-		process.exit(1);
+
+		log.info("Multiple identities found. Select one to use:");
+		const selected = exitOnCancel(
+			await select({
+				message: "Identity:",
+				options,
+			}),
+		);
+
+		// Load the selected credentials
+		const selectedCred = identities.find((c) => c.id === selected);
+		if (selectedCred?.type === "oauth") {
+			const session = await getOAuthSession(selected);
+			if (session) {
+				const handle = await getOAuthHandle(selected);
+				credentials = {
+					type: "oauth",
+					did: selected,
+					handle: handle || selected,
+				};
+			}
+		} else {
+			credentials = await getCredentials(selected);
+		}
+
+		if (!credentials) {
+			log.error("Failed to load selected credentials.");
+			process.exit(1);
+		}
 	}
 
 	const s = spinner();

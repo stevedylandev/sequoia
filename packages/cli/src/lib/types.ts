@@ -54,11 +54,11 @@ export interface AppPasswordCredentials {
 }
 
 // OAuth credentials (references stored OAuth session)
+// Note: pdsUrl is not needed for OAuth - the OAuth client resolves PDS from the DID
 export interface OAuthCredentials {
 	type: "oauth";
 	did: string;
 	handle: string;
-	pdsUrl: string;
 }
 
 // Union type for all credential types

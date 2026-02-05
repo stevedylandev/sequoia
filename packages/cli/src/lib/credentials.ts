@@ -96,7 +96,6 @@ async function tryLoadOAuthCredentials(
 				type: "oauth",
 				did: profile,
 				handle: handle || profile,
-				pdsUrl: "https://bsky.social", // Will be resolved from DID doc
 			};
 		}
 	}
@@ -109,7 +108,6 @@ async function tryLoadOAuthCredentials(
 			type: "oauth",
 			did: match.did,
 			handle: match.handle || match.did,
-			pdsUrl: "https://bsky.social",
 		};
 	}
 
@@ -186,7 +184,6 @@ export async function loadCredentials(
 					type: "oauth",
 					did: oauthDids[0],
 					handle: handle || oauthDids[0],
-					pdsUrl: "https://bsky.social",
 				};
 			}
 		}

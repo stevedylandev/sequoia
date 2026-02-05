@@ -41,7 +41,6 @@ export async function selectCredential(
 				type: "oauth",
 				did: selected.id,
 				handle: handle || selected.id,
-				pdsUrl: "https://bsky.social",
 			};
 		}
 	} else {

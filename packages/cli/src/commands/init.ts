@@ -325,8 +325,9 @@ export const initCommand = command({
 			};
 		}
 
-		// Get PDS URL from credentials (already loaded earlier)
-		const pdsUrl = credentials?.pdsUrl;
+		// Get PDS URL from credentials (only available for app-password auth)
+		const pdsUrl =
+			credentials?.type === "app-password" ? credentials.pdsUrl : undefined;
 
 		// Generate config file
 		const configContent = generateConfigTemplate({
