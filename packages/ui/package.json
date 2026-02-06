@@ -1,6 +1,6 @@
 {
 	"name": "sequoia-ui",
-	"version": "0.1.0",
+	"version": "0.0.2",
 	"type": "module",
 	"files": [
 		"dist",
@@ -8,8 +8,14 @@
 	],
 	"main": "./dist/index.js",
 	"exports": {
-		".": "./dist/index.js",
-		"./comments": "./dist/index.js"
+		".": {
+			"import": "./dist/index.js",
+			"default": "./dist/index.js"
+		},
+		"./comments": {
+			"import": "./dist/index.js",
+			"default": "./dist/index.js"
+		}
 	},
 	"scripts": {
 		"lint": "biome lint --write",

@@ -24,3 +24,7 @@ export type {
 } from "./types/bluesky";
 
 export { isThreadViewPost } from "./types/bluesky";
+
+// Styles and theming
+export type { SequoiaTheme, SequoiaCSSVar } from "./types/styles";
+export { SEQUOIA_CSS_VARS } from "./types/styles";
