@@ -1,0 +1,8 @@
+:root {
+	--sequoia-fg-color: var(--vocs-color_text);
+	--sequoia-bg-color: var(--vocs-color_background);
+	--sequoia-border-color: var(--vocs-color_border);
+	--sequoia-accent-color: var(--vocs-color_link);
+	--sequoia-secondary-color: var(--vocs-color_text3);
+	--sequoia-border-radius: 8px;
+}

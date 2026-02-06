@@ -1,14 +1,19 @@
 {
-	"siteUrl": "https://sequoia.pub",
-	"contentDir": "docs/pages/blog",
-	"imagesDir": "docs/public",
-	"publicDir": "docs/public",
-	"outputDir": "docs/dist",
-	"pathPrefix": "/blog",
-	"publicationUri": "at://did:plc:kq6bvkw4sxof3vdinuitehn5/site.standard.publication/3mdnzt4rqr42v",
-	"pdsUrl": "https://andromeda.social",
-	"frontmatter": {
-		"publishDate": "date"
-	},
-	"ignore": ["index.mdx"]
+  "siteUrl": "https://sequoia.pub",
+  "contentDir": "docs/pages/blog",
+  "imagesDir": "docs/public",
+  "publicDir": "docs/public",
+  "outputDir": "docs/dist",
+  "pathPrefix": "/blog",
+  "publicationUri": "at://did:plc:kq6bvkw4sxof3vdinuitehn5/site.standard.publication/3mdnzt4rqr42v",
+  "pdsUrl": "https://andromeda.social",
+  "frontmatter": {
+    "publishDate": "date"
+  },
+  "ignore": [
+    "index.mdx"
+  ],
+  "ui": {
+    "components": "docs/components"
+  }
 }
