@@ -20,6 +20,11 @@ export interface BlueskyConfig {
 	maxAgeDays?: number; // Only post if published within N days (default: 7)
 }
 
+// UI components configuration
+export interface UIConfig {
+	components: string; // Directory to install UI components (default: src/components)
+}
+
 export interface PublisherConfig {
 	siteUrl: string;
 	contentDir: string;
@@ -36,6 +41,7 @@ export interface PublisherConfig {
 	stripDatePrefix?: boolean; // Remove YYYY-MM-DD- prefix from filenames (Jekyll-style, default: false)
 	textContentField?: string; // Frontmatter field to use for textContent instead of markdown body
 	bluesky?: BlueskyConfig; // Optional Bluesky posting configuration
+	ui?: UIConfig; // Optional UI components configuration
 }
 
 // Legacy credentials format (for backward compatibility during migration)

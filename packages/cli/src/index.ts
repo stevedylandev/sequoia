@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { run, subcommands } from "cmd-ts";
+import { addCommand } from "./commands/add";
 import { authCommand } from "./commands/auth";
 import { initCommand } from "./commands/init";
 import { injectCommand } from "./commands/inject";
@@ -35,8 +36,9 @@ Publish evergreen content to the ATmosphere
 
 > https://tangled.org/stevedylan.dev/sequoia
 	`,
-	version: "0.3.3",
+	version: "0.4.0",
 	cmds: {
+		add: addCommand,
 		auth: authCommand,
 		init: initCommand,
 		inject: injectCommand,

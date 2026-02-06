@@ -16,7 +16,7 @@
 	"scripts": {
 		"lint": "biome lint --write",
 		"format": "biome format --write",
-		"build": "bun build src/index.ts --target node --outdir dist",
+		"build": "bun build src/index.ts --target node --outdir dist && mkdir -p dist/components && cp src/components/*.js dist/components/",
 		"dev": "bun run build && bun link",
 		"deploy": "bun run build && bun publish"
 	},
