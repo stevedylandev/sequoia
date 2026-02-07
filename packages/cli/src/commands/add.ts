@@ -3,8 +3,8 @@ import { existsSync } from "node:fs";
 import * as path from "node:path";
 import { command, positional, string } from "cmd-ts";
 import { intro, outro, text, spinner, log, note } from "@clack/prompts";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 import { findConfig, loadConfig } from "../lib/config";
 import type { PublisherConfig } from "../lib/types";
 
@@ -83,7 +83,7 @@ export const addCommand = command({
 					await fs.writeFile(
 						configPath,
 						JSON.stringify(existingConfig, null, 2),
-						"utf-8"
+						"utf-8",
 					);
 					s.stop("Updated sequoia.json with UI configuration");
 				} catch (error) {
@@ -100,7 +100,7 @@ export const addCommand = command({
 				await fs.writeFile(
 					path.join(process.cwd(), "sequoia.json"),
 					JSON.stringify(minimalConfig, null, 2),
-					"utf-8"
+					"utf-8",
 				);
 				s.stop("Created sequoia.json with UI configuration");
 			}
@@ -149,7 +149,7 @@ export const addCommand = command({
 				`<${componentName}></${componentName}>\n\n` +
 				`The component will automatically read the document URI from:\n` +
 				`<link rel="site.standard.document" href="at://...">`,
-			"Usage"
+			"Usage",
 		);
 
 		outro(`${componentName} added successfully!`);

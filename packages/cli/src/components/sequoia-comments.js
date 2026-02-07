@@ -800,9 +800,9 @@ class SequoiaComments extends BaseElement {
 	 * Render a single comment
 	 * @param {any} post - Post data
 	 * @param {boolean} showThreadLine - Whether to show the connecting thread line
-	 * @param {number} index - Index in the flattened thread (0 = top-level)
+	 * @param {number} _index - Index in the flattened thread (0 = top-level)
 	 */
-	renderComment(post, showThreadLine = false, index = 0) {
+	renderComment(post, showThreadLine = false, _index = 0) {
 		const author = post.author;
 		const displayName = author.displayName || author.handle;
 		const avatarHtml = author.avatar
