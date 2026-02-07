@@ -1,10 +1,10 @@
 # Comments
 
-Sequoia has a small UI trick up its sleve that lets you easily display comments on your blog posts through Bluesky posts. This is the general flow: 
+Sequoia has a small UI trick up its sleeve that lets you easily display comments on your blog posts through Bluesky posts. This is the general flow:
 
-1. Setup your blog with `sequoia init`, and when prompted at the end to enable BlueSky posts, select `yes`. 
-2. When you run `sequoia pubish` the CLI will publish a BlueSky post and link it to your `site.standard.document` record for your post. 
-3. As people reply to the BlueSky post, the replies can be rendered as comments below your post using the Sequoia UI web component. 
+1. Setup your blog with `sequoia init`, and when prompted at the end to enable BlueSky posts, select `yes`.
+2. When you run `sequoia publish` the CLI will publish a BlueSky post and link it to your `site.standard.document` record for your post.
+3. As people reply to the BlueSky post, the replies can be rendered as comments below your post using the Sequoia UI web component.
 
 ## Setup
 
@@ -14,26 +14,122 @@ Run the following command in your project to install the comments web component.
 sequoia add sequoia-comments
 ```
 
-Then in your HTML or blog post template, import the component with a script tag or module import.
-
-```html
-<body>
-  <h1>Blog Post Title</h1>
-  <!--Content-->
-  <h2>Comments</h2>
-  
-  <sequoia-comments></sequoia-comments> // [!code focus]
-  <script type="module" src="./src/components/sequoia-comments.js"></script> // [!code focus]
-  
-</body>
-</html>
-```
-
-The web components will look for the `<link rel="site.standard.document" href="atUri"/>` in your HTML head, then using the `atUri` fetch the post and the replies. 
+The web component will look for the `<link rel="site.standard.document" href="atUri"/>` in your HTML head, then using the `atUri` fetch the post and the replies.
 
 ::::tip
 For more information on the `<link>` tags, check out the [verification guide](/verifying)
 ::::
+
+## Usage
+
+Since `sequoia-comments` is a standard Web Component, it works with any framework. Choose your setup below:
+
+:::code-group
+
+```html [HTML]
+<body>
+  <h1>Blog Post Title</h1>
+  <!--Content-->
+  <h2>Comments</h2>
+
+  <sequoia-comments></sequoia-comments>
+  <script type="module" src="./src/components/sequoia-comments.js"></script>
+</body>
+```
+
+```tsx [React]
+// Import the component (registers the custom element)
+import './components/sequoia-comments.js';
+
+function BlogPost() {
+  return (
+    <article>
+      <h1>Blog Post Title</h1>
+      {/* Content */}
+      <h2>Comments</h2>
+      <sequoia-comments />
+    </article>
+  );
+}
+```
+
+```vue [Vue]
+<script setup>
+import './components/sequoia-comments.js';
+</script>
+
+<template>
+  <article>
+    <h1>Blog Post Title</h1>
+    <!-- Content -->
+    <h2>Comments</h2>
+    <sequoia-comments />
+  </article>
+</template>
+```
+
+```svelte [Svelte]
+<script>
+  import './components/sequoia-comments.js';
+</script>
+
+<article>
+  <h1>Blog Post Title</h1>
+  <!-- Content -->
+  <h2>Comments</h2>
+  <sequoia-comments />
+</article>
+```
+
+```astro [Astro]
+<article>
+  <h1>Blog Post Title</h1>
+  <!-- Content -->
+  <h2>Comments</h2>
+  <sequoia-comments />
+  <script>
+    import './components/sequoia-comments.js';
+  </script>
+</article>
+```
+
+:::
+
+### TypeScript Support
+
+If you're using TypeScript with React, add this type declaration to avoid JSX errors:
+
+```ts [custom-elements.d.ts]
+declare namespace JSX {
+  interface IntrinsicElements {
+    'sequoia-comments': React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLElement> & {
+        'document-uri'?: string;
+        depth?: string | number;
+      },
+      HTMLElement
+    >;
+  }
+}
+```
+
+### Vue Configuration
+
+For Vue, you may need to configure the compiler to recognize custom elements:
+
+```ts [vite.config.ts]
+export default defineConfig({
+  plugins: [
+    vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag) => tag === 'sequoia-comments'
+        }
+      }
+    })
+  ]
+});
+```
 
 ## Configuration
 
