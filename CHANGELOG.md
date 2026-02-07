@@ -1,10 +1,26 @@
-## [0.3.3.] - 2026-02-04
+## [0.4.0] - 2026-02-07
+
+### 🚀 Features
+
+- Initial ui components
+
+### ⚙️ Miscellaneous Tasks
+
+- Small updates
+- Refactored package into existing cli
+- Tested comments in docs
+- Updated thread style and added test.html
+- Update docs
+- Updated comments
+- Lint
+
+## [0.3.3] - 2026-02-05
 
 ### ⚙️ Miscellaneous Tasks
 
 - Cleaned up remaining auth implementations
 - Format
-
+- Release 0.3.3
 ## [0.3.2] - 2026-02-05
 
 ### 🐛 Bug Fixes
