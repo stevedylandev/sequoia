@@ -99,7 +99,6 @@ const styles = `
 	align-items: center;
 	margin-bottom: 1rem;
 	padding-bottom: 0.75rem;
-	border-bottom: 1px solid var(--sequoia-border-color, #e5e7eb);
 }
 
 .sequoia-comments-title {
@@ -136,22 +135,34 @@ const styles = `
 .sequoia-comments-list {
 	display: flex;
 	flex-direction: column;
-	gap: 0;
+}
+
+.sequoia-thread {
+	border-top: 1px solid var(--sequoia-border-color, #e5e7eb);
+	padding-bottom: 1rem;
+}
+
+.sequoia-thread + .sequoia-thread {
+	margin-top: 0.5rem;
+}
+
+.sequoia-thread:last-child {
+	border-bottom: 1px solid var(--sequoia-border-color, #e5e7eb);
 }
 
 .sequoia-comment {
-	padding: 1rem;
-	background: var(--sequoia-bg-color, #ffffff);
-	border: 1px solid var(--sequoia-border-color, #e5e7eb);
-	border-radius: var(--sequoia-border-radius, 8px);
-	margin-bottom: 0.75rem;
+	display: flex;
+	gap: 0.75rem;
+	padding-top: 1rem;
 }
 
-.sequoia-comment-header {
+.sequoia-comment-avatar-column {
 	display: flex;
+	flex-direction: column;
 	align-items: center;
-	gap: 0.75rem;
-	margin-bottom: 0.5rem;
+	flex-shrink: 0;
+	width: 2.5rem;
+	position: relative;
 }
 
 .sequoia-comment-avatar {
@@ -161,6 +172,8 @@ const styles = `
 	background: var(--sequoia-border-color, #e5e7eb);
 	object-fit: cover;
 	flex-shrink: 0;
+	position: relative;
+	z-index: 1;
 }
 
 .sequoia-comment-avatar-placeholder {
@@ -175,12 +188,31 @@ const styles = `
 	color: var(--sequoia-secondary-color, #6b7280);
 	font-weight: 600;
 	font-size: 1rem;
+	position: relative;
+	z-index: 1;
 }
 
-.sequoia-comment-meta {
-	display: flex;
-	flex-direction: column;
+.sequoia-thread-line {
+	position: absolute;
+	top: 2.5rem;
+	bottom: calc(-1rem - 0.5rem);
+	left: 50%;
+	transform: translateX(-50%);
+	width: 2px;
+	background: var(--sequoia-border-color, #e5e7eb);
+}
+
+.sequoia-comment-content {
+	flex: 1;
 	min-width: 0;
+}
+
+.sequoia-comment-header {
+	display: flex;
+	align-items: baseline;
+	gap: 0.5rem;
+	margin-bottom: 0.25rem;
+	flex-wrap: wrap;
 }
 
 .sequoia-comment-author {
@@ -205,10 +237,14 @@ const styles = `
 }
 
 .sequoia-comment-time {
-	font-size: 0.75rem;
+	font-size: 0.875rem;
 	color: var(--sequoia-secondary-color, #6b7280);
-	margin-left: auto;
 	flex-shrink: 0;
+}
+
+.sequoia-comment-time::before {
+	content: "·";
+	margin-right: 0.5rem;
 }
 
 .sequoia-comment-text {
@@ -224,21 +260,6 @@ const styles = `
 
 .sequoia-comment-text a:hover {
 	text-decoration: underline;
-}
-
-.sequoia-comment-replies {
-	margin-top: 0.75rem;
-	margin-left: 1.5rem;
-	padding-left: 1rem;
-	border-left: 2px solid var(--sequoia-border-color, #e5e7eb);
-}
-
-.sequoia-comment-replies .sequoia-comment {
-	margin-bottom: 0.5rem;
-}
-
-.sequoia-comment-replies .sequoia-comment:last-child {
-	margin-bottom: 0;
 }
 
 .sequoia-bsky-logo {
@@ -318,7 +339,7 @@ function renderTextWithFacets(text, facets) {
 
 	// Sort facets by start index
 	const sortedFacets = [...facets].sort(
-		(a, b) => a.index.byteStart - b.index.byteStart
+		(a, b) => a.index.byteStart - b.index.byteStart,
 	);
 
 	let result = "";
@@ -418,7 +439,7 @@ async function resolvePDS(did) {
 
 		// Find the PDS service endpoint
 		const pdsService = didDoc.service?.find(
-			(s) => s.id === "#atproto_pds" || s.type === "AtprotoPersonalDataServer"
+			(s) => s.id === "#atproto_pds" || s.type === "AtprotoPersonalDataServer",
 		);
 		pdsUrl = pdsService?.serviceEndpoint;
 	} else if (did.startsWith("did:web:")) {
@@ -432,7 +453,7 @@ async function resolvePDS(did) {
 		const didDoc = await didDocResponse.json();
 
 		const pdsService = didDoc.service?.find(
-			(s) => s.id === "#atproto_pds" || s.type === "AtprotoPersonalDataServer"
+			(s) => s.id === "#atproto_pds" || s.type === "AtprotoPersonalDataServer",
 		);
 		pdsUrl = pdsService?.serviceEndpoint;
 	} else {
@@ -492,7 +513,7 @@ async function getDocument(atUri) {
  */
 async function getPostThread(postUri, depth = 6) {
 	const url = new URL(
-		"https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread"
+		"https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread",
 	);
 	url.searchParams.set("uri", postUri);
 	url.searchParams.set("depth", depth.toString());
@@ -547,10 +568,7 @@ const BLUESKY_ICON = `<svg class="sequoia-bsky-logo" viewBox="0 0 600 530" fill=
 // ============================================================================
 
 // SSR-safe base class - use HTMLElement in browser, empty class in Node.js
-const BaseElement =
-	typeof HTMLElement !== "undefined"
-		? HTMLElement
-		: class {};
+const BaseElement = typeof HTMLElement !== "undefined" ? HTMLElement : class {};
 
 class SequoiaComments extends BaseElement {
 	constructor() {
@@ -588,7 +606,7 @@ class SequoiaComments extends BaseElement {
 
 		// Then scan for link tag in document head
 		const linkTag = document.querySelector(
-			'link[rel="site.standard.document"]'
+			'link[rel="site.standard.document"]',
 		);
 		return linkTag?.href ?? null;
 	}
@@ -715,8 +733,11 @@ class SequoiaComments extends BaseElement {
 				break;
 
 			case "loaded": {
-				const replies = this.state.thread.replies?.filter(isThreadViewPost) ?? [];
-				const commentsHtml = replies.map((reply) => this.renderComment(reply)).join("");
+				const replies =
+					this.state.thread.replies?.filter(isThreadViewPost) ?? [];
+				const threadsHtml = replies
+					.map((reply) => this.renderThread(reply))
+					.join("");
 				const commentCount = this.countComments(replies);
 
 				this.shadow.innerHTML = `
@@ -730,7 +751,7 @@ class SequoiaComments extends BaseElement {
 							</a>
 						</div>
 						<div class="sequoia-comments-list">
-							${commentsHtml}
+							${threadsHtml}
 						</div>
 					</div>
 				`;
@@ -739,8 +760,49 @@ class SequoiaComments extends BaseElement {
 		}
 	}
 
-	renderComment(thread) {
-		const { post } = thread;
+	/**
+	 * Flatten a thread into a linear list of comments
+	 * @param {ThreadViewPost} thread - Thread to flatten
+	 * @returns {Array<{post: any, hasMoreReplies: boolean}>} Flattened comments
+	 */
+	flattenThread(thread) {
+		const result = [];
+		const nestedReplies = thread.replies?.filter(isThreadViewPost) ?? [];
+
+		result.push({
+			post: thread.post,
+			hasMoreReplies: nestedReplies.length > 0,
+		});
+
+		// Recursively flatten nested replies
+		for (const reply of nestedReplies) {
+			result.push(...this.flattenThread(reply));
+		}
+
+		return result;
+	}
+
+	/**
+	 * Render a complete thread (top-level comment + all nested replies)
+	 */
+	renderThread(thread) {
+		const flatComments = this.flattenThread(thread);
+		const commentsHtml = flatComments
+			.map((item, index) =>
+				this.renderComment(item.post, item.hasMoreReplies, index),
+			)
+			.join("");
+
+		return `<div class="sequoia-thread">${commentsHtml}</div>`;
+	}
+
+	/**
+	 * Render a single comment
+	 * @param {any} post - Post data
+	 * @param {boolean} showThreadLine - Whether to show the connecting thread line
+	 * @param {number} index - Index in the flattened thread (0 = top-level)
+	 */
+	renderComment(post, showThreadLine = false, index = 0) {
 		const author = post.author;
 		const displayName = author.displayName || author.handle;
 		const avatarHtml = author.avatar
@@ -750,28 +812,26 @@ class SequoiaComments extends BaseElement {
 		const profileUrl = `https://bsky.app/profile/${author.did}`;
 		const textHtml = renderTextWithFacets(post.record.text, post.record.facets);
 		const timeAgo = formatRelativeTime(post.record.createdAt);
-
-		// Render nested replies
-		const nestedReplies = thread.replies?.filter(isThreadViewPost) ?? [];
-		const repliesHtml =
-			nestedReplies.length > 0
-				? `<div class="sequoia-comment-replies">${nestedReplies.map((r) => this.renderComment(r)).join("")}</div>`
-				: "";
+		const threadLineHtml = showThreadLine
+			? '<div class="sequoia-thread-line"></div>'
+			: "";
 
 		return `
 			<div class="sequoia-comment">
-				<div class="sequoia-comment-header">
+				<div class="sequoia-comment-avatar-column">
 					${avatarHtml}
-					<div class="sequoia-comment-meta">
+					${threadLineHtml}
+				</div>
+				<div class="sequoia-comment-content">
+					<div class="sequoia-comment-header">
 						<a href="${profileUrl}" target="_blank" rel="noopener noreferrer" class="sequoia-comment-author">
 							${escapeHtml(displayName)}
 						</a>
 						<span class="sequoia-comment-handle">@${escapeHtml(author.handle)}</span>
+						<span class="sequoia-comment-time">${timeAgo}</span>
 					</div>
-					<span class="sequoia-comment-time">${timeAgo}</span>
+					<p class="sequoia-comment-text">${textHtml}</p>
 				</div>
-				<p class="sequoia-comment-text">${textHtml}</p>
-				${repliesHtml}
 			</div>
 		`;
 	}

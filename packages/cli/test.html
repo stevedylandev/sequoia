@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sequoia Comments Test</title>
+  <!-- Link to a published document - replace with your own AT URI -->
+  <link rel="site.standard.document" href="at://did:plc:kq6bvkw4sxof3vdinuitehn5/site.standard.document/3mdnztyhoem2v">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      line-height: 1.6;
+      background-color: #1A1A1A;
+      color: #F5F3EF;
+    }
+    h1 {
+      margin-bottom: 2rem;
+    }
+    /* Custom styling example */
+     :root {
+      --sequoia-accent-color: #3A5A40;
+      --sequoia-border-radius: 12px;
+      --sequoia-bg-color: #1a1a1a;
+      --sequoia-fg-color: #F5F3EF;
+      --sequoia-border-color: #333;
+      --sequoia-secondary-color: #8B7355;
+    }
+  </style>
+</head>
+<body>
+  <h1>Blog Post Title</h1>
+  <p>This is a test page for the sequoia-comments web component.</p>
+  <p>The component will look for a <code>&lt;link rel="site.standard.document"&gt;</code> tag in the document head to find the AT Protocol document, then fetch and display Bluesky replies as comments.</p>
+
+  <h2>Comments</h2>
+  <sequoia-comments></sequoia-comments>
+
+  <script type="module" src="./src/components/sequoia-comments.js"></script>
+</body>
+</html>
