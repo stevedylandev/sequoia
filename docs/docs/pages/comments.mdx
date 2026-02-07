@@ -1,0 +1,83 @@
+# Comments
+
+Sequoia has a small UI trick up its sleve that lets you easily display comments on your blog posts through Bluesky posts. This is the general flow: 
+
+1. Setup your blog with `sequoia init`, and when prompted at the end to enable BlueSky posts, select `yes`. 
+2. When you run `sequoia pubish` the CLI will publish a BlueSky post and link it to your `site.standard.document` record for your post. 
+3. As people reply to the BlueSky post, the replies can be rendered as comments below your post using the Sequoia UI web component. 
+
+## Setup
+
+Run the following command in your project to install the comments web component. It will ask you where you would like to store the component file.
+
+```bash [Terminal]
+sequoia add sequoia-comments
+```
+
+Then in your HTML or blog post template, import the component with a script tag or module import.
+
+```html
+<body>
+  <h1>Blog Post Title</h1>
+  <!--Content-->
+  <h2>Comments</h2>
+  
+  <sequoia-comments></sequoia-comments> // [!code focus]
+  <script type="module" src="./src/components/sequoia-comments.js"></script> // [!code focus]
+  
+</body>
+</html>
+```
+
+The web components will look for the `<link rel="site.standard.document" href="atUri"/>` in your HTML head, then using the `atUri` fetch the post and the replies. 
+
+::::tip
+For more information on the `<link>` tags, check out the [verification guide](/verifying)
+::::
+
+## Configuration
+
+The comments web component has several configuration options available.
+
+### Attributes
+
+The `<sequoia-comments>` component accepts the following attributes:
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `document-uri` | `string` | - | AT Protocol URI for the document. Optional if a `<link rel="site.standard.document">` tag exists in the page head. |
+| `depth` | `number` | `6` | Maximum depth of nested replies to fetch. |
+
+```html
+<!-- Use attributes for explicit control -->
+<sequoia-comments
+  document-uri="at://did:plc:example/site.standard.document/abc123"
+  depth="10">
+</sequoia-comments>
+```
+
+### Styling
+
+The component uses CSS custom properties for theming. Set these in your `:root` or parent element to customize the appearance:
+
+| CSS Property | Default | Description |
+|--------------|---------|-------------|
+| `--sequoia-fg-color` | `#1f2937` | Text color |
+| `--sequoia-bg-color` | `#ffffff` | Background color |
+| `--sequoia-border-color` | `#e5e7eb` | Border color |
+| `--sequoia-accent-color` | `#2563eb` | Accent/link color |
+| `--sequoia-secondary-color` | `#6b7280` | Secondary text color (handles, timestamps) |
+| `--sequoia-border-radius` | `8px` | Border radius for cards and buttons |
+
+### Example: Dark Theme
+
+```css
+:root {
+  --sequoia-accent-color: #3A5A40;
+  --sequoia-border-radius: 12px;
+  --sequoia-bg-color: #1a1a1a;
+  --sequoia-fg-color: #F5F3EF;
+  --sequoia-border-color: #333;
+  --sequoia-secondary-color: #8B7355;
+}
+```

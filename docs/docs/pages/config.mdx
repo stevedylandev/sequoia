@@ -19,8 +19,10 @@
 | `removeIndexFromSlug` | `boolean` | No | `false` | Remove `/index` or `/_index` suffix from slugs |
 | `stripDatePrefix` | `boolean` | No | `false` | Remove `YYYY-MM-DD-` date prefixes from slugs (Jekyll-style) |
 | `bluesky` | `object` | No | - | Bluesky posting configuration |
-| `bluesky.enabled` | `boolean` | No | `false` | Post to Bluesky when publishing documents |
+| `bluesky.enabled` | `boolean` | No | `false` | Post to Bluesky when publishing documents (also enables [comments](/comments)) |
 | `bluesky.maxAgeDays` | `number` | No | `30` | Only post documents published within this many days |
+| `ui` | `object` | No | - | UI components configuration |
+| `ui.components` | `string` | No | `"src/components"` | Directory where UI components are installed |
 
 ### Example
 
@@ -41,6 +43,9 @@
   "bluesky": {
     "enabled": true,
     "maxAgeDays": 30
+  },
+  "ui": {
+    "components": "src/components"
   }
 }
 ```

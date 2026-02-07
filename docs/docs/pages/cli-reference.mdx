@@ -32,6 +32,24 @@ FLAGS:
 
 Use this as an alternative to `login` when OAuth isn't available or for CI environments.
 
+## `add`
+
+```bash [Terminal]
+sequoia add <component>
+> Add a UI component to your project
+
+ARGUMENTS:
+  component - The name of the component to add
+
+FLAGS:
+  --help, -h - show help [optional]
+```
+
+Available components:
+- `sequoia-comments` - Display Bluesky replies as comments on your blog posts
+
+The component will be installed to the directory specified in `ui.components` (default: `src/components`). See the [Comments guide](/comments) for usage details.
+
 ## `init`
 
 ```bash [Terminal]
