@@ -14,6 +14,7 @@
  * Attributes:
  *   - document-uri: AT Protocol URI for the document (optional if link tag exists)
  *   - depth: Maximum depth of nested replies to fetch (default: 6)
+ *   - hide: Set to "auto" to hide if no document link is detected
  *
  * CSS Custom Properties:
  *   - --sequoia-fg-color: Text color (default: #1f2937)
@@ -573,13 +574,25 @@ const BaseElement = typeof HTMLElement !== "undefined" ? HTMLElement : class {};
 class SequoiaComments extends BaseElement {
 	constructor() {
 		super();
-		this.shadow = this.attachShadow({ mode: "open" });
+		const shadow = this.attachShadow({ mode: "open" });
+
+		const styleTag = document.createElement("style");
+		shadow.appendChild(styleTag);
+		styleTag.innerText = styles;
+
+		const container = document.createElement("div");
+		shadow.appendChild(container);
+		container.className = "sequoia-comments-container";
+		container.part = "container";
+
+		this.commentsContainer = container;
 		this.state = { type: "loading" };
 		this.abortController = null;
+
 	}
 
 	static get observedAttributes() {
-		return ["document-uri", "depth"];
+		return ["document-uri", "depth", "hide"];
 	}
 
 	connectedCallback() {
@@ -614,6 +627,11 @@ class SequoiaComments extends BaseElement {
 	get depth() {
 		const depthAttr = this.getAttribute("depth");
 		return depthAttr ? parseInt(depthAttr, 10) : 6;
+	}
+
+	get hide() {
+		const hideAttr = this.getAttribute("hide");
+		return hideAttr === "auto";
 	}
 
 	async loadComments() {
@@ -666,68 +684,54 @@ class SequoiaComments extends BaseElement {
 	}
 
 	render() {
-		const styleTag = `<style>${styles}</style>`;
-
 		switch (this.state.type) {
 			case "loading":
-				this.shadow.innerHTML = `
-					${styleTag}
-					<div class="sequoia-comments-container">
-						<div class="sequoia-loading">
-							<span class="sequoia-loading-spinner"></span>
-							Loading comments...
-						</div>
+				this.commentsContainer.innerHTML = `
+					<div class="sequoia-loading">
+						<span class="sequoia-loading-spinner"></span>
+						Loading comments...
 					</div>
 				`;
 				break;
 
 			case "no-document":
-				this.shadow.innerHTML = `
-					${styleTag}
-					<div class="sequoia-comments-container">
-						<div class="sequoia-warning">
-							No document found. Add a <code>&lt;link rel="site.standard.document" href="at://..."&gt;</code> tag to your page.
-						</div>
+				this.commentsContainer.innerHTML = `
+					<div class="sequoia-warning">
+						No document found. Add a <code>&lt;link rel="site.standard.document" href="at://..."&gt;</code> tag to your page.
 					</div>
 				`;
+				if (this.hide) {
+					this.commentsContainer.style.display = 'none';
+				}
 				break;
 
 			case "no-comments-enabled":
-				this.shadow.innerHTML = `
-					${styleTag}
-					<div class="sequoia-comments-container">
-						<div class="sequoia-empty">
-							Comments are not enabled for this post.
-						</div>
+				this.commentsContainer.innerHTML = `
+					<div class="sequoia-empty">
+						Comments are not enabled for this post.
 					</div>
 				`;
 				break;
 
 			case "empty":
-				this.shadow.innerHTML = `
-					${styleTag}
-					<div class="sequoia-comments-container">
-						<div class="sequoia-comments-header">
-							<h3 class="sequoia-comments-title">Comments</h3>
-							<a href="${this.state.postUrl}" target="_blank" rel="noopener noreferrer" class="sequoia-reply-button">
-								${BLUESKY_ICON}
-								Reply on Bluesky
-							</a>
-						</div>
-						<div class="sequoia-empty">
-							No comments yet. Be the first to reply on Bluesky!
-						</div>
+				this.commentsContainer.innerHTML = `
+					<div class="sequoia-comments-header">
+						<h3 class="sequoia-comments-title">Comments</h3>
+						<a href="${this.state.postUrl}" target="_blank" rel="noopener noreferrer" class="sequoia-reply-button">
+							${BLUESKY_ICON}
+							Reply on Bluesky
+						</a>
+					</div>
+					<div class="sequoia-empty">
+						No comments yet. Be the first to reply on Bluesky!
 					</div>
 				`;
 				break;
 
 			case "error":
-				this.shadow.innerHTML = `
-					${styleTag}
-					<div class="sequoia-comments-container">
-						<div class="sequoia-error">
-							Failed to load comments: ${escapeHtml(this.state.message)}
-						</div>
+				this.commentsContainer.innerHTML = `
+					<div class="sequoia-error">
+						Failed to load comments: ${escapeHtml(this.state.message)}
 					</div>
 				`;
 				break;
@@ -740,19 +744,16 @@ class SequoiaComments extends BaseElement {
 					.join("");
 				const commentCount = this.countComments(replies);
 
-				this.shadow.innerHTML = `
-					${styleTag}
-					<div class="sequoia-comments-container">
-						<div class="sequoia-comments-header">
-							<h3 class="sequoia-comments-title">${commentCount} Comment${commentCount !== 1 ? "s" : ""}</h3>
-							<a href="${this.state.postUrl}" target="_blank" rel="noopener noreferrer" class="sequoia-reply-button">
-								${BLUESKY_ICON}
-								Reply on Bluesky
-							</a>
-						</div>
-						<div class="sequoia-comments-list">
-							${threadsHtml}
-						</div>
+				this.commentsContainer.innerHTML = `
+					<div class="sequoia-comments-header">
+						<h3 class="sequoia-comments-title">${commentCount} Comment${commentCount !== 1 ? "s" : ""}</h3>
+						<a href="${this.state.postUrl}" target="_blank" rel="noopener noreferrer" class="sequoia-reply-button">
+							${BLUESKY_ICON}
+							Reply on Bluesky
+						</a>
+					</div>
+					<div class="sequoia-comments-list">
+						${threadsHtml}
 					</div>
 				`;
 				break;
