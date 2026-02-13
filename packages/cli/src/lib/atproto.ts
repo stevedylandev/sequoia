@@ -2,7 +2,7 @@ import { Agent, AtpAgent } from "@atproto/api";
 import * as mimeTypes from "mime-types";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { stripMarkdownForText } from "./markdown";
+import { stripMarkdownForText, resolvePostPath } from "./markdown";
 import { getOAuthClient } from "./oauth-client";
 import type {
 	BlobObject,
@@ -245,8 +245,7 @@ export async function createDocument(
 	config: PublisherConfig,
 	coverImage?: BlobObject,
 ): Promise<string> {
-	const pathPrefix = config.pathPrefix || "/posts";
-	const postPath = `${pathPrefix}/${post.slug}`;
+	const postPath = resolvePostPath(post, config.pathPrefix, config.pathTemplate);
 	const publishDate = new Date(post.frontmatter.publishDate);
 
 	// Determine textContent: use configured field from frontmatter, or fallback to markdown body
@@ -307,8 +306,7 @@ export async function updateDocument(
 
 	const [, , collection, rkey] = uriMatch;
 
-	const pathPrefix = config.pathPrefix || "/posts";
-	const postPath = `${pathPrefix}/${post.slug}`;
+	const postPath = resolvePostPath(post, config.pathPrefix, config.pathTemplate);
 	const publishDate = new Date(post.frontmatter.publishDate);
 
 	// Determine textContent: use configured field from frontmatter, or fallback to markdown body

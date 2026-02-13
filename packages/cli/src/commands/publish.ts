@@ -22,6 +22,7 @@ import {
 	scanContentDirectory,
 	getContentHash,
 	updateFrontmatterWithAtUri,
+	resolvePostPath,
 } from "../lib/markdown";
 import type { BlogPost, BlobObject, StrongRef } from "../lib/types";
 import { exitOnCancel } from "../lib/prompts";
@@ -240,8 +241,8 @@ export const publishCommand = command({
 
 			let postUrl = "";
 			if (verbose) {
-				const pathPrefix = config.pathPrefix || "/posts";
-				postUrl = `\n ${config.siteUrl}${pathPrefix}/${post.slug}`;
+				const postPath = resolvePostPath(post, config.pathPrefix, config.pathTemplate);
+				postUrl = `\n ${config.siteUrl}${postPath}`;
 			}
 			log.message(
 				`  ${icon} ${post.frontmatter.title} (${reason})${bskyNote}${postUrl}`,
@@ -349,8 +350,7 @@ export const publishCommand = command({
 						} else {
 							// Create Bluesky post
 							try {
-								const pathPrefix = config.pathPrefix || "/posts";
-								const canonicalUrl = `${config.siteUrl}${pathPrefix}/${post.slug}`;
+								const canonicalUrl = `${config.siteUrl}${resolvePostPath(post, config.pathPrefix, config.pathTemplate)}`;
 
 								bskyPostRef = await createBlueskyPost(agent, {
 									title: post.frontmatter.title,

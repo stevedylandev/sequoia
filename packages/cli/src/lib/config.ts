@@ -83,6 +83,7 @@ export function generateConfigTemplate(options: {
 	ignore?: string[];
 	removeIndexFromSlug?: boolean;
 	stripDatePrefix?: boolean;
+	pathTemplate?: string;
 	textContentField?: string;
 	bluesky?: BlueskyConfig;
 }): string {
@@ -127,6 +128,10 @@ export function generateConfigTemplate(options: {
 
 	if (options.stripDatePrefix) {
 		config.stripDatePrefix = options.stripDatePrefix;
+	}
+
+	if (options.pathTemplate) {
+		config.pathTemplate = options.pathTemplate;
 	}
 
 	if (options.textContentField) {

@@ -18,6 +18,7 @@
 | `ignore` | `string[]` | No | - | Glob patterns for files to ignore |
 | `removeIndexFromSlug` | `boolean` | No | `false` | Remove `/index` or `/_index` suffix from slugs |
 | `stripDatePrefix` | `boolean` | No | `false` | Remove `YYYY-MM-DD-` date prefixes from slugs (Jekyll-style) |
+| `pathTemplate` | `string` | No | - | URL path template with tokens (overrides `pathPrefix` + slug) |
 | `bluesky` | `object` | No | - | Bluesky posting configuration |
 | `bluesky.enabled` | `boolean` | No | `false` | Post to Bluesky when publishing documents (also enables [comments](/comments)) |
 | `bluesky.maxAgeDays` | `number` | No | `30` | Only post documents published within this many days |
@@ -34,6 +35,7 @@
   "publicDir": "public",
   "outputDir": "dist",
   "pathPrefix": "/posts",
+  "pathTemplate": "/blog/{year}/{month}/{slug}",
   "publicationUri": "at://did:plc:kq6bvkw4sxof3vdinuitehn5/site.standard.publication/3mdlavhxjhm2v",
   "pdsUrl": "https://andromeda.social",
   "frontmatter": {
@@ -113,6 +115,31 @@ Jekyll uses date prefixes in filenames (e.g., `2024-01-15-my-post.md`) for order
 ```
 
 This transforms `2024-01-15-my-post.md` into the slug `my-post`.
+
+### Path Template
+
+By default, the URL path for each post is `pathPrefix + "/" + slug` (e.g., `/posts/my-post`). For more control over URL structure, use `pathTemplate` with token placeholders:
+
+```json
+{
+  "pathTemplate": "/blog/{year}/{month}/{slug}"
+}
+```
+
+This would produce paths like `/blog/2024/01/my-post`.
+
+**Available tokens:**
+
+| Token | Description | Example |
+|-------|-------------|---------|
+| `{slug}` | The generated slug (from filepath or `slugField`) | `my-post` |
+| `{year}` | Four-digit publish year | `2024` |
+| `{month}` | Zero-padded publish month | `01` |
+| `{day}` | Zero-padded publish day | `15` |
+| `{title}` | Slugified post title | `my-first-post` |
+| `{field}` | Any frontmatter field value (string fields only) | - |
+
+When `pathTemplate` is set, it overrides `pathPrefix`. If `pathTemplate` is not set, the default `pathPrefix`/slug behavior is used.
 
 ### Ignoring Files
 

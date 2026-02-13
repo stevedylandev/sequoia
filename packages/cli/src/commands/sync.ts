@@ -14,6 +14,7 @@ import {
 	scanContentDirectory,
 	getContentHash,
 	updateFrontmatterWithAtUri,
+	resolvePostPath,
 } from "../lib/markdown";
 import { exitOnCancel } from "../lib/prompts";
 
@@ -147,11 +148,10 @@ export const syncCommand = command({
 		s.stop(`Found ${localPosts.length} local posts`);
 
 		// Build a map of path -> local post for matching
-		// Document path is like /posts/my-post-slug (or custom pathPrefix)
-		const pathPrefix = config.pathPrefix || "/posts";
+		// Document path is like /posts/my-post-slug (or custom pathPrefix/pathTemplate)
 		const postsByPath = new Map<string, (typeof localPosts)[0]>();
 		for (const post of localPosts) {
-			const postPath = `${pathPrefix}/${post.slug}`;
+			const postPath = resolvePostPath(post, config.pathPrefix, config.pathTemplate);
 			postsByPath.set(postPath, post);
 		}
 

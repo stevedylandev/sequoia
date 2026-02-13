@@ -231,6 +231,53 @@ export function getSlugFromOptions(
 	return slug;
 }
 
+export function resolvePathTemplate(
+	template: string,
+	post: BlogPost,
+): string {
+	const publishDate = new Date(post.frontmatter.publishDate);
+	const year = String(publishDate.getFullYear());
+	const month = String(publishDate.getMonth() + 1).padStart(2, "0");
+	const day = String(publishDate.getDate()).padStart(2, "0");
+
+	const slugifiedTitle = (post.frontmatter.title || "")
+		.toLowerCase()
+		.replace(/\s+/g, "-")
+		.replace(/[^\w-]/g, "");
+
+	// Replace known tokens
+	let result = template
+		.replace(/\{slug\}/g, post.slug)
+		.replace(/\{year\}/g, year)
+		.replace(/\{month\}/g, month)
+		.replace(/\{day\}/g, day)
+		.replace(/\{title\}/g, slugifiedTitle);
+
+	// Replace any remaining {field} tokens with raw frontmatter values
+	result = result.replace(/\{(\w+)\}/g, (_match, field: string) => {
+		const value = post.rawFrontmatter[field];
+		if (value != null && typeof value === "string") {
+			return value;
+		}
+		return "";
+	});
+
+	// Ensure leading slash
+	if (!result.startsWith("/")) {
+		result = `/${result}`;
+	}
+
+	return result;
+}
+
+export function resolvePostPath(post: BlogPost, pathPrefix?: string, pathTemplate?: string): string {
+	if (pathTemplate) {
+		return resolvePathTemplate(pathTemplate, post);
+	}
+	const prefix = pathPrefix || "/posts";
+	return `${prefix}/${post.slug}`;
+}
+
 export async function getContentHash(content: string): Promise<string> {
 	const encoder = new TextEncoder();
 	const data = encoder.encode(content);

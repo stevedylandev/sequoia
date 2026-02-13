@@ -39,6 +39,7 @@ export interface PublisherConfig {
 	ignore?: string[]; // Glob patterns for files to ignore (e.g., ["_index.md", "**/drafts/**"])
 	removeIndexFromSlug?: boolean; // Remove "/index" or "/_index" suffix from paths (default: false)
 	stripDatePrefix?: boolean; // Remove YYYY-MM-DD- prefix from filenames (Jekyll-style, default: false)
+	pathTemplate?: string; // URL path template with tokens like {year}/{month}/{day}/{slug} (overrides pathPrefix + slug)
 	textContentField?: string; // Frontmatter field to use for textContent instead of markdown body
 	bluesky?: BlueskyConfig; // Optional Bluesky posting configuration
 	ui?: UIConfig; // Optional UI components configuration

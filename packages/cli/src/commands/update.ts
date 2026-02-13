@@ -160,6 +160,7 @@ async function updateConfigFlow(
 			ignore: configUpdated.ignore,
 			removeIndexFromSlug: configUpdated.removeIndexFromSlug,
 			stripDatePrefix: configUpdated.stripDatePrefix,
+			pathTemplate: configUpdated.pathTemplate,
 			textContentField: configUpdated.textContentField,
 			bluesky: configUpdated.bluesky,
 		});
