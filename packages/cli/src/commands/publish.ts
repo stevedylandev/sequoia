@@ -241,7 +241,11 @@ export const publishCommand = command({
 
 			let postUrl = "";
 			if (verbose) {
-				const postPath = resolvePostPath(post, config.pathPrefix, config.pathTemplate);
+				const postPath = resolvePostPath(
+					post,
+					config.pathPrefix,
+					config.pathTemplate,
+				);
 				postUrl = `\n ${config.siteUrl}${postPath}`;
 			}
 			log.message(

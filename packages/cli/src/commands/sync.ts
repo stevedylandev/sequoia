@@ -151,7 +151,11 @@ export const syncCommand = command({
 		// Document path is like /posts/my-post-slug (or custom pathPrefix/pathTemplate)
 		const postsByPath = new Map<string, (typeof localPosts)[0]>();
 		for (const post of localPosts) {
-			const postPath = resolvePostPath(post, config.pathPrefix, config.pathTemplate);
+			const postPath = resolvePostPath(
+				post,
+				config.pathPrefix,
+				config.pathTemplate,
+			);
 			postsByPath.set(postPath, post);
 		}
 

@@ -231,10 +231,7 @@ export function getSlugFromOptions(
 	return slug;
 }
 
-export function resolvePathTemplate(
-	template: string,
-	post: BlogPost,
-): string {
+export function resolvePathTemplate(template: string, post: BlogPost): string {
 	const publishDate = new Date(post.frontmatter.publishDate);
 	const year = String(publishDate.getFullYear());
 	const month = String(publishDate.getMonth() + 1).padStart(2, "0");
@@ -270,7 +267,11 @@ export function resolvePathTemplate(
 	return result;
 }
 
-export function resolvePostPath(post: BlogPost, pathPrefix?: string, pathTemplate?: string): string {
+export function resolvePostPath(
+	post: BlogPost,
+	pathPrefix?: string,
+	pathTemplate?: string,
+): string {
 	if (pathTemplate) {
 		return resolvePathTemplate(pathTemplate, post);
 	}

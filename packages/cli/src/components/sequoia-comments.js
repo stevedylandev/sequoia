@@ -588,7 +588,6 @@ class SequoiaComments extends BaseElement {
 		this.commentsContainer = container;
 		this.state = { type: "loading" };
 		this.abortController = null;
-
 	}
 
 	static get observedAttributes() {
@@ -701,7 +700,7 @@ class SequoiaComments extends BaseElement {
 					</div>
 				`;
 				if (this.hide) {
-					this.commentsContainer.style.display = 'none';
+					this.commentsContainer.style.display = "none";
 				}
 				break;
 

@@ -245,7 +245,11 @@ export async function createDocument(
 	config: PublisherConfig,
 	coverImage?: BlobObject,
 ): Promise<string> {
-	const postPath = resolvePostPath(post, config.pathPrefix, config.pathTemplate);
+	const postPath = resolvePostPath(
+		post,
+		config.pathPrefix,
+		config.pathTemplate,
+	);
 	const publishDate = new Date(post.frontmatter.publishDate);
 
 	// Determine textContent: use configured field from frontmatter, or fallback to markdown body
@@ -306,7 +310,11 @@ export async function updateDocument(
 
 	const [, , collection, rkey] = uriMatch;
 
-	const postPath = resolvePostPath(post, config.pathPrefix, config.pathTemplate);
+	const postPath = resolvePostPath(
+		post,
+		config.pathPrefix,
+		config.pathTemplate,
+	);
 	const publishDate = new Date(post.frontmatter.publishDate);
 
 	// Determine textContent: use configured field from frontmatter, or fallback to markdown body
