@@ -1,3 +1,4 @@
 .wrangler
+.dev.vars
 
 .sequoia-state.json

@@ -5,16 +5,19 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vocs dev",
+		"dev:api": "wrangler dev",
 		"build": "vocs build && bun inject-og-tags.ts",
-		"deploy": "bun run build && sequoia inject && bunx wrangler pages deploy docs/dist",
+		"deploy": "bun run build && sequoia inject && wrangler deploy",
 		"preview": "vocs preview"
 	},
 	"dependencies": {
+		"hono": "latest",
 		"react": "latest",
 		"react-dom": "latest",
 		"vocs": "latest"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "latest",
 		"@types/react": "latest",
 		"typescript": "latest"
 	}
