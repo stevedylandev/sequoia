@@ -322,7 +322,16 @@ export async function updateDocument(
 		textContent = stripMarkdownForText(post.content);
 	}
 
+	// Fetch existing record to preserve PDS-side fields (e.g. bskyPostRef)
+	const existingResponse = await agent.com.atproto.repo.getRecord({
+		repo: agent.did!,
+		collection: collection!,
+		rkey: rkey!,
+	});
+	const existingRecord = existingResponse.data.value as Record<string, unknown>;
+
 	const record: Record<string, unknown> = {
+		...existingRecord,
 		$type: "site.standard.document",
 		title: post.frontmatter.title,
 		site: config.publicationUri,
