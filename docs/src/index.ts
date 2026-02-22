@@ -1,14 +1,15 @@
 import { Hono } from "hono";
+import auth from "./routes/auth";
 
 type Bindings = {
 	ASSETS: Fetcher;
+	SEQUOIA_SESSIONS: KVNamespace;
+	CLIENT_URL: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-app.get("/oauth/callback", (c) => {
-	return c.text("Not Implemented", 501);
-});
+app.route("/oauth", auth);
 
 app.get("/api/health", (c) => {
 	return c.json({ status: "ok" });

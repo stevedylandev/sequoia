@@ -11,6 +11,9 @@
 		"preview": "vocs preview"
 	},
 	"dependencies": {
+		"@atproto/oauth-client": "latest",
+		"@atproto/jwk-jose": "latest",
+		"@atproto-labs/handle-resolver": "latest",
 		"hono": "latest",
 		"react": "latest",
 		"react-dom": "latest",

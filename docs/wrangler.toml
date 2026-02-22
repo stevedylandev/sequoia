@@ -1,6 +1,7 @@
 name = "sequoia-docs"
 main = "src/index.ts"
 compatibility_date = "2025-04-01"
+compatibility_flags = ["nodejs_compat"]
 
 [assets]
 directory = "./docs/dist"
@@ -8,3 +9,10 @@ binding = "ASSETS"
 not_found_handling = "single-page-application"
 html_handling = "auto-trailing-slash"
 run_worker_first = ["/api/*", "/oauth/*"]
+
+[[kv_namespaces]]
+binding = "SEQUOIA_SESSIONS"
+id = "b9fedf2798a249669b3aeeaca70a0bf8"
+
+[vars]
+CLIENT_URL = "https://sequoia.pub"
