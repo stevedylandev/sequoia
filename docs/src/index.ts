@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import auth from "./routes/auth";
+import subscribe from "./routes/subscribe";
 
 type Bindings = {
 	ASSETS: Fetcher;
@@ -10,6 +11,7 @@ type Bindings = {
 const app = new Hono<{ Bindings: Bindings }>();
 
 app.route("/oauth", auth);
+app.route("/subscribe", subscribe);
 
 app.get("/api/health", (c) => {
 	return c.json({ status: "ok" });

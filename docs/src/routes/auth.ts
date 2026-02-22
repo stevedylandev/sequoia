@@ -1,4 +1,6 @@
+import { Agent } from "@atproto/api";
 import { Hono } from "hono";
+import { getCookie, deleteCookie } from "hono/cookie";
 import { createOAuthClient } from "../lib/oauth-client";
 import {
 	getSessionDid,
@@ -67,6 +69,43 @@ auth.get("/callback", async (c) => {
 
 		const client = createOAuthClient(c.env.SEQUOIA_SESSIONS, c.env.CLIENT_URL);
 		const { session } = await client.callback(params);
+
+		// Check for subscribe context cookie
+		const subscribeCtxKey = getCookie(c, "subscribe_ctx");
+		if (subscribeCtxKey) {
+			deleteCookie(c, "subscribe_ctx", { path: "/" });
+			const ctxJson = await c.env.SEQUOIA_SESSIONS.get(subscribeCtxKey);
+			if (ctxJson) {
+				await c.env.SEQUOIA_SESSIONS.delete(subscribeCtxKey);
+				const ctx = JSON.parse(ctxJson) as { pub: string; returnUrl: string };
+				try {
+					const agent = new Agent(session);
+					await agent.com.atproto.repo.createRecord({
+						repo: session.did,
+						collection: "site.standard.graph.subscription",
+						record: {
+							$type: "site.standard.graph.subscription",
+							publication: ctx.pub,
+						},
+					});
+					const returnUrl = new URL(ctx.returnUrl);
+					returnUrl.searchParams.set("subscribed", "true");
+					return c.redirect(returnUrl.toString(), 302);
+				} catch (err) {
+					// Duplicate subscription = treat as success
+					const msg = err instanceof Error ? err.message : String(err);
+					if (msg.includes("already exists") || msg.includes("Conflict")) {
+						const returnUrl = new URL(ctx.returnUrl);
+						returnUrl.searchParams.set("subscribed", "true");
+						return c.redirect(returnUrl.toString(), 302);
+					}
+					// Real error: redirect back with error param
+					const returnUrl = new URL(ctx.returnUrl);
+					returnUrl.searchParams.set("subscribe_error", encodeURIComponent(msg));
+					return c.redirect(returnUrl.toString(), 302);
+				}
+			}
+		}
 
 		// Resolve handle from DID
 		let handle: string | undefined;

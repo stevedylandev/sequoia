@@ -14,7 +14,32 @@ const COMPONENTS_DIR = path.join(__dirname, "components");
 
 const DEFAULT_COMPONENTS_PATH = "src/components";
 
-const AVAILABLE_COMPONENTS = ["sequoia-comments"];
+const AVAILABLE_COMPONENTS = ["sequoia-comments", "sequoia-subscribe"];
+
+function buildUsageNote(componentName: string, componentsDir: string): string {
+	const scriptTag = `<script type="module" src="${componentsDir}/${componentName}.js"></script>`;
+	const elementTag = `<${componentName}></${componentName}>`;
+
+	if (componentName === "sequoia-subscribe") {
+		return (
+			`Add to your HTML:\n\n` +
+			`${scriptTag}\n` +
+			`${elementTag}\n\n` +
+			`The component discovers the publication URI from (in order):\n` +
+			`  1. publication-uri attribute on the element\n` +
+			`  2. <link rel="site.standard.publication" href="at://..."> in your page head\n` +
+			`  3. /.well-known/site.standard.publication at your site root`
+		);
+	}
+
+	return (
+		`Add to your HTML:\n\n` +
+		`${scriptTag}\n` +
+		`${elementTag}\n\n` +
+		`The component will automatically read the document URI from:\n` +
+		`<link rel="site.standard.document" href="at://">`
+	);
+}
 
 export const addCommand = command({
 	name: "add",
@@ -142,15 +167,9 @@ export const addCommand = command({
 			process.exit(1);
 		}
 
-		// Show usage instructions
-		note(
-			`Add to your HTML:\n\n` +
-				`<script type="module" src="${componentsDir}/${componentName}.js"></script>\n` +
-				`<${componentName}></${componentName}>\n\n` +
-				`The component will automatically read the document URI from:\n` +
-				`<link rel="site.standard.document" href="at://...">`,
-			"Usage",
-		);
+		// Show component-specific usage instructions
+		const usageNote = buildUsageNote(componentName, componentsDir);
+		note(usageNote, "Usage");
 
 		outro(`${componentName} added successfully!`);
 	},

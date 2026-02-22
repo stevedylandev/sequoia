@@ -1,0 +1,183 @@
+# Subscribe Button
+
+Sequoia provides a `sequoia-subscribe` web component that lets readers subscribe to your publication directly from your website. When a reader clicks the button, they are redirected to [sequoia.pub/subscribe](https://sequoia.pub/subscribe) where they can authenticate with Bluesky to create a `site.standard.graph.subscription` record in their AT Protocol repository.
+
+## Setup
+
+Run the following command in your project to install the subscribe web component:
+
+```bash [Terminal]
+sequoia add sequoia-subscribe
+```
+
+The component automatically discovers your publication URI from:
+
+1. The `publication-uri` attribute on the element
+2. A `<link rel="site.standard.publication" href="at://...">` tag in your page head
+3. `/.well-known/site.standard.publication` at your site root
+
+::::tip
+The `<link rel="site.standard.publication">` tag is added automatically by `sequoia inject`. For more information, check out the [verification guide](/verifying).
+::::
+
+## Usage
+
+Since `sequoia-subscribe` is a standard Web Component, it works with any framework. Choose your setup below:
+
+:::code-group
+
+```html [HTML]
+<body>
+  <h1>My Publication</h1>
+
+  <sequoia-subscribe></sequoia-subscribe>
+  <script type="module" src="./src/components/sequoia-subscribe.js"></script>
+</body>
+```
+
+```tsx [React]
+// Import the component (registers the custom element)
+import './components/sequoia-subscribe.js';
+
+function BlogHeader() {
+  return (
+    <header>
+      <h1>My Publication</h1>
+      <sequoia-subscribe />
+    </header>
+  );
+}
+```
+
+```vue [Vue]
+<script setup>
+import './components/sequoia-subscribe.js';
+</script>
+
+<template>
+  <header>
+    <h1>My Publication</h1>
+    <sequoia-subscribe />
+  </header>
+</template>
+```
+
+```svelte [Svelte]
+<script>
+  import './components/sequoia-subscribe.js';
+</script>
+
+<header>
+  <h1>My Publication</h1>
+  <sequoia-subscribe />
+</header>
+```
+
+```astro [Astro]
+<header>
+  <h1>My Publication</h1>
+  <sequoia-subscribe />
+  <script>
+    import './components/sequoia-subscribe.js';
+  </script>
+</header>
+```
+
+:::
+
+### TypeScript Support
+
+If you're using TypeScript with React, add this type declaration to avoid JSX errors:
+
+```ts [custom-elements.d.ts]
+declare namespace JSX {
+  interface IntrinsicElements {
+    'sequoia-subscribe': React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLElement> & {
+        'publication-uri'?: string;
+        'callback-url'?: string;
+        hide?: string;
+      },
+      HTMLElement
+    >;
+  }
+}
+```
+
+### Vue Configuration
+
+For Vue, you may need to configure the compiler to recognize custom elements:
+
+```ts [vite.config.ts]
+export default defineConfig({
+  plugins: [
+    vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag) => tag === 'sequoia-subscribe'
+        }
+      }
+    })
+  ]
+});
+```
+
+## Configuration
+
+### Attributes
+
+The `<sequoia-subscribe>` component accepts the following attributes:
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `publication-uri` | `string` | — | AT URI of the publication. Optional if a `<link rel="site.standard.publication">` tag or `.well-known` file is present. |
+| `callback-url` | `string` | `https://sequoia.pub/subscribe` | Override the subscribe callback URL. |
+| `hide` | `string` | — | Set to `"auto"` to hide the button if no publication URI is found. |
+
+```html
+<!-- Explicit publication URI -->
+<sequoia-subscribe
+  publication-uri="at://did:plc:example/site.standard.publication/self">
+</sequoia-subscribe>
+
+<!-- Hide if no publication found -->
+<sequoia-subscribe hide="auto"></sequoia-subscribe>
+```
+
+### Styling
+
+The component uses CSS custom properties for theming:
+
+| CSS Property | Default | Description |
+|--------------|---------|-------------|
+| `--sequoia-accent-color` | `#2563eb` | Button background color |
+| `--sequoia-border-radius` | `8px` | Button border radius |
+| `--sequoia-fg-color` | `#1f2937` | Text color |
+
+You can also style the button directly using the `::part` pseudo-element:
+
+```css
+sequoia-subscribe::part(button) {
+  background: #3A5A40;
+  border-radius: 999px;
+  font-size: 0.875rem;
+}
+```
+
+### Example: Themed Button
+
+```css
+:root {
+  --sequoia-accent-color: #3A5A40;
+  --sequoia-border-radius: 999px;
+}
+```
+
+## How It Works
+
+1. A reader clicks the **Subscribe with Bluesky** button on your site.
+2. The component redirects to `sequoia.pub/subscribe?pub={publication-uri}&return={current-url}`.
+3. The reader enters their Bluesky handle on sequoia.pub.
+4. sequoia.pub initiates an AT Protocol OAuth flow with the reader's PDS.
+5. After authorization, sequoia.pub creates a `site.standard.graph.subscription` record in the reader's repository pointing to your publication.
+6. The reader is redirected back to your page with a brief success confirmation.

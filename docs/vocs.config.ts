@@ -34,6 +34,7 @@ export default defineConfig({
 				{ text: "Setup", link: "/setup" },
 				{ text: "Publishing", link: "/publishing" },
 				{ text: "Comments", link: "/comments" },
+				{ text: "Subscribe Button", link: "/subscribe" },
 				{ text: "Verifying", link: "/verifying" },
 				{ text: "Workflows", link: "/workflows" },
 			],
