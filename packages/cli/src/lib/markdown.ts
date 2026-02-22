@@ -40,7 +40,11 @@ export function parseFrontmatter(
 		raw = toml.parse(frontmatterStr) as Record<string, unknown>;
 	} else {
 		// Use CORE_SCHEMA to keep dates as strings rather than Date objects
-		raw = (yaml.load(frontmatterStr, { schema: yaml.CORE_SCHEMA }) as Record<string, unknown>) ?? {};
+		raw =
+			(yaml.load(frontmatterStr, { schema: yaml.CORE_SCHEMA }) as Record<
+				string,
+				unknown
+			>) ?? {};
 	}
 
 	// Apply field mappings to normalize to standard PostFrontmatter fields

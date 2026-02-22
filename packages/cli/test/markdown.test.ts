@@ -79,7 +79,9 @@ excerpt: >
 ---
 `;
 			const { rawFrontmatter } = parseFrontmatter(content);
-			expect(rawFrontmatter.excerpt).toBe("This is a folded multiline string\n");
+			expect(rawFrontmatter.excerpt).toBe(
+				"This is a folded multiline string\n",
+			);
 		});
 
 		it("parses YAML stripped folded multiline string", () => {
@@ -90,7 +92,9 @@ excerpt: >-
 ---
 `;
 			const { rawFrontmatter } = parseFrontmatter(content);
-			expect(rawFrontmatter.excerpt).toBe("This is a stripped folded multiline string");
+			expect(rawFrontmatter.excerpt).toBe(
+				"This is a stripped folded multiline string",
+			);
 		});
 
 		it("parses YAML literal multiline string", () => {
@@ -101,7 +105,9 @@ excerpt: |
 ---
 `;
 			const { rawFrontmatter } = parseFrontmatter(content);
-			expect(rawFrontmatter.excerpt).toBe("This is a literal\nmultiline string\n");
+			expect(rawFrontmatter.excerpt).toBe(
+				"This is a literal\nmultiline string\n",
+			);
 		});
 
 		it("parses YAML kept literal multiline string", () => {
@@ -114,7 +120,9 @@ end: true
 ---
 `;
 			const { rawFrontmatter } = parseFrontmatter(content);
-			expect(rawFrontmatter.excerpt).toBe("This is a kept literal\nmultiline string\n\n");
+			expect(rawFrontmatter.excerpt).toBe(
+				"This is a kept literal\nmultiline string\n\n",
+			);
 		});
 
 		it("parses boolean true", () => {
@@ -339,7 +347,9 @@ categories: [news, updates]
 unpublished: true
 ---
 `;
-			const { frontmatter } = parseFrontmatter(content, { draft: "unpublished" });
+			const { frontmatter } = parseFrontmatter(content, {
+				draft: "unpublished",
+			});
 			expect(frontmatter.draft).toBe(true);
 		});
 
