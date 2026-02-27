@@ -40,7 +40,9 @@ export const addCommand = command({
 		intro("Add Sequoia Component");
 
 		// Validate component name
-		const component = AVAILABLE_COMPONENTS.find((c) => c.name === componentName);
+		const component = AVAILABLE_COMPONENTS.find(
+			(c) => c.name === componentName,
+		);
 		if (!component) {
 			log.error(`Component '${componentName}' not found`);
 			log.info("Available components:");

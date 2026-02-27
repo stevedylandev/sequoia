@@ -127,89 +127,6 @@ const CHECK_ICON = `<svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://w
 // ============================================================================
 
 /**
- * Resolve a DID to its PDS URL.
- * Supports did:plc and did:web methods.
- * @param {string} did - Decentralized Identifier
- * @returns {Promise<string>} PDS URL
- */
-async function resolvePDS(did) {
-	let pdsUrl;
-
-	if (did.startsWith("did:plc:")) {
-		const didDocUrl = `https://plc.directory/${did}`;
-		const didDocResponse = await fetch(didDocUrl);
-		if (!didDocResponse.ok) {
-			throw new Error(`Could not fetch DID document: ${didDocResponse.status}`);
-		}
-		const didDoc = await didDocResponse.json();
-
-		const pdsService = didDoc.service?.find(
-			(s) => s.id === "#atproto_pds" || s.type === "AtprotoPersonalDataServer",
-		);
-		pdsUrl = pdsService?.serviceEndpoint;
-	} else if (did.startsWith("did:web:")) {
-		const domain = did.replace("did:web:", "");
-		const didDocUrl = `https://${domain}/.well-known/did.json`;
-		const didDocResponse = await fetch(didDocUrl);
-		if (!didDocResponse.ok) {
-			throw new Error(`Could not fetch DID document: ${didDocResponse.status}`);
-		}
-		const didDoc = await didDocResponse.json();
-
-		const pdsService = didDoc.service?.find(
-			(s) => s.id === "#atproto_pds" || s.type === "AtprotoPersonalDataServer",
-		);
-		pdsUrl = pdsService?.serviceEndpoint;
-	} else {
-		throw new Error(`Unsupported DID method: ${did}`);
-	}
-
-	if (!pdsUrl) {
-		throw new Error("Could not find PDS URL for user");
-	}
-
-	return pdsUrl;
-}
-
-/**
- * Create a site.standard.graph.subscription record in the subscriber's PDS.
- * @param {string} did - DID of the subscriber
- * @param {string} accessToken - AT Protocol access token
- * @param {string} publicationUri - AT URI of the publication to subscribe to
- * @returns {Promise<{uri: string, cid: string}>} The created record's URI and CID
- */
-async function createRecord(did, accessToken, publicationUri) {
-	const pdsUrl = await resolvePDS(did);
-
-	const collection = "site.standard.graph.subscription";
-	const url = `${pdsUrl}/xrpc/com.atproto.repo.createRecord`;
-	const response = await fetch(url, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-			Authorization: `Bearer ${accessToken}`,
-		},
-		body: JSON.stringify({
-			repo: did,
-			collection,
-			record: {
-				$type: "site.standard.graph.subscription",
-				publication: publicationUri,
-			},
-		}),
-	});
-
-	if (!response.ok) {
-		const body = await response.json().catch(() => ({}));
-		const message = body?.message ?? body?.error ?? `HTTP ${response.status}`;
-		throw new Error(`Failed to create record: ${message}`);
-	}
-
-	const data = await response.json();
-	return { uri: data.uri, cid: data.cid };
-}
-
-/**
  * Fetch the publication AT URI from the host site's well-known endpoint.
  * @param {string} [origin] - Origin to fetch from (defaults to current page origin)
  * @returns {Promise<string>} Publication AT URI
@@ -219,9 +136,7 @@ async function fetchPublicationUri(origin) {
 	const url = `${base}/.well-known/site.standard.publication`;
 	const response = await fetch(url);
 	if (!response.ok) {
-		throw new Error(
-			`Could not fetch publication URI: ${response.status}`,
-		);
+		throw new Error(`Could not fetch publication URI: ${response.status}`);
 	}
 
 	// Accept either plain text (the AT URI itself) or JSON with a `uri` field.

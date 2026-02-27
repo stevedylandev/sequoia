@@ -622,7 +622,14 @@ export async function createBlueskyPost(
 	agent: Agent,
 	options: CreateBlueskyPostOptions,
 ): Promise<StrongRef> {
-	const { title, description, bskyPost, canonicalUrl, coverImage, publishedAt } = options;
+	const {
+		title,
+		description,
+		bskyPost,
+		canonicalUrl,
+		coverImage,
+		publishedAt,
+	} = options;
 
 	// Build post text: title + description
 	// Max 300 graphemes for Bluesky posts
@@ -633,8 +640,7 @@ export async function createBlueskyPost(
 	if (bskyPost) {
 		// Custom bsky post overrides any default behavior
 		postText = bskyPost;
-	}
-	else if (description) {
+	} else if (description) {
 		// Try: title + description
 		const fullText = `${title}\n\n${description}`;
 		if (countGraphemes(fullText) <= MAX_GRAPHEMES) {
@@ -642,9 +648,7 @@ export async function createBlueskyPost(
 		} else {
 			// Truncate description to fit
 			const availableForDesc =
-				MAX_GRAPHEMES -
-				countGraphemes(title) -
-				countGraphemes("\n\n");
+				MAX_GRAPHEMES - countGraphemes(title) - countGraphemes("\n\n");
 			if (availableForDesc > 10) {
 				const truncatedDesc = truncateToGraphemes(
 					description,
