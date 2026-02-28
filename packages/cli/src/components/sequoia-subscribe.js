@@ -79,14 +79,6 @@ const styles = `
 	flex-shrink: 0;
 }
 
-.sequoia-subscribe-button--success {
-	background: #16a34a;
-}
-
-.sequoia-subscribe-button--success:hover:not(:disabled) {
-	background: color-mix(in srgb, #16a34a 85%, black);
-}
-
 .sequoia-loading-spinner {
 	display: inline-block;
 	width: 1rem;
@@ -116,10 +108,6 @@ const styles = `
 
 const BLUESKY_ICON = `<svg class="sequoia-bsky-logo" viewBox="0 0 600 530" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
   <path d="m135.72 44.03c66.496 49.921 138.02 151.14 164.28 205.46 26.262-54.316 97.782-155.54 164.28-205.46 47.98-36.021 125.72-63.892 125.72 24.795 0 17.712-10.155 148.79-16.111 170.07-20.703 73.984-96.144 92.854-163.25 81.433 117.3 19.964 147.14 86.092 82.697 152.22-122.39 125.59-175.91-31.511-189.63-71.766-2.514-7.3797-3.6904-10.832-3.7077-7.8964-0.0174-2.9357-1.1937 0.51669-3.7077 7.8964-13.714 40.255-67.233 197.36-189.63 71.766-64.444-66.128-34.605-132.26 82.697-152.22-67.108 11.421-142.55-7.4491-163.25-81.433-5.9562-21.282-16.111-152.36-16.111-170.07 0-88.687 77.742-60.816 125.72-24.795z"/>
-</svg>`;
-
-const CHECK_ICON = `<svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
 </svg>`;
 
 // ============================================================================
@@ -178,6 +166,7 @@ class SequoiaSubscribe extends BaseElement {
 		wrapper.part = "container";
 
 		this.wrapper = wrapper;
+		this.subscribed = false;
 		this.state = { type: "idle" };
 		this.abortController = null;
 		this.render();
@@ -188,10 +177,7 @@ class SequoiaSubscribe extends BaseElement {
 	}
 
 	connectedCallback() {
-		// Pre-check publication availability so hide="auto" can take effect
-		if (!this.publicationUri) {
-			this.checkPublication();
-		}
+		this.checkPublication();
 	}
 
 	disconnectedCallback() {
@@ -199,12 +185,7 @@ class SequoiaSubscribe extends BaseElement {
 	}
 
 	attributeChangedCallback() {
-		// Reset to idle if attributes change after an error or success
-		if (
-			this.state.type === "error" ||
-			this.state.type === "subscribed" ||
-			this.state.type === "no-publication"
-		) {
+		if (this.state.type === "error" || this.state.type === "no-publication") {
 			this.state = { type: "idle" };
 		}
 		this.render();
@@ -232,15 +213,44 @@ class SequoiaSubscribe extends BaseElement {
 		this.abortController = new AbortController();
 
 		try {
-			await fetchPublicationUri();
+			const uri = this.publicationUri ?? (await fetchPublicationUri());
+			this.checkSubscription(uri);
 		} catch {
 			this.state = { type: "no-publication" };
 			this.render();
 		}
 	}
 
+	async checkSubscription(publicationUri) {
+		try {
+			const res = await fetch(
+				`${this.callbackUri}?publicationUri=${encodeURIComponent(publicationUri)}`,
+				{
+					headers: { Accept: "application/json" },
+					credentials: "include",
+				},
+			);
+			if (!res.ok) return;
+			const data = await res.json();
+			if (data.subscribed) {
+				this.subscribed = true;
+				this.render();
+			}
+		} catch {
+			// Ignore errors — show default subscribe button
+		}
+	}
+
 	async handleClick() {
-		if (this.state.type === "loading" || this.state.type === "subscribed") {
+		if (this.state.type === "loading") {
+			return;
+		}
+
+		// Unsubscribe: redirect to full-page unsubscribe flow
+		if (this.subscribed) {
+			const publicationUri =
+				this.publicationUri ?? (await fetchPublicationUri());
+			window.location.href = `${this.callbackUri}?publicationUri=${encodeURIComponent(publicationUri)}&action=unsubscribe`;
 			return;
 		}
 
@@ -251,9 +261,6 @@ class SequoiaSubscribe extends BaseElement {
 			const publicationUri =
 				this.publicationUri ?? (await fetchPublicationUri());
 
-			// POST to the callbackUri (e.g. https://sequoia.pub/subscribe).
-			// If the server reports the user isn't authenticated it returns a
-			// subscribeUrl for the full-page OAuth + subscription flow.
 			const response = await fetch(this.callbackUri, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -281,7 +288,8 @@ class SequoiaSubscribe extends BaseElement {
 			}
 
 			const { recordUri } = data;
-			this.state = { type: "subscribed", recordUri, publicationUri };
+			this.subscribed = true;
+			this.state = { type: "idle" };
 			this.render();
 
 			this.dispatchEvent(
@@ -292,7 +300,6 @@ class SequoiaSubscribe extends BaseElement {
 				}),
 			);
 		} catch (error) {
-			// Don't overwrite state if we already navigated away
 			if (this.state.type !== "loading") return;
 
 			const message =
@@ -322,21 +329,12 @@ class SequoiaSubscribe extends BaseElement {
 		}
 
 		const isLoading = type === "loading";
-		const isSubscribed = type === "subscribed";
 
 		const icon = isLoading
 			? `<span class="sequoia-loading-spinner"></span>`
-			: isSubscribed
-				? CHECK_ICON
-				: BLUESKY_ICON;
+			: BLUESKY_ICON;
 
-		const label = isSubscribed ? "Subscribed" : this.label;
-		const buttonClass = [
-			"sequoia-subscribe-button",
-			isSubscribed ? "sequoia-subscribe-button--success" : "",
-		]
-			.filter(Boolean)
-			.join(" ");
+		const label = this.subscribed ? "Unsubscribe on Bluesky" : this.label;
 
 		const errorHtml =
 			type === "error"
@@ -345,11 +343,11 @@ class SequoiaSubscribe extends BaseElement {
 
 		this.wrapper.innerHTML = `
 			<button
-				class="${buttonClass}"
+				class="sequoia-subscribe-button"
 				type="button"
 				part="button"
-				${isLoading || isSubscribed ? "disabled" : ""}
-				aria-label="${isSubscribed ? "Subscribed" : this.label}"
+				${isLoading ? "disabled" : ""}
+				aria-label="${label}"
 			>
 				${icon}
 				${label}
@@ -357,10 +355,8 @@ class SequoiaSubscribe extends BaseElement {
 			${errorHtml}
 		`;
 
-		if (type !== "subscribed") {
-			const btn = this.wrapper.querySelector("button");
-			btn?.addEventListener("click", () => this.handleClick());
-		}
+		const btn = this.wrapper.querySelector("button");
+		btn?.addEventListener("click", () => this.handleClick());
 	}
 }
 

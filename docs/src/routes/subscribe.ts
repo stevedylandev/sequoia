@@ -154,7 +154,47 @@ subscribe.post("/", async (c) => {
 
 subscribe.get("/", async (c) => {
 	const publicationUri = c.req.query("publicationUri");
+	const action = c.req.query("action");
+	const wantsJson = c.req.header("accept")?.includes("application/json");
+
+	// JSON path: subscription status check for the web component.
+	if (wantsJson) {
+		if (action && action !== "unsubscribe") {
+			return c.json({ error: `Unsupported action: ${action}` }, 400);
+		}
+		if (!publicationUri || !publicationUri.startsWith("at://")) {
+			return c.json({ error: "Missing or invalid publicationUri" }, 400);
+		}
+		const did = getSessionDid(c);
+		if (!did) {
+			return c.json({ authenticated: false }, 401);
+		}
+		try {
+			const client = createOAuthClient(
+				c.env.SEQUOIA_SESSIONS,
+				c.env.CLIENT_URL,
+			);
+			const session = await client.restore(did);
+			const agent = new Agent(session);
+			const recordUri = await findExistingSubscription(
+				agent,
+				did,
+				publicationUri,
+			);
+			return recordUri
+				? c.json({ subscribed: true, recordUri })
+				: c.json({ subscribed: false });
+		} catch {
+			return c.json({ authenticated: false }, 401);
+		}
+	}
+
+	// HTML path: full-page subscribe/unsubscribe flow.
 	const styleHref = await getVocsStyleHref(c.env.ASSETS, c.req.url);
+
+	if (action && action !== "unsubscribe") {
+		return c.html(renderError(`Unsupported action: ${action}`, styleHref), 400);
+	}
 
 	if (!publicationUri || !publicationUri.startsWith("at://")) {
 		return c.html(
@@ -172,13 +212,43 @@ subscribe.get("/", async (c) => {
 
 	const did = getSessionDid(c);
 	if (!did) {
-		return c.html(renderHandleForm(publicationUri, styleHref, returnTo));
+		return c.html(
+			renderHandleForm(publicationUri, styleHref, returnTo, undefined, action),
+		);
 	}
 
 	try {
 		const client = createOAuthClient(c.env.SEQUOIA_SESSIONS, c.env.CLIENT_URL);
 		const session = await client.restore(did);
 		const agent = new Agent(session);
+
+		if (action === "unsubscribe") {
+			const existingUri = await findExistingSubscription(
+				agent,
+				did,
+				publicationUri,
+			);
+			if (existingUri) {
+				const rkey = existingUri.split("/").pop()!;
+				await agent.com.atproto.repo.deleteRecord({
+					repo: did,
+					collection: COLLECTION,
+					rkey,
+				});
+			}
+			return c.html(
+				renderSuccess(
+					publicationUri,
+					null,
+					"Unsubscribed ✓",
+					existingUri
+						? "You've successfully unsubscribed!"
+						: "You weren't subscribed to this publication.",
+					styleHref,
+					returnTo,
+				),
+			);
+		}
 
 		const existingUri = await findExistingSubscription(
 			agent,
@@ -187,7 +257,14 @@ subscribe.get("/", async (c) => {
 		);
 		if (existingUri) {
 			return c.html(
-				renderSuccess(publicationUri, existingUri, true, styleHref, returnTo),
+				renderSuccess(
+					publicationUri,
+					existingUri,
+					"Subscribed ✓",
+					"You're already subscribed to this publication.",
+					styleHref,
+					returnTo,
+				),
 			);
 		}
 
@@ -204,7 +281,8 @@ subscribe.get("/", async (c) => {
 			renderSuccess(
 				publicationUri,
 				result.data.uri,
-				false,
+				"Subscribed ✓",
+				"You've successfully subscribed!",
 				styleHref,
 				returnTo,
 			),
@@ -218,6 +296,7 @@ subscribe.get("/", async (c) => {
 				styleHref,
 				returnTo,
 				"Session expired. Please sign in again.",
+				action,
 			),
 		);
 	}
@@ -235,6 +314,7 @@ subscribe.post("/login", async (c) => {
 	const handle = (body["handle"] as string | undefined)?.trim();
 	const publicationUri = body["publicationUri"] as string | undefined;
 	const formReturnTo = (body["returnTo"] as string | undefined) || undefined;
+	const formAction = (body["action"] as string | undefined) || undefined;
 
 	if (!handle || !publicationUri) {
 		const styleHref = await getVocsStyleHref(c.env.ASSETS, c.req.url);
@@ -246,6 +326,7 @@ subscribe.post("/login", async (c) => {
 
 	const returnTo =
 		`${c.env.CLIENT_URL}/subscribe?publicationUri=${encodeURIComponent(publicationUri)}` +
+		(formAction ? `&action=${encodeURIComponent(formAction)}` : "") +
 		(formReturnTo ? `&returnTo=${encodeURIComponent(formReturnTo)}` : "");
 	setReturnToCookie(c, returnTo, c.env.CLIENT_URL);
 
@@ -263,12 +344,16 @@ function renderHandleForm(
 	styleHref: string,
 	returnTo?: string,
 	error?: string,
+	action?: string,
 ): string {
 	const errorHtml = error
 		? `<p class="vocs_Paragraph error">${escapeHtml(error)}</p>`
 		: "";
 	const returnToInput = returnTo
 		? `<input type="hidden" name="returnTo" value="${escapeHtml(returnTo)}" />`
+		: "";
+	const actionInput = action
+		? `<input type="hidden" name="action" value="${escapeHtml(action)}" />`
 		: "";
 
 	return page(
@@ -279,6 +364,7 @@ function renderHandleForm(
 		<form method="POST" action="/subscribe/login">
 			<input type="hidden" name="publicationUri" value="${escapeHtml(publicationUri)}" />
 			${returnToInput}
+			${actionInput}
 			<input
 				type="text"
 				name="handle"
@@ -296,19 +382,17 @@ function renderHandleForm(
 
 function renderSuccess(
 	publicationUri: string,
-	recordUri: string,
-	existing: boolean,
+	recordUri: string | null,
+	heading: string,
+	msg: string,
 	styleHref: string,
 	returnTo?: string,
 ): string {
-	const msg = existing
-		? "You're already subscribed to this publication."
-		: "You've successfully subscribed!";
 	const escapedPublicationUri = escapeHtml(publicationUri);
-	const escapedRecordUri = escapeHtml(recordUri);
+	const escapedReturnTo = returnTo ? escapeHtml(returnTo) : "";
 
 	const redirectHtml = returnTo
-		? `<p class="vocs_Paragraph" id="redirect-msg">Redirecting to <a class="vocs_Anchor" href="${escapeHtml(returnTo)}">${escapeHtml(returnTo)}</a> in <span id="countdown">${REDIRECT_DELAY_SECONDS}</span>\u00a0seconds\u2026</p>
+		? `<p class="vocs_Paragraph" id="redirect-msg">Redirecting to <a class="vocs_Anchor" href="${escapedReturnTo}">${escapedReturnTo}</a> in <span id="countdown">${REDIRECT_DELAY_SECONDS}</span>\u00a0seconds\u2026</p>
 		<script>
 		(function(){
 			var secs = ${REDIRECT_DELAY_SECONDS};
@@ -322,12 +406,12 @@ function renderSuccess(
 		</script>`
 		: "";
 	const headExtra = returnTo
-		? `<meta http-equiv="refresh" content="${REDIRECT_DELAY_SECONDS};url=${escapeHtml(returnTo)}" />`
+		? `<meta http-equiv="refresh" content="${REDIRECT_DELAY_SECONDS};url=${escapedReturnTo}" />`
 		: "";
 
 	return page(
 		`
-		<h1 class="vocs_H1 vocs_Heading">Subscribed ✓</h1>
+		<h1 class="vocs_H1 vocs_Heading">${escapeHtml(heading)}</h1>
 		<p class="vocs_Paragraph">${msg}</p>
 		${redirectHtml}
 		<table class="vocs_Table" style="display:table;table-layout:fixed;width:100%;overflow:hidden;">
@@ -339,12 +423,16 @@ function renderSuccess(
 						<div style="overflow-x:auto;white-space:nowrap;"><code class="vocs_Code"><a href="https://pds.ls/${escapedPublicationUri}">${escapedPublicationUri}</a></code></div>
 					</td>
 				</tr>
-				<tr class="vocs_TableRow">
+				${
+					recordUri
+						? `<tr class="vocs_TableRow">
 					<td class="vocs_TableCell">Record</td>
 					<td class="vocs_TableCell" style="overflow:hidden;">
-						<div style="overflow-x:auto;white-space:nowrap;"><code class="vocs_Code"><a href="https://pds.ls/${escapedRecordUri}">${escapedRecordUri}</a></code></div>
+						<div style="overflow-x:auto;white-space:nowrap;"><code class="vocs_Code"><a href="https://pds.ls/${escapeHtml(recordUri)}">${escapeHtml(recordUri)}</a></code></div>
 					</td>
-				</tr>
+				</tr>`
+						: ""
+				}
 			</tbody>
 		</table>
 	`,
