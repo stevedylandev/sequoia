@@ -224,9 +224,8 @@ class SequoiaSubscribe extends BaseElement {
 	async checkSubscription(publicationUri) {
 		try {
 			const res = await fetch(
-				`${this.callbackUri}?publicationUri=${encodeURIComponent(publicationUri)}`,
+				`${this.callbackUri}/check?publicationUri=${encodeURIComponent(publicationUri)}`,
 				{
-					headers: { Accept: "application/json" },
 					credentials: "include",
 				},
 			);

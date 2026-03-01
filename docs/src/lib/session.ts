@@ -8,11 +8,13 @@ const RETURN_TO_TTL = 600; // 10 minutes in seconds
 
 function baseCookieOptions(clientUrl: string) {
 	const isLocalhost = clientUrl.includes("localhost");
+	const hostname = new URL(clientUrl).hostname;
 	return {
 		httpOnly: true as const,
-		sameSite: "Lax" as const,
+		// Allow the SESSION_COOKIE_NAME to be sent for existing subscription checks.
+		sameSite: "None" as const,
 		path: "/",
-		...(isLocalhost ? {} : { domain: ".sequoia.pub", secure: true }),
+		...(isLocalhost ? {} : { domain: `.${hostname}`, secure: true }),
 	};
 }
 

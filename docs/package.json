@@ -25,6 +25,7 @@
 		"@biomejs/biome": "^2.3.13",
 		"@cloudflare/workers-types": "latest",
 		"@types/react": "latest",
-		"typescript": "latest"
+		"typescript": "latest",
+		"wrangler": "latest"
 	}
 }

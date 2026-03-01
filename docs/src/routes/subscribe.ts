@@ -155,41 +155,6 @@ subscribe.post("/", async (c) => {
 subscribe.get("/", async (c) => {
 	const publicationUri = c.req.query("publicationUri");
 	const action = c.req.query("action");
-	const wantsJson = c.req.header("accept")?.includes("application/json");
-
-	// JSON path: subscription status check for the web component.
-	if (wantsJson) {
-		if (action && action !== "unsubscribe") {
-			return c.json({ error: `Unsupported action: ${action}` }, 400);
-		}
-		if (!publicationUri || !publicationUri.startsWith("at://")) {
-			return c.json({ error: "Missing or invalid publicationUri" }, 400);
-		}
-		const did = getSessionDid(c);
-		if (!did) {
-			return c.json({ authenticated: false }, 401);
-		}
-		try {
-			const client = createOAuthClient(
-				c.env.SEQUOIA_SESSIONS,
-				c.env.CLIENT_URL,
-			);
-			const session = await client.restore(did);
-			const agent = new Agent(session);
-			const recordUri = await findExistingSubscription(
-				agent,
-				did,
-				publicationUri,
-			);
-			return recordUri
-				? c.json({ subscribed: true, recordUri })
-				: c.json({ subscribed: false });
-		} catch {
-			return c.json({ authenticated: false }, 401);
-		}
-	}
-
-	// HTML path: full-page subscribe/unsubscribe flow.
 	const styleHref = await getVocsStyleHref(c.env.ASSETS, c.req.url);
 
 	if (action && action !== "unsubscribe") {
@@ -299,6 +264,47 @@ subscribe.get("/", async (c) => {
 				action,
 			),
 		);
+	}
+});
+
+// ============================================================================
+// GET /subscribe/check?publicationUri=at://...
+//
+// JSON-only endpoint for the web component to check subscription status.
+//
+// Responses:
+//   200 { subscribed: true, recordUri: string }
+//   200 { subscribed: false }
+//   400 { error: string }
+//   401 { authenticated: false }
+// ============================================================================
+
+subscribe.get("/check", async (c) => {
+	const publicationUri = c.req.query("publicationUri");
+
+	if (!publicationUri || !publicationUri.startsWith("at://")) {
+		return c.json({ error: "Missing or invalid publicationUri" }, 400);
+	}
+
+	const did = getSessionDid(c);
+	if (!did) {
+		return c.json({ authenticated: false }, 401);
+	}
+
+	try {
+		const client = createOAuthClient(c.env.SEQUOIA_SESSIONS, c.env.CLIENT_URL);
+		const session = await client.restore(did);
+		const agent = new Agent(session);
+		const recordUri = await findExistingSubscription(
+			agent,
+			did,
+			publicationUri,
+		);
+		return recordUri
+			? c.json({ subscribed: true, recordUri })
+			: c.json({ subscribed: false });
+	} catch {
+		return c.json({ authenticated: false }, 401);
 	}
 });
 
