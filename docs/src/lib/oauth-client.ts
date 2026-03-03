@@ -3,6 +3,9 @@ import { OAuthClient } from "@atproto/oauth-client";
 import { AtprotoDohHandleResolver } from "@atproto-labs/handle-resolver";
 import { createStateStore, createSessionStore } from "./kv-stores";
 
+export const OAUTH_SCOPE =
+	"atproto repo:site.standard.graph.subscription?action=create&action=delete";
+
 export function createOAuthClient(kv: KVNamespace, clientUrl: string) {
 	const clientId = `${clientUrl}/oauth/client-metadata.json`;
 	const redirectUri = `${clientUrl}/oauth/callback`;

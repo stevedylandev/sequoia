@@ -11,8 +11,7 @@ function baseCookieOptions(clientUrl: string) {
 	const hostname = new URL(clientUrl).hostname;
 	return {
 		httpOnly: true as const,
-		// Allow the SESSION_COOKIE_NAME to be sent for existing subscription checks.
-		sameSite: "None" as const,
+		sameSite: "Lax" as const,
 		path: "/",
 		...(isLocalhost ? {} : { domain: `.${hostname}`, secure: true }),
 	};

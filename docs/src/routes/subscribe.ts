@@ -42,6 +42,24 @@ const REDIRECT_DELAY_SECONDS = 5;
 // ============================================================================
 
 /**
+ * Append a query parameter to a returnTo URL, preserving existing params.
+ */
+function withReturnToParam(
+	returnTo: string | undefined,
+	key: string,
+	value: string,
+): string | undefined {
+	if (!returnTo) return undefined;
+	try {
+		const url = new URL(returnTo);
+		url.searchParams.set(key, value);
+		return url.toString();
+	} catch {
+		return returnTo;
+	}
+}
+
+/**
  * Scan the user's repo for an existing site.standard.graph.subscription
  * matching the given publication URI. Returns the record AT-URI if found.
  */
@@ -201,6 +219,19 @@ subscribe.get("/", async (c) => {
 					rkey,
 				});
 			}
+
+			// Strip sequoia_did from returnTo so the component doesn't re-store it
+			let cleanReturnTo = returnTo;
+			if (cleanReturnTo) {
+				try {
+					const rtUrl = new URL(cleanReturnTo);
+					rtUrl.searchParams.delete("sequoia_did");
+					cleanReturnTo = rtUrl.toString();
+				} catch {
+					// keep as-is
+				}
+			}
+
 			return c.html(
 				renderSuccess(
 					publicationUri,
@@ -210,7 +241,7 @@ subscribe.get("/", async (c) => {
 						? "You've successfully unsubscribed!"
 						: "You weren't subscribed to this publication.",
 					styleHref,
-					returnTo,
+					withReturnToParam(cleanReturnTo, "sequoia_unsubscribed", "1"),
 				),
 			);
 		}
@@ -220,6 +251,8 @@ subscribe.get("/", async (c) => {
 			did,
 			publicationUri,
 		);
+		const returnToWithDid = withReturnToParam(returnTo, "sequoia_did", did);
+
 		if (existingUri) {
 			return c.html(
 				renderSuccess(
@@ -228,7 +261,7 @@ subscribe.get("/", async (c) => {
 					"Subscribed ✓",
 					"You're already subscribed to this publication.",
 					styleHref,
-					returnTo,
+					returnToWithDid,
 				),
 			);
 		}
@@ -249,7 +282,7 @@ subscribe.get("/", async (c) => {
 				"Subscribed ✓",
 				"You've successfully subscribed!",
 				styleHref,
-				returnTo,
+				returnToWithDid,
 			),
 		);
 	} catch (error) {
@@ -286,8 +319,10 @@ subscribe.get("/check", async (c) => {
 		return c.json({ error: "Missing or invalid publicationUri" }, 400);
 	}
 
-	const did = getSessionDid(c);
-	if (!did) {
+	// Prefer the server-side session DID; fall back to a client-provided DID
+	// (stored by the web component from a previous subscribe flow).
+	const did = getSessionDid(c) ?? c.req.query("did") ?? null;
+	if (!did || !did.startsWith("did:")) {
 		return c.json({ authenticated: false }, 401);
 	}
 

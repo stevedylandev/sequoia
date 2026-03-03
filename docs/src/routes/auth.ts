@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createOAuthClient } from "../lib/oauth-client";
+import { createOAuthClient, OAUTH_SCOPE } from "../lib/oauth-client";
 import {
 	getSessionDid,
 	setSessionCookie,
@@ -27,7 +27,7 @@ auth.get("/client-metadata.json", (c) => {
 		redirect_uris: [redirectUri],
 		grant_types: ["authorization_code", "refresh_token"],
 		response_types: ["code"],
-		scope: "atproto repo:site.standard.graph.subscription?action=create",
+		scope: OAUTH_SCOPE,
 		token_endpoint_auth_method: "none",
 		application_type: "web",
 		dpop_bound_access_tokens: true,
@@ -44,7 +44,7 @@ auth.get("/login", async (c) => {
 
 		const client = createOAuthClient(c.env.SEQUOIA_SESSIONS, c.env.CLIENT_URL);
 		const authUrl = await client.authorize(handle, {
-			scope: "atproto repo:site.standard.graph.subscription?action=create",
+			scope: OAUTH_SCOPE,
 		});
 
 		return c.redirect(authUrl.toString());

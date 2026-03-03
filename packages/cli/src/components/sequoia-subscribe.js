@@ -111,6 +111,100 @@ const BLUESKY_ICON = `<svg class="sequoia-bsky-logo" viewBox="0 0 600 530" fill=
 </svg>`;
 
 // ============================================================================
+// DID Storage
+// ============================================================================
+
+/**
+ * Store the subscriber DID. Tries a cookie first; falls back to localStorage.
+ * @param {string} did
+ */
+function storeSubscriberDid(did) {
+	try {
+		const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
+		document.cookie = `sequoia_did=${encodeURIComponent(did)}; expires=${expires}; path=/; SameSite=Lax`;
+	} catch {
+		// Cookie write may fail in some embedded contexts
+	}
+	try {
+		localStorage.setItem("sequoia_did", did);
+	} catch {
+		// localStorage may be unavailable
+	}
+}
+
+/**
+ * Retrieve the stored subscriber DID. Checks cookie first, then localStorage.
+ * @returns {string | null}
+ */
+function getStoredSubscriberDid() {
+	try {
+		const match = document.cookie.match(/(?:^|;\s*)sequoia_did=([^;]+)/);
+		if (match) {
+			const did = decodeURIComponent(match[1]);
+			if (did.startsWith("did:")) return did;
+		}
+	} catch {
+		// ignore
+	}
+	try {
+		const did = localStorage.getItem("sequoia_did");
+		if (did?.startsWith("did:")) return did;
+	} catch {
+		// ignore
+	}
+	return null;
+}
+
+/**
+ * Remove the stored subscriber DID from both cookie and localStorage.
+ */
+function clearSubscriberDid() {
+	try {
+		document.cookie = "sequoia_did=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax";
+	} catch {
+		// ignore
+	}
+	try {
+		localStorage.removeItem("sequoia_did");
+	} catch {
+		// ignore
+	}
+}
+
+/**
+ * Check the current page URL for sequoia_did / sequoia_unsubscribed params
+ * set by the subscribe redirect flow. Consumes them by removing from the URL.
+ */
+function consumeReturnParams() {
+	const url = new URL(window.location.href);
+	const did = url.searchParams.get("sequoia_did");
+	const unsubscribed = url.searchParams.get("sequoia_unsubscribed");
+
+	let changed = false;
+
+	if (unsubscribed === "1") {
+		clearSubscriberDid();
+		url.searchParams.delete("sequoia_unsubscribed");
+		changed = true;
+	}
+
+	if (did && did.startsWith("did:")) {
+		storeSubscriberDid(did);
+		url.searchParams.delete("sequoia_did");
+		changed = true;
+	}
+
+	if (changed) {
+		const cleanUrl = url.pathname + (url.search || "") + (url.hash || "");
+		try {
+			window.history.replaceState(null, "", cleanUrl);
+		} catch {
+			// ignore
+		}
+	}
+}
+
+// ============================================================================
 // AT Protocol Functions
 // ============================================================================
 
@@ -177,6 +271,7 @@ class SequoiaSubscribe extends BaseElement {
 	}
 
 	connectedCallback() {
+		consumeReturnParams();
 		this.checkPublication();
 	}
 
@@ -223,12 +318,18 @@ class SequoiaSubscribe extends BaseElement {
 
 	async checkSubscription(publicationUri) {
 		try {
-			const res = await fetch(
-				`${this.callbackUri}/check?publicationUri=${encodeURIComponent(publicationUri)}`,
-				{
-					credentials: "include",
-				},
-			);
+			const checkUrl = new URL(`${this.callbackUri}/check`);
+			checkUrl.searchParams.set("publicationUri", publicationUri);
+
+			// Pass the stored DID so the server can check without a session cookie
+			const storedDid = getStoredSubscriberDid();
+			if (storedDid) {
+				checkUrl.searchParams.set("did", storedDid);
+			}
+
+			const res = await fetch(checkUrl.toString(), {
+				credentials: "include",
+			});
 			if (!res.ok) return;
 			const data = await res.json();
 			if (data.subscribed) {
@@ -287,6 +388,15 @@ class SequoiaSubscribe extends BaseElement {
 			}
 
 			const { recordUri } = data;
+
+			// Store the DID from the record URI (at://did:aaa:bbb/...)
+			if (recordUri) {
+				const didMatch = recordUri.match(/^at:\/\/(did:[^/]+)/);
+				if (didMatch) {
+					storeSubscriberDid(didMatch[1]);
+				}
+			}
+
 			this.subscribed = true;
 			this.state = { type: "idle" };
 			this.render();
