@@ -1,0 +1,32 @@
+services:
+  server:
+    build: .
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    environment:
+      - CLIENT_URL=${CLIENT_URL}
+      - CLIENT_NAME=${CLIENT_NAME:-Sequoia}
+      - PORT=${PORT:-3000}
+      - REDIS_URL=redis://redis:6379
+      - THEME_ACCENT_COLOR=${THEME_ACCENT_COLOR:-}
+      - THEME_BG_COLOR=${THEME_BG_COLOR:-}
+      - THEME_FG_COLOR=${THEME_FG_COLOR:-}
+      - THEME_BORDER_COLOR=${THEME_BORDER_COLOR:-}
+      - THEME_ERROR_COLOR=${THEME_ERROR_COLOR:-}
+      - THEME_BORDER_RADIUS=${THEME_BORDER_RADIUS:-}
+      - THEME_FONT_FAMILY=${THEME_FONT_FAMILY:-}
+      - THEME_DARK_BG_COLOR=${THEME_DARK_BG_COLOR:-}
+      - THEME_DARK_FG_COLOR=${THEME_DARK_FG_COLOR:-}
+      - THEME_DARK_BORDER_COLOR=${THEME_DARK_BORDER_COLOR:-}
+      - THEME_DARK_ERROR_COLOR=${THEME_DARK_ERROR_COLOR:-}
+      - THEME_CSS_PATH=${THEME_CSS_PATH:-}
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:
