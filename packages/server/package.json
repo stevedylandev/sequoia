@@ -1,0 +1,17 @@
+{
+	"name": "sequoia-server",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "bun --watch src/index.ts",
+		"start": "bun run src/index.ts"
+	},
+	"dependencies": {
+		"@atproto/api": "^0.13.21",
+		"@atproto/jwk-jose": "^0.1.3",
+		"@atproto/oauth-client": "^0.3.3",
+		"@atproto-labs/handle-resolver": "^0.1.5",
+		"hono": "^4.7.4"
+	}
+}
