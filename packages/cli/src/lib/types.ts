@@ -41,6 +41,7 @@ export interface PublisherConfig {
 	stripDatePrefix?: boolean; // Remove YYYY-MM-DD- prefix from filenames (Jekyll-style, default: false)
 	pathTemplate?: string; // URL path template with tokens like {year}/{month}/{day}/{slug} (overrides pathPrefix + slug)
 	textContentField?: string; // Frontmatter field to use for textContent instead of markdown body
+	publishContent?: boolean; // Whether or not to publish the documents content on the standard.site document (default: true)
 	bluesky?: BlueskyConfig; // Optional Bluesky posting configuration
 	ui?: UIConfig; // Optional UI components configuration
 }

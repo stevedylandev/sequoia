@@ -85,10 +85,12 @@ export function generateConfigTemplate(options: {
 	stripDatePrefix?: boolean;
 	pathTemplate?: string;
 	textContentField?: string;
+	publishContent?: boolean;
 	bluesky?: BlueskyConfig;
 }): string {
 	const config: Record<string, unknown> = {
-		$schema: 'https://tangled.org/stevedylan.dev/sequoia/raw/main/sequoia.schema.json',
+		$schema:
+			"https://tangled.org/stevedylan.dev/sequoia/raw/main/sequoia.schema.json",
 		siteUrl: options.siteUrl,
 		contentDir: options.contentDir,
 	};
@@ -138,6 +140,11 @@ export function generateConfigTemplate(options: {
 	if (options.textContentField) {
 		config.textContentField = options.textContentField;
 	}
+
+	if (options.publishContent) {
+		config.publishContent = options.publishContent;
+	}
+
 	if (options.bluesky) {
 		config.bluesky = options.bluesky;
 	}

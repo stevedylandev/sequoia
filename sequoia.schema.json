@@ -116,6 +116,11 @@
 			"type": "string",
 			"description": "Frontmatter field to use for textContent instead of markdown body"
 		},
+		"publishContent": {
+			"type": "boolean",
+			"description": "Whether or not to publish the documents content on the standard.site document",
+			"default": true
+		},
 		"bluesky": {
 			"type": "object",
 			"additionalProperties": false,

@@ -162,6 +162,7 @@ async function updateConfigFlow(
 			stripDatePrefix: configUpdated.stripDatePrefix,
 			pathTemplate: configUpdated.pathTemplate,
 			textContentField: configUpdated.textContentField,
+			publishContent: configUpdated.publishContent,
 			bluesky: configUpdated.bluesky,
 		});
 
@@ -373,6 +374,13 @@ async function editAdvanced(config: PublisherConfig): Promise<PublisherConfig> {
 		}),
 	);
 
+	const publishContent = exitOnCancel(
+		await confirm({
+			message: "Publish the post content on the standard.site document?",
+			initialValue: config.publishContent ?? true,
+		}),
+	);
+
 	const textContentField = exitOnCancel(
 		await text({
 			message:
@@ -397,6 +405,7 @@ async function editAdvanced(config: PublisherConfig): Promise<PublisherConfig> {
 		removeIndexFromSlug: removeIndexFromSlug || undefined,
 		stripDatePrefix: stripDatePrefix || undefined,
 		textContentField: textContentField || undefined,
+		publishContent: publishContent ?? true,
 	};
 }
 

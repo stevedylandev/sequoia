@@ -98,6 +98,11 @@ export const initCommand = command({
 						message: "URL path prefix for posts:",
 						placeholder: "/posts, /blog, /articles, etc.",
 					}),
+				publishContent: () =>
+					confirm({
+						message: "Publish the post content on the standard.site document?",
+						initialValue: true,
+					}),
 			},
 			{ onCancel },
 		);
@@ -341,6 +346,7 @@ export const initCommand = command({
 			pdsUrl,
 			frontmatter: frontmatterMapping,
 			bluesky: blueskyConfig,
+			publishContent: siteConfig.publishContent,
 		});
 
 		const configPath = path.join(process.cwd(), "sequoia.json");

@@ -252,14 +252,15 @@ export async function createDocument(
 	);
 	const publishDate = new Date(post.frontmatter.publishDate);
 
-	// Determine textContent: use configured field from frontmatter, or fallback to markdown body
-	let textContent: string;
+	// Determine textContent (if enabled): use configured field from frontmatter, or fallback to markdown body
+	let textContent: string | null = null;
 	if (
+		config.publishContent &&
 		config.textContentField &&
 		post.rawFrontmatter?.[config.textContentField]
 	) {
 		textContent = String(post.rawFrontmatter[config.textContentField]);
-	} else {
+	} else if (config.publishContent) {
 		textContent = stripMarkdownForText(post.content);
 	}
 
@@ -268,7 +269,7 @@ export async function createDocument(
 		title: post.frontmatter.title,
 		site: config.publicationUri,
 		path: postPath,
-		textContent: textContent.slice(0, 10000),
+		textContent: textContent?.slice(0, 10000),
 		publishedAt: publishDate.toISOString(),
 		canonicalUrl: `${config.siteUrl}${postPath}`,
 	};
@@ -317,14 +318,15 @@ export async function updateDocument(
 	);
 	const publishDate = new Date(post.frontmatter.publishDate);
 
-	// Determine textContent: use configured field from frontmatter, or fallback to markdown body
-	let textContent: string;
+	// Determine textContent (if enabled): use configured field from frontmatter, or fallback to markdown body
+	let textContent: string | null = null;
 	if (
+		config.publishContent &&
 		config.textContentField &&
 		post.rawFrontmatter?.[config.textContentField]
 	) {
 		textContent = String(post.rawFrontmatter[config.textContentField]);
-	} else {
+	} else if (config.publishContent) {
 		textContent = stripMarkdownForText(post.content);
 	}
 
@@ -342,7 +344,7 @@ export async function updateDocument(
 		title: post.frontmatter.title,
 		site: config.publicationUri,
 		path: postPath,
-		textContent: textContent.slice(0, 10000),
+		textContent: textContent?.slice(0, 10000),
 		publishedAt: publishDate.toISOString(),
 		canonicalUrl: `${config.siteUrl}${postPath}`,
 	};
@@ -384,7 +386,7 @@ export interface DocumentRecord {
 	title: string;
 	site: string;
 	path: string;
-	textContent: string;
+	textContent?: string;
 	publishedAt: string;
 	canonicalUrl?: string;
 	description?: string;
