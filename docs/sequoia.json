@@ -1,4 +1,5 @@
 {
+	"$schema": "../sequoia.schema.json",
 	"siteUrl": "https://sequoia.pub",
 	"contentDir": "docs/pages/blog",
 	"imagesDir": "docs/public",

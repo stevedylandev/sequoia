@@ -88,6 +88,7 @@ export function generateConfigTemplate(options: {
 	bluesky?: BlueskyConfig;
 }): string {
 	const config: Record<string, unknown> = {
+		$schema: 'https://tangled.org/stevedylan.dev/sequoia/raw/main/sequoia.schema.json',
 		siteUrl: options.siteUrl,
 		contentDir: options.contentDir,
 	};

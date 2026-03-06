@@ -1,0 +1,152 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "PublisherConfig",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["siteUrl", "contentDir", "publicationUri"],
+	"properties": {
+		"$schema": {
+			"type": "string",
+			"description": "JSON schema hint"
+		},
+		"siteUrl": {
+			"type": "string",
+			"format": "uri",
+			"description": "Base site URL"
+		},
+		"contentDir": {
+			"type": "string",
+			"description": "Directory containing content"
+		},
+		"imagesDir": {
+			"type": "string",
+			"description": "Directory containing cover images"
+		},
+		"publicDir": {
+			"type": "string",
+			"description": "Static/public folder for `.well-known` files",
+			"default": "public"
+		},
+		"outputDir": {
+			"type": "string",
+			"description": "Built output directory for inject command"
+		},
+		"pathPrefix": {
+			"type": "string",
+			"description": "URL path prefix for posts",
+			"default": "/posts"
+		},
+		"publicationUri": {
+			"type": "string",
+			"description": "Publication URI"
+		},
+		"pdsUrl": {
+			"type": "string",
+			"format": "uri",
+			"description": "Personal data server URL (PDS)",
+			"default": "https://bsky.social"
+		},
+		"identity": {
+			"type": "string",
+			"description": "Which stored identity to use (matches identifier)"
+		},
+		"frontmatter": {
+			"type": "object",
+			"additionalProperties": false,
+			"description": "Custom frontmatter field mappings",
+			"properties": {
+				"title": {
+					"type": "string",
+					"description": "Field name for title",
+					"default": "title"
+				},
+				"description": {
+					"type": "string",
+					"description": "Field name for description",
+					"default": "description"
+				},
+				"publishDate": {
+					"type": "string",
+					"description": "Field name for publish date (checks \"publishDate\", \"pubDate\", \"date\", \"createdAt\", and \"created_at\" by default)",
+					"default": "publishDate"
+				},
+				"coverImage": {
+					"type": "string",
+					"description": "Field name for cover image",
+					"default": "ogImage"
+				},
+				"tags": {
+					"type": "string",
+					"description": "Field name for tags",
+					"default": "tags"
+				},
+				"draft": {
+					"type": "string",
+					"description": "Field name for draft status",
+					"default": "draft"
+				},
+				"slugField": {
+					"type": "string",
+					"description": "Frontmatter field to use for slug (if set, uses frontmatter value; otherwise uses filepath)"
+				}
+			}
+		},
+		"ignore": {
+			"type": "array",
+			"description": "Glob patterns for files to ignore",
+			"items": {
+				"type": "string"
+			}
+		},
+		"removeIndexFromSlug": {
+			"type": "boolean",
+			"description": "Remove \"/index\" or \"/_index\" suffix from paths",
+			"default": false
+		},
+		"stripDatePrefix": {
+			"type": "boolean",
+			"description": "Remove YYYY-MM-DD- prefix from filenames (Jekyll-style)",
+			"default": false
+		},
+		"pathTemplate": {
+			"type": "string",
+			"description": "URL path template with tokens like {year}/{month}/{day}/{slug} (overrides pathPrefix + slug)"
+		},
+		"textContentField": {
+			"type": "string",
+			"description": "Frontmatter field to use for textContent instead of markdown body"
+		},
+		"bluesky": {
+			"type": "object",
+			"additionalProperties": false,
+			"description": "Optional Bluesky posting configuration",
+			"required": ["enabled"],
+			"properties": {
+				"enabled": {
+					"type": "boolean",
+					"description": "Whether Bluesky posting is enabled",
+					"default": false
+				},
+				"maxAgeDays": {
+					"type": "integer",
+					"minimum": 0,
+					"description": "Only post if published within N days",
+					"default": 7
+				}
+			}
+		},
+		"ui": {
+			"type": "object",
+			"additionalProperties": false,
+			"description": "Optional UI components configuration",
+			"properties": {
+				"components": {
+					"type": "string",
+					"description": "Directory to install UI components",
+					"default": "src/components"
+				}
+			},
+			"required": ["components"]
+		}
+	}
+}
