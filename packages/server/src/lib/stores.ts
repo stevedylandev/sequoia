@@ -5,7 +5,8 @@ import type {
 	SessionStore,
 	StateStore,
 } from "@atproto/oauth-client";
-import { RedisClient } from "bun";
+import type { Database } from "bun:sqlite";
+import { kvGet, kvSet, kvDel } from "./db";
 
 type SerializedStateData = Omit<InternalStateData, "dpopKey"> & {
 	dpopJwk: Record<string, unknown>;
@@ -25,32 +26,30 @@ async function deserializeKey(jwk: Record<string, unknown>): Promise<Key> {
 	return JoseKey.fromJWK(jwk) as unknown as Key;
 }
 
-export function createStateStore(redis: RedisClient, ttl = 600): StateStore {
+export function createStateStore(db: Database, ttl = 600): StateStore {
 	return {
 		async set(key, { dpopKey, ...rest }) {
 			const data: SerializedStateData = {
 				...rest,
 				dpopJwk: serializeKey(dpopKey),
 			};
-			const redisKey = `oauth_state:${key}`;
-			await redis.set(redisKey, JSON.stringify(data));
-			await redis.expire(redisKey, ttl);
+			kvSet(db, `oauth_state:${key}`, JSON.stringify(data), ttl);
 		},
 		async get(key) {
-			const raw = await redis.get(`oauth_state:${key}`);
+			const raw = kvGet(db, `oauth_state:${key}`);
 			if (!raw) return undefined;
 			const { dpopJwk, ...rest }: SerializedStateData = JSON.parse(raw);
 			const dpopKey = await deserializeKey(dpopJwk);
 			return { ...rest, dpopKey };
 		},
 		async del(key) {
-			await redis.del(`oauth_state:${key}`);
+			kvDel(db, `oauth_state:${key}`);
 		},
 	};
 }
 
 export function createSessionStore(
-	redis: RedisClient,
+	db: Database,
 	ttl = 60 * 60 * 24 * 14,
 ): SessionStore {
 	return {
@@ -59,19 +58,17 @@ export function createSessionStore(
 				...rest,
 				dpopJwk: serializeKey(dpopKey),
 			};
-			const redisKey = `oauth_session:${sub}`;
-			await redis.set(redisKey, JSON.stringify(data));
-			await redis.expire(redisKey, ttl);
+			kvSet(db, `oauth_session:${sub}`, JSON.stringify(data), ttl);
 		},
 		async get(sub) {
-			const raw = await redis.get(`oauth_session:${sub}`);
+			const raw = kvGet(db, `oauth_session:${sub}`);
 			if (!raw) return undefined;
 			const { dpopJwk, ...rest }: SerializedSession = JSON.parse(raw);
 			const dpopKey = await deserializeKey(dpopJwk);
 			return { ...rest, dpopKey };
 		},
 		async del(sub) {
-			await redis.del(`oauth_session:${sub}`);
+			kvDel(db, `oauth_session:${sub}`);
 		},
 	};
 }

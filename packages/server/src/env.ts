@@ -2,7 +2,7 @@ export interface Env {
 	CLIENT_URL: string;
 	CLIENT_NAME: string;
 	PORT: number;
-	REDIS_URL: string;
+	DATABASE_PATH: string;
 }
 
 export function loadEnv(): Env {
@@ -15,6 +15,6 @@ export function loadEnv(): Env {
 		CLIENT_URL: CLIENT_URL.replace(/\/+$/, ""),
 		CLIENT_NAME: process.env.CLIENT_NAME || "Sequoia",
 		PORT: Number(process.env.PORT) || 3000,
-		REDIS_URL: process.env.REDIS_URL || "redis://localhost:6379",
+		DATABASE_PATH: process.env.DATABASE_PATH || "./data/sequoia.db",
 	};
 }

@@ -33,6 +33,9 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # Finder (MacOS) folder config
 .DS_Store
 
+# SQLite data
+data/
+
 # Bun lockfile - keep but binary cache
 bun.lockb
 plans/

@@ -1,23 +1,23 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { RedisClient } from "bun";
 import { loadEnv } from "./env";
 import type { Env } from "./env";
+import { openDatabase } from "./lib/db";
 import auth from "./routes/auth";
 import subscribe from "./routes/subscribe";
 
 const env = loadEnv();
 
-const redis = new RedisClient(env.REDIS_URL);
+const db = openDatabase(env.DATABASE_PATH);
 
-type Variables = { env: Env; redis: typeof redis };
+type Variables = { env: Env; db: typeof db };
 
 const app = new Hono<{ Variables: Variables }>();
 
-// Inject env and redis into all routes
+// Inject env and db into all routes
 app.use("*", async (c, next) => {
 	c.set("env", env);
-	c.set("redis", redis);
+	c.set("db", db);
 	await next();
 });
 
