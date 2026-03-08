@@ -7,7 +7,7 @@ services:
       - CLIENT_URL=${CLIENT_URL}
       - CLIENT_NAME=${CLIENT_NAME:-Sequoia}
       - PORT=${PORT:-3000}
-      - REDIS_URL=redis://redis:6379
+      - DATABASE_PATH=${DATABASE_PATH:-/app/data/sequoia.db}
       - THEME_ACCENT_COLOR=${THEME_ACCENT_COLOR:-}
       - THEME_BG_COLOR=${THEME_BG_COLOR:-}
       - THEME_FG_COLOR=${THEME_FG_COLOR:-}
@@ -20,13 +20,8 @@ services:
       - THEME_DARK_BORDER_COLOR=${THEME_DARK_BORDER_COLOR:-}
       - THEME_DARK_ERROR_COLOR=${THEME_DARK_ERROR_COLOR:-}
       - THEME_CSS_PATH=${THEME_CSS_PATH:-}
-    depends_on:
-      - redis
-
-  redis:
-    image: redis:7
     volumes:
-      - redis-data:/data
+      - sequoia-data:/app/data
 
 volumes:
-  redis-data:
+  sequoia-data:

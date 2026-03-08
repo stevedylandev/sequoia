@@ -1,12 +1,12 @@
 import { Agent } from "@atproto/api";
 import { Hono } from "hono";
-import type { RedisClient } from "bun";
+import type { Database } from "bun:sqlite";
 import { createOAuthClient } from "../lib/oauth-client";
 import { getSessionDid, setReturnToCookie } from "../lib/session";
 import { page, escapeHtml } from "../lib/theme";
 import type { Env } from "../env";
 
-type Variables = { env: Env; redis: RedisClient };
+type Variables = { env: Env; db: Database };
 
 const subscribe = new Hono<{ Variables: Variables }>();
 
@@ -66,7 +66,7 @@ async function findExistingSubscription(
 
 subscribe.post("/", async (c) => {
 	const env = c.get("env");
-	const redis = c.get("redis");
+	const db = c.get("db");
 
 	let publicationUri: string;
 	try {
@@ -87,7 +87,7 @@ subscribe.post("/", async (c) => {
 	}
 
 	try {
-		const client = createOAuthClient(redis, env.CLIENT_URL, env.CLIENT_NAME);
+		const client = createOAuthClient(db, env.CLIENT_URL, env.CLIENT_NAME);
 		const session = await client.restore(did);
 		const agent = new Agent(session);
 
@@ -131,7 +131,7 @@ subscribe.post("/", async (c) => {
 
 subscribe.get("/", async (c) => {
 	const env = c.get("env");
-	const redis = c.get("redis");
+	const db = c.get("db");
 
 	const publicationUri = c.req.query("publicationUri");
 	const action = c.req.query("action");
@@ -157,7 +157,7 @@ subscribe.get("/", async (c) => {
 	}
 
 	try {
-		const client = createOAuthClient(redis, env.CLIENT_URL, env.CLIENT_NAME);
+		const client = createOAuthClient(db, env.CLIENT_URL, env.CLIENT_NAME);
 		const session = await client.restore(did);
 		const agent = new Agent(session);
 
@@ -256,7 +256,7 @@ subscribe.get("/", async (c) => {
 
 subscribe.get("/check", async (c) => {
 	const env = c.get("env");
-	const redis = c.get("redis");
+	const db = c.get("db");
 
 	const publicationUri = c.req.query("publicationUri");
 
@@ -270,7 +270,7 @@ subscribe.get("/check", async (c) => {
 	}
 
 	try {
-		const client = createOAuthClient(redis, env.CLIENT_URL, env.CLIENT_NAME);
+		const client = createOAuthClient(db, env.CLIENT_URL, env.CLIENT_NAME);
 		const session = await client.restore(did);
 		const agent = new Agent(session);
 		const recordUri = await findExistingSubscription(

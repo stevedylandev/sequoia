@@ -1,14 +1,14 @@
 import { JoseKey } from "@atproto/jwk-jose";
 import { OAuthClient } from "@atproto/oauth-client";
 import { AtprotoDohHandleResolver } from "@atproto-labs/handle-resolver";
-import type { RedisClient } from "bun";
-import { createStateStore, createSessionStore } from "./redis-stores";
+import type { Database } from "bun:sqlite";
+import { createStateStore, createSessionStore } from "./stores";
 
 export const OAUTH_SCOPE =
 	"atproto repo:site.standard.graph.subscription?action=create&action=delete";
 
 export function createOAuthClient(
-	redis: RedisClient,
+	db: Database,
 	clientUrl: string,
 	clientName = "Sequoia",
 ) {
@@ -47,7 +47,7 @@ export function createOAuthClient(
 			},
 			requestLock: <T>(_name: string, fn: () => T | PromiseLike<T>) => fn(),
 		},
-		stateStore: createStateStore(redis),
-		sessionStore: createSessionStore(redis),
+		stateStore: createStateStore(db),
+		sessionStore: createSessionStore(db),
 	});
 }

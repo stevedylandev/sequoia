@@ -1,6 +1,7 @@
 import { Hono } from "hono";
-import type { RedisClient } from "bun";
+import type { Database } from "bun:sqlite";
 import { createOAuthClient, OAUTH_SCOPE } from "../lib/oauth-client";
+import { kvGet, kvSet, kvDel } from "../lib/db";
 import {
 	getSessionDid,
 	setSessionCookie,
@@ -10,7 +11,7 @@ import {
 } from "../lib/session";
 import type { Env } from "../env";
 
-type Variables = { env: Env; redis: RedisClient };
+type Variables = { env: Env; db: Database };
 
 const auth = new Hono<{ Variables: Variables }>();
 
@@ -37,7 +38,7 @@ auth.get("/client-metadata.json", (c) => {
 // Start OAuth login flow
 auth.get("/login", async (c) => {
 	const env = c.get("env");
-	const redis = c.get("redis");
+	const db = c.get("db");
 
 	try {
 		const handle = c.req.query("handle");
@@ -45,7 +46,7 @@ auth.get("/login", async (c) => {
 			return c.redirect(`${env.CLIENT_URL}/?error=missing_handle`);
 		}
 
-		const client = createOAuthClient(redis, env.CLIENT_URL, env.CLIENT_NAME);
+		const client = createOAuthClient(db, env.CLIENT_URL, env.CLIENT_NAME);
 		const authUrl = await client.authorize(handle, {
 			scope: OAUTH_SCOPE,
 		});
@@ -60,7 +61,7 @@ auth.get("/login", async (c) => {
 // OAuth callback handler
 auth.get("/callback", async (c) => {
 	const env = c.get("env");
-	const redis = c.get("redis");
+	const db = c.get("db");
 
 	try {
 		const params = new URLSearchParams(c.req.url.split("?")[1] || "");
@@ -73,7 +74,7 @@ auth.get("/callback", async (c) => {
 			);
 		}
 
-		const client = createOAuthClient(redis, env.CLIENT_URL, env.CLIENT_NAME);
+		const client = createOAuthClient(db, env.CLIENT_URL, env.CLIENT_NAME);
 		const { session } = await client.callback(params);
 
 		// Resolve handle from DID
@@ -85,11 +86,9 @@ auth.get("/callback", async (c) => {
 			// Handle resolution is best-effort
 		}
 
-		// Store handle in Redis alongside the session for quick lookup
+		// Store handle alongside the session for quick lookup
 		if (handle) {
-			const key = `oauth_handle:${session.did}`;
-			await redis.set(key, handle);
-			await redis.expire(key, 60 * 60 * 24 * 14);
+			kvSet(db, `oauth_handle:${session.did}`, handle, 60 * 60 * 24 * 14);
 		}
 
 		setSessionCookie(c, session.did, env.CLIENT_URL);
@@ -108,17 +107,17 @@ auth.get("/callback", async (c) => {
 // Logout endpoint
 auth.post("/logout", async (c) => {
 	const env = c.get("env");
-	const redis = c.get("redis");
+	const db = c.get("db");
 	const did = getSessionDid(c);
 
 	if (did) {
 		try {
-			const client = createOAuthClient(redis, env.CLIENT_URL, env.CLIENT_NAME);
+			const client = createOAuthClient(db, env.CLIENT_URL, env.CLIENT_NAME);
 			await client.revoke(did);
 		} catch (error) {
 			console.error("Revoke error:", error);
 		}
-		await redis.del(`oauth_handle:${did}`);
+		kvDel(db, `oauth_handle:${did}`);
 	}
 
 	clearSessionCookie(c, env.CLIENT_URL);
@@ -128,7 +127,7 @@ auth.post("/logout", async (c) => {
 // Check auth status
 auth.get("/status", async (c) => {
 	const env = c.get("env");
-	const redis = c.get("redis");
+	const db = c.get("db");
 	const did = getSessionDid(c);
 
 	if (!did) {
@@ -136,10 +135,10 @@ auth.get("/status", async (c) => {
 	}
 
 	try {
-		const client = createOAuthClient(redis, env.CLIENT_URL, env.CLIENT_NAME);
+		const client = createOAuthClient(db, env.CLIENT_URL, env.CLIENT_NAME);
 		const session = await client.restore(did);
 
-		const handle = await redis.get(`oauth_handle:${session.did}`);
+		const handle = kvGet(db, `oauth_handle:${session.did}`);
 
 		return c.json({
 			authenticated: true,
