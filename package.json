@@ -7,6 +7,7 @@
 	],
 	"scripts": {
 		"format:cli": "cd packages/cli && bun run format",
+		"format:server": "cd packages/server && bun run format",
 		"format:docs": "cd docs && bun run format",
 		"dev:cli": "cd packages/cli && bun run dev",
 		"dev:docs": "cd docs && bun run dev",

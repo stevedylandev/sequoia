@@ -330,7 +330,7 @@ export async function updateDocument(
 	const publishDate = new Date(post.frontmatter.publishDate);
 
 	// Handle updatedAt: only set if explicitly provided in frontmatter
-	let updatedAt = post.frontmatter.updatedAt
+	const updatedAt = post.frontmatter.updatedAt
 		? new Date(post.frontmatter.updatedAt)
 		: undefined;
 
