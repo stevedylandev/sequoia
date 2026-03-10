@@ -4,8 +4,13 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
+		"lint": "biome lint --write",
+		"format": "biome format --write",
 		"dev": "bun --watch src/index.ts",
 		"start": "bun run src/index.ts"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.3.13"
 	},
 	"dependencies": {
 		"@atproto/api": "^0.13.21",

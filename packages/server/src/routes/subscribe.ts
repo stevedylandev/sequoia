@@ -300,10 +300,7 @@ subscribe.post("/login", async (c) => {
 	const formAction = (body["action"] as string | undefined) || undefined;
 
 	if (!handle || !publicationUri) {
-		return c.html(
-			renderError("Missing handle or publication URI."),
-			400,
-		);
+		return c.html(renderError("Missing handle or publication URI."), 400);
 	}
 
 	const returnTo =
@@ -327,9 +324,7 @@ function renderHandleForm(
 	error?: string,
 	action?: string,
 ): string {
-	const errorHtml = error
-		? `<p class="error">${escapeHtml(error)}</p>`
-		: "";
+	const errorHtml = error ? `<p class="error">${escapeHtml(error)}</p>` : "";
 	const returnToInput = returnTo
 		? `<input type="hidden" name="returnTo" value="${escapeHtml(returnTo)}" />`
 		: "";
@@ -418,9 +413,7 @@ function renderSuccess(
 }
 
 function renderError(message: string): string {
-	return page(
-		`<h1>Error</h1><p class="error">${escapeHtml(message)}</p>`,
-	);
+	return page(`<h1>Error</h1><p class="error">${escapeHtml(message)}</p>`);
 }
 
 export default subscribe;

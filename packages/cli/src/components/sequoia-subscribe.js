@@ -120,7 +120,9 @@ const BLUESKY_ICON = `<svg class="sequoia-bsky-logo" viewBox="0 0 600 530" fill=
  */
 function storeSubscriberDid(did) {
 	try {
-		const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
+		const expires = new Date(
+			Date.now() + 365 * 24 * 60 * 60 * 1000,
+		).toUTCString();
 		document.cookie = `sequoia_did=${encodeURIComponent(did)}; expires=${expires}; path=/; SameSite=Lax`;
 	} catch {
 		// Cookie write may fail in some embedded contexts
@@ -160,7 +162,8 @@ function getStoredSubscriberDid() {
  */
 function clearSubscriberDid() {
 	try {
-		document.cookie = "sequoia_did=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax";
+		document.cookie =
+			"sequoia_did=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax";
 	} catch {
 		// ignore
 	}
