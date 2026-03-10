@@ -2,6 +2,7 @@ export interface FrontmatterMapping {
 	title?: string; // Field name for title (default: "title")
 	description?: string; // Field name for description (default: "description")
 	publishDate?: string; // Field name for publish date (default: "publishDate", also checks "pubDate", "date", "createdAt", "created_at")
+	updatedAt?: string; // Field name for updated date (default: "updatedAt", also checks "updated_at", "modifiedAt", "modified_at")
 	coverImage?: string; // Field name for cover image (default: "ogImage")
 	tags?: string; // Field name for tags (default: "tags")
 	draft?: string; // Field name for draft status (default: "draft")
@@ -90,6 +91,7 @@ export interface PostFrontmatter {
 	description?: string;
 	bskyPost?: string;
 	publishDate: string;
+	updatedAt?: string;
 	tags?: string[];
 	ogImage?: string;
 	atUri?: string;

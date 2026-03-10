@@ -26,7 +26,8 @@ function isDocumentRecord(value: unknown): value is DocumentRecord {
 		typeof v.site === "string" &&
 		typeof v.path === "string" &&
 		typeof v.textContent === "string" &&
-		typeof v.publishedAt === "string"
+		typeof v.publishedAt === "string" &&
+		(v.updatedAt === undefined || typeof v.updatedAt === "string")
 	);
 }
 
@@ -252,6 +253,12 @@ export async function createDocument(
 	);
 	const publishDate = new Date(post.frontmatter.publishDate);
 
+	// Handle updatedAt: only set if explicitly provided in frontmatter
+	let updatedAt: Date | undefined;
+	if (post.frontmatter.updatedAt) {
+		updatedAt = new Date(post.frontmatter.updatedAt);
+	}
+
 	// Determine textContent (if enabled): use configured field from frontmatter, or fallback to markdown body
 	let textContent: string | null = null;
 	if (
@@ -273,6 +280,10 @@ export async function createDocument(
 		publishedAt: publishDate.toISOString(),
 		canonicalUrl: `${config.siteUrl}${postPath}`,
 	};
+
+	if (updatedAt) {
+		record.updatedAt = updatedAt.toISOString();
+	}
 
 	if (post.frontmatter.description) {
 		record.description = post.frontmatter.description;
@@ -318,6 +329,11 @@ export async function updateDocument(
 	);
 	const publishDate = new Date(post.frontmatter.publishDate);
 
+	// Handle updatedAt: only set if explicitly provided in frontmatter
+	let updatedAt = post.frontmatter.updatedAt
+		? new Date(post.frontmatter.updatedAt)
+		: undefined;
+
 	// Determine textContent (if enabled): use configured field from frontmatter, or fallback to markdown body
 	let textContent: string | null = null;
 	if (
@@ -348,6 +364,10 @@ export async function updateDocument(
 		publishedAt: publishDate.toISOString(),
 		canonicalUrl: `${config.siteUrl}${postPath}`,
 	};
+
+	if (updatedAt) {
+		record.updatedAt = updatedAt.toISOString();
+	}
 
 	if (post.frontmatter.description) {
 		record.description = post.frontmatter.description;
@@ -388,6 +408,7 @@ export interface DocumentRecord {
 	path: string;
 	textContent?: string;
 	publishedAt: string;
+	updatedAt?: string;
 	canonicalUrl?: string;
 	description?: string;
 	coverImage?: BlobObject;

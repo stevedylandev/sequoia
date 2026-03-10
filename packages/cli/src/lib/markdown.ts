@@ -75,6 +75,23 @@ export function parseFrontmatter(
 		}
 	}
 
+	// Updated date mapping - check custom field first, then fallbacks
+	const updatedAtField = mapping?.updatedAt;
+	if (updatedAtField && raw[updatedAtField]) {
+		frontmatter.updatedAt = raw[updatedAtField];
+	} else if (raw.updatedAt) {
+		frontmatter.updatedAt = raw.updatedAt;
+	} else {
+		// Fallback to common date field names
+		const updatedAtFields = ["updated_at", "modifiedAt", "modified_at"];
+		for (const field of updatedAtFields) {
+			if (raw[field]) {
+				frontmatter.updatedAt = raw[field];
+				break;
+			}
+		}
+	}
+
 	// Cover image mapping
 	const coverField = mapping?.coverImage || "ogImage";
 	frontmatter.ogImage = raw[coverField] || raw.ogImage;

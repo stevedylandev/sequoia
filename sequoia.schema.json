@@ -70,6 +70,11 @@
 					"description": "Field name for publish date (checks \"publishDate\", \"pubDate\", \"date\", \"createdAt\", and \"created_at\" by default)",
 					"default": "publishDate"
 				},
+				"updatedAt": {
+					"type": "string",
+					"description": "Field name for updated date (checks \"updatedAt\", \"updated_at\", \"modifiedAt\", and \"modified_at\" by default)",
+					"default": "updatedAt"
+				},
 				"coverImage": {
 					"type": "string",
 					"description": "Field name for cover image",
