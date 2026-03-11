@@ -125,11 +125,27 @@ const ATMOSPHERE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 11
 // ============================================================================
 
 const BUTTON_TYPES = {
-	sequoia:    { icon: SEQUOIA_ICON,    subscribe: "Subscribe on Sequoia",    unsubscribe: "Unsubscribe" },
-	bluesky:    { icon: BLUESKY_ICON,    subscribe: "Subscribe on Bluesky",    unsubscribe: "Unsubscribe" },
-	blacksky:   { icon: BLACKSKY_ICON,   subscribe: "Subscribe on Blacksky",   unsubscribe: "Unsubscribe" },
-	atmosphere: { icon: ATMOSPHERE_ICON, subscribe: "Subscribe on Atmosphere", unsubscribe: "Unsubscribe" },
-	plain:      { icon: "",              subscribe: "Subscribe",               unsubscribe: "Unsubscribe" },
+	sequoia: {
+		icon: SEQUOIA_ICON,
+		subscribe: "Subscribe on Sequoia",
+		unsubscribe: "Unsubscribe",
+	},
+	bluesky: {
+		icon: BLUESKY_ICON,
+		subscribe: "Subscribe on Bluesky",
+		unsubscribe: "Unsubscribe",
+	},
+	blacksky: {
+		icon: BLACKSKY_ICON,
+		subscribe: "Subscribe on Blacksky",
+		unsubscribe: "Unsubscribe",
+	},
+	atmosphere: {
+		icon: ATMOSPHERE_ICON,
+		subscribe: "Subscribe on Atmosphere",
+		unsubscribe: "Unsubscribe",
+	},
+	plain: { icon: "", subscribe: "Subscribe", unsubscribe: "Unsubscribe" },
 };
 
 // ============================================================================
@@ -292,7 +308,14 @@ class SequoiaSubscribe extends BaseElement {
 	}
 
 	static get observedAttributes() {
-		return ["publication-uri", "callback-uri", "label", "unsubscribe-label", "button-type", "hide"];
+		return [
+			"publication-uri",
+			"callback-uri",
+			"label",
+			"unsubscribe-label",
+			"button-type",
+			"hide",
+		];
 	}
 
 	connectedCallback() {
