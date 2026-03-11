@@ -35,9 +35,19 @@
   <p>This is a test page for the sequoia-comments web component.</p>
   <p>The component will look for a <code>&lt;link rel="site.standard.document"&gt;</code> tag in the document head to find the AT Protocol document, then fetch and display Bluesky replies as comments.</p>
 
+  <h2>Subscribe Buttons</h2>
+  <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 2rem;">
+    <sequoia-subscribe publication-uri="at://did:plc:kq6bvkw4sxof3vdinuitehn5/site.standard.publication/self"></sequoia-subscribe>
+    <sequoia-subscribe publication-uri="at://did:plc:kq6bvkw4sxof3vdinuitehn5/site.standard.publication/self" button-type="bluesky"></sequoia-subscribe>
+    <sequoia-subscribe publication-uri="at://did:plc:kq6bvkw4sxof3vdinuitehn5/site.standard.publication/self" button-type="blacksky"></sequoia-subscribe>
+    <sequoia-subscribe publication-uri="at://did:plc:kq6bvkw4sxof3vdinuitehn5/site.standard.publication/self" button-type="atmosphere"></sequoia-subscribe>
+    <sequoia-subscribe publication-uri="at://did:plc:kq6bvkw4sxof3vdinuitehn5/site.standard.publication/self" button-type="plain"></sequoia-subscribe>
+  </div>
+
   <h2>Comments</h2>
   <sequoia-comments></sequoia-comments>
 
+  <script type="module" src="./src/components/sequoia-subscribe.js"></script>
   <script type="module" src="./src/components/sequoia-comments.js"></script>
 </body>
 </html>
