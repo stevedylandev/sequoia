@@ -1,3 +1,28 @@
+## [0.5.1] - 2026-03-11
+
+### 🚀 Features
+
+- Added initial server package
+- Add json schema
+- Add option to disable publishing (text) content
+- Add updated at support
+
+### 🐛 Bug Fixes
+
+- Correct oauth scopes
+
+### ⚙️ Miscellaneous Tasks
+
+- Updated changelog
+- Applied formatting
+- *(docs)* Updated supported frameworks
+- Refactored server package to use sqlite instead of redis
+- Added and applied formatting to server
+- Added branded and customization to subscribe
+- Applied formatting
+- Updated docs
+- Version bump
+
 ## [0.5.0] - 2026-02-27
 
 ### 🚀 Features
@@ -17,7 +42,6 @@
 - Refactored docs to worker + static assets
 - Refactored to use atproto oauth lib
 - Version bump and clean up
-
 ## [0.4.0] - 2026-02-07
 
 ### 🚀 Features
