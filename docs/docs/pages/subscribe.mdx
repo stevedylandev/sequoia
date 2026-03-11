@@ -1,6 +1,6 @@
 # Subscribe
 
-Sequoia provides a subscribe button web component that lets your readers subscribe to your publication directly from your site using their Bluesky account.
+Sequoia provides a subscribe button web component that lets your readers subscribe to your publication directly from your site using their AT Protocol account.
 
 ## Setup
 
@@ -93,7 +93,9 @@ declare namespace JSX {
       React.HTMLAttributes<HTMLElement> & {
         'publication-uri'?: string;
         'callback-uri'?: string;
+        'button-type'?: 'sequoia' | 'bluesky' | 'blacksky' | 'atmosphere' | 'plain';
         label?: string;
+        'unsubscribe-label'?: string;
         hide?: string;
       },
       HTMLElement
@@ -132,14 +134,43 @@ The `<sequoia-subscribe>` component accepts the following attributes:
 |-----------|------|---------|-------------|
 | `publication-uri` | `string` | - | AT Protocol URI for the publication. Optional if a `/.well-known/site.standard.publication` endpoint exists on the host site. |
 | `callback-uri` | `string` | `https://sequoia.pub/subscribe` | Redirect URI used for the OAuth authentication flow. |
-| `label` | `string` | `Subscribe on Bluesky` | Button label text. |
+| `button-type` | `string` | `sequoia` | Branding style for the button. Accepted values: `sequoia`, `bluesky`, `blacksky`, `atmosphere`, `plain`. |
+| `label` | `string` | - | Override the subscribe button label text. Defaults to the `button-type` label (e.g. "Subscribe on Sequoia"). |
+| `unsubscribe-label` | `string` | `Unsubscribe` | Override the unsubscribe button label text. |
 | `hide` | `string` | - | Set to `"auto"` to hide the component if no publication URI is detected. |
 
+#### Button Types
+
+The `button-type` attribute controls which icon and default label the button uses:
+
+| Type | Icon | Default Label |
+|------|------|---------------|
+| `sequoia` | Sequoia tree | Subscribe on Sequoia |
+| `bluesky` | Bluesky butterfly | Subscribe on Bluesky |
+| `blacksky` | Blacksky star | Subscribe on Blacksky |
+| `atmosphere` | Atmosphere @ | Subscribe on Atmosphere |
+| `plain` | None | Subscribe |
+
 ```html
-<!-- Use attributes for explicit control -->
+<!-- Default Sequoia branding -->
+<sequoia-subscribe></sequoia-subscribe>
+
+<!-- Bluesky branding -->
+<sequoia-subscribe button-type="bluesky"></sequoia-subscribe>
+
+<!-- Blacksky branding -->
+<sequoia-subscribe button-type="blacksky"></sequoia-subscribe>
+
+<!-- Atmosphere branding -->
+<sequoia-subscribe button-type="atmosphere"></sequoia-subscribe>
+
+<!-- Plain text, no icon -->
+<sequoia-subscribe button-type="plain"></sequoia-subscribe>
+
+<!-- Custom labels -->
 <sequoia-subscribe
-  publication-uri="at://did:plc:example/site.standard.publication/abc123"
-  label="Follow on Bluesky">
+  label="Follow this publication"
+  unsubscribe-label="Stop following">
 </sequoia-subscribe>
 ```
 
@@ -176,6 +207,7 @@ The component uses CSS custom properties for theming. Set these in your `:root` 
 | `--sequoia-accent-color` | `#2563eb` | Button background color |
 | `--sequoia-secondary-color` | `#6b7280` | Secondary text color |
 | `--sequoia-border-radius` | `8px` | Border radius for the button |
+| `--sequoia-icon-display` | `inline-block` | Set to `none` to hide the button icon |
 
 ### Example: Match Site Theme
 
