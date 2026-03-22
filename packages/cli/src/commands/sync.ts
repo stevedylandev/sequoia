@@ -1,21 +1,15 @@
-import * as fs from "node:fs/promises";
 import { command, flag } from "cmd-ts";
 import { select, spinner, log } from "@clack/prompts";
 import * as path from "node:path";
-import { loadConfig, loadState, saveState, findConfig } from "../lib/config";
+import { loadConfig, findConfig } from "../lib/config";
 import {
 	loadCredentials,
 	listAllCredentials,
 	getCredentials,
 } from "../lib/credentials";
 import { getOAuthHandle, getOAuthSession } from "../lib/oauth-store";
-import { createAgent, listDocuments } from "../lib/atproto";
-import {
-	scanContentDirectory,
-	getContentHash,
-	updateFrontmatterWithAtUri,
-	resolvePostPath,
-} from "../lib/markdown";
+import { createAgent } from "../lib/atproto";
+import { syncStateFromPDS } from "../lib/sync";
 import { exitOnCancel } from "../lib/prompts";
 
 export const syncCommand = command({
@@ -121,123 +115,26 @@ export const syncCommand = command({
 			process.exit(1);
 		}
 
-		// Fetch documents from PDS
+		// Sync state from PDS
 		s.start("Fetching documents from PDS...");
-		const documents = await listDocuments(agent, config.publicationUri);
-		s.stop(`Found ${documents.length} documents on PDS`);
-
-		if (documents.length === 0) {
-			log.info("No documents found for this publication.");
-			return;
-		}
-
-		// Resolve content directory
-		const contentDir = path.isAbsolute(config.contentDir)
-			? config.contentDir
-			: path.join(configDir, config.contentDir);
-
-		// Scan local posts
-		s.start("Scanning local content...");
-		const localPosts = await scanContentDirectory(contentDir, {
-			frontmatterMapping: config.frontmatter,
-			ignorePatterns: config.ignore,
-			slugField: config.frontmatter?.slugField,
-			removeIndexFromSlug: config.removeIndexFromSlug,
-			stripDatePrefix: config.stripDatePrefix,
+		const result = await syncStateFromPDS(agent, config, configDir, {
+			updateFrontmatter,
+			dryRun,
+			quiet: false,
 		});
-		s.stop(`Found ${localPosts.length} local posts`);
+		s.stop(`Found documents on PDS`);
 
-		// Build a map of path -> local post for matching
-		// Document path is like /posts/my-post-slug (or custom pathPrefix/pathTemplate)
-		const postsByPath = new Map<string, (typeof localPosts)[0]>();
-		for (const post of localPosts) {
-			const postPath = resolvePostPath(
-				post,
-				config.pathPrefix,
-				config.pathTemplate,
+		if (!dryRun) {
+			const stateCount = Object.keys(result.state.posts).length;
+			log.success(
+				`\nSaved .sequoia-state.json (${stateCount} entries)`,
 			);
-			postsByPath.set(postPath, post);
-		}
 
-		// Load existing state
-		const state = await loadState(configDir);
-		const originalPostCount = Object.keys(state.posts).length;
-
-		// Track changes
-		let matchedCount = 0;
-		let unmatchedCount = 0;
-		const frontmatterUpdates: Array<{ filePath: string; atUri: string }> = [];
-
-		log.message("\nMatching documents to local files:\n");
-
-		for (const doc of documents) {
-			const docPath = doc.value.path;
-			const localPost = postsByPath.get(docPath);
-
-			if (localPost) {
-				matchedCount++;
-				log.message(`  ✓ ${doc.value.title}`);
-				log.message(`    Path: ${docPath}`);
-				log.message(`    URI: ${doc.uri}`);
-				log.message(`    File: ${path.basename(localPost.filePath)}`);
-
-				// Update state (use relative path from config directory)
-				const contentHash = await getContentHash(localPost.rawContent);
-				const relativeFilePath = path.relative(configDir, localPost.filePath);
-				state.posts[relativeFilePath] = {
-					contentHash,
-					atUri: doc.uri,
-					lastPublished: doc.value.publishedAt,
-				};
-
-				// Check if frontmatter needs updating
-				if (updateFrontmatter && localPost.frontmatter.atUri !== doc.uri) {
-					frontmatterUpdates.push({
-						filePath: localPost.filePath,
-						atUri: doc.uri,
-					});
-					log.message(`    → Will update frontmatter`);
-				}
-			} else {
-				unmatchedCount++;
-				log.message(`  ✗ ${doc.value.title} (no matching local file)`);
-				log.message(`    Path: ${docPath}`);
-				log.message(`    URI: ${doc.uri}`);
+			if (result.frontmatterUpdatesApplied > 0) {
+				log.success(
+					`Updated frontmatter in ${result.frontmatterUpdatesApplied} files`,
+				);
 			}
-			log.message("");
-		}
-
-		// Summary
-		log.message("---");
-		log.info(`Matched: ${matchedCount} documents`);
-		if (unmatchedCount > 0) {
-			log.warn(
-				`Unmatched: ${unmatchedCount} documents (exist on PDS but not locally)`,
-			);
-		}
-
-		if (dryRun) {
-			log.info("\nDry run complete. No changes made.");
-			return;
-		}
-
-		// Save updated state
-		await saveState(configDir, state);
-		const newPostCount = Object.keys(state.posts).length;
-		log.success(
-			`\nSaved .sequoia-state.json (${originalPostCount} → ${newPostCount} entries)`,
-		);
-
-		// Update frontmatter if requested
-		if (frontmatterUpdates.length > 0) {
-			s.start(`Updating frontmatter in ${frontmatterUpdates.length} files...`);
-			for (const { filePath, atUri } of frontmatterUpdates) {
-				const content = await fs.readFile(filePath, "utf-8");
-				const updated = updateFrontmatterWithAtUri(content, atUri);
-				await fs.writeFile(filePath, updated);
-				log.message(`  Updated: ${path.basename(filePath)}`);
-			}
-			s.stop("Frontmatter updated");
 		}
 
 		log.success("\nSync complete!");
