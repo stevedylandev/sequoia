@@ -159,9 +159,7 @@ export const publishCommand = command({
 		) {
 			// Create agent early for sync (will be reused for publishing)
 			const connectingTo =
-				credentials.type === "oauth"
-					? credentials.handle
-					: credentials.pdsUrl;
+				credentials.type === "oauth" ? credentials.handle : credentials.pdsUrl;
 			s.start(`Connecting as ${connectingTo}...`);
 			try {
 				agent = await createAgent(credentials);
@@ -174,25 +172,20 @@ export const publishCommand = command({
 
 			try {
 				s.start("Auto-syncing state from PDS...");
-				const syncResult = await syncStateFromPDS(
-					agent,
-					config,
-					configDir,
-					{
-						updateFrontmatter: true,
-						quiet: true,
-					},
-				);
-				s.stop(
-					`Auto-synced ${syncResult.matchedCount} posts from PDS`,
-				);
+				const syncResult = await syncStateFromPDS(agent, config, configDir, {
+					updateFrontmatter: true,
+					quiet: true,
+				});
+				s.stop(`Auto-synced ${syncResult.matchedCount} posts from PDS`);
 				state = syncResult.state;
 			} catch (error) {
 				s.stop("Auto-sync failed");
 				log.warn(
 					`Auto-sync failed: ${error instanceof Error ? error.message : String(error)}`,
 				);
-				log.warn("Continuing with empty state. Run 'sequoia sync' manually to fix.");
+				log.warn(
+					"Continuing with empty state. Run 'sequoia sync' manually to fix.",
+				);
 			}
 		}
 
@@ -312,9 +305,7 @@ export const publishCommand = command({
 		// Create agent (skip if already created during auto-sync)
 		if (!agent) {
 			const connectingTo =
-				credentials.type === "oauth"
-					? credentials.handle
-					: credentials.pdsUrl;
+				credentials.type === "oauth" ? credentials.handle : credentials.pdsUrl;
 			s.start(`Connecting as ${connectingTo}...`);
 			try {
 				agent = await createAgent(credentials);

@@ -85,7 +85,11 @@ export async function syncStateFromPDS(
 	let matchedCount = 0;
 	let unmatchedCount = 0;
 	let frontmatterUpdatesApplied = 0;
-	const frontmatterUpdates: Array<{ filePath: string; atUri: string; relativeFilePath: string }> = [];
+	const frontmatterUpdates: Array<{
+		filePath: string;
+		atUri: string;
+		relativeFilePath: string;
+	}> = [];
 
 	if (!quiet) {
 		log.message("\nMatching documents to local files:\n");
@@ -143,9 +147,7 @@ export async function syncStateFromPDS(
 		} else {
 			unmatchedCount++;
 			if (!quiet) {
-				log.message(
-					`  ✗ ${doc.value.title} (no matching local file)`,
-				);
+				log.message(`  ✗ ${doc.value.title} (no matching local file)`);
 				log.message(`    Path: ${docPath}`);
 				log.message(`    URI: ${doc.uri}`);
 			}
@@ -170,7 +172,12 @@ export async function syncStateFromPDS(
 		if (!quiet) {
 			log.info("\nDry run complete. No changes made.");
 		}
-		return { state, matchedCount, unmatchedCount, frontmatterUpdatesApplied: 0 };
+		return {
+			state,
+			matchedCount,
+			unmatchedCount,
+			frontmatterUpdatesApplied: 0,
+		};
 	}
 
 	// Save updated state
