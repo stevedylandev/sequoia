@@ -126,9 +126,7 @@ export const syncCommand = command({
 
 		if (!dryRun) {
 			const stateCount = Object.keys(result.state.posts).length;
-			log.success(
-				`\nSaved .sequoia-state.json (${stateCount} entries)`,
-			);
+			log.success(`\nSaved .sequoia-state.json (${stateCount} entries)`);
 
 			if (result.frontmatterUpdatesApplied > 0) {
 				log.success(
