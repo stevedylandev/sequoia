@@ -25,6 +25,7 @@ import {
 	resolvePostPath,
 } from "../lib/markdown";
 import type { BlogPost, BlobObject, StrongRef } from "../lib/types";
+import { syncStateFromPDS } from "../lib/sync";
 import { exitOnCancel } from "../lib/prompts";
 
 export const publishCommand = command({
@@ -145,10 +146,57 @@ export const publishCommand = command({
 			: undefined;
 
 		// Load state
-		const state = await loadState(configDir);
+		let state = await loadState(configDir);
+
+		// Auto-sync from PDS if state is empty (prevents duplicates on fresh clones)
+		const s = spinner();
+		let agent: Awaited<ReturnType<typeof createAgent>> | undefined;
+
+		if (
+			config.autoSync !== false &&
+			Object.keys(state.posts).length === 0 &&
+			!dryRun
+		) {
+			// Create agent early for sync (will be reused for publishing)
+			const connectingTo =
+				credentials.type === "oauth"
+					? credentials.handle
+					: credentials.pdsUrl;
+			s.start(`Connecting as ${connectingTo}...`);
+			try {
+				agent = await createAgent(credentials);
+				s.stop(`Logged in as ${agent.did}`);
+			} catch (error) {
+				s.stop("Failed to login");
+				log.error(`Failed to login: ${error}`);
+				process.exit(1);
+			}
+
+			try {
+				s.start("Auto-syncing state from PDS...");
+				const syncResult = await syncStateFromPDS(
+					agent,
+					config,
+					configDir,
+					{
+						updateFrontmatter: true,
+						quiet: true,
+					},
+				);
+				s.stop(
+					`Auto-synced ${syncResult.matchedCount} posts from PDS`,
+				);
+				state = syncResult.state;
+			} catch (error) {
+				s.stop("Auto-sync failed");
+				log.warn(
+					`Auto-sync failed: ${error instanceof Error ? error.message : String(error)}`,
+				);
+				log.warn("Continuing with empty state. Run 'sequoia sync' manually to fix.");
+			}
+		}
 
 		// Scan for posts
-		const s = spinner();
 		s.start("Scanning for posts...");
 		const posts = await scanContentDirectory(contentDir, {
 			frontmatterMapping: config.frontmatter,
@@ -261,18 +309,21 @@ export const publishCommand = command({
 			return;
 		}
 
-		// Create agent
-		const connectingTo =
-			credentials.type === "oauth" ? credentials.handle : credentials.pdsUrl;
-		s.start(`Connecting as ${connectingTo}...`);
-		let agent: Awaited<ReturnType<typeof createAgent>> | undefined;
-		try {
-			agent = await createAgent(credentials);
-			s.stop(`Logged in as ${agent.did}`);
-		} catch (error) {
-			s.stop("Failed to login");
-			log.error(`Failed to login: ${error}`);
-			process.exit(1);
+		// Create agent (skip if already created during auto-sync)
+		if (!agent) {
+			const connectingTo =
+				credentials.type === "oauth"
+					? credentials.handle
+					: credentials.pdsUrl;
+			s.start(`Connecting as ${connectingTo}...`);
+			try {
+				agent = await createAgent(credentials);
+				s.stop(`Logged in as ${agent.did}`);
+			} catch (error) {
+				s.stop("Failed to login");
+				log.error(`Failed to login: ${error}`);
+				process.exit(1);
+			}
 		}
 
 		// Publish posts

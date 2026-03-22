@@ -45,6 +45,7 @@ export interface PublisherConfig {
 	publishContent?: boolean; // Whether or not to publish the documents content on the standard.site document (default: true)
 	bluesky?: BlueskyConfig; // Optional Bluesky posting configuration
 	ui?: UIConfig; // Optional UI components configuration
+	autoSync?: boolean; // Automatically sync state from PDS before publishing (default: true)
 }
 
 // Legacy credentials format (for backward compatibility during migration)

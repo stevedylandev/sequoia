@@ -145,6 +145,11 @@
 				}
 			}
 		},
+		"autoSync": {
+			"type": "boolean",
+			"description": "Automatically sync state from PDS before publishing to prevent duplicate posts on fresh clones",
+			"default": true
+		},
 		"ui": {
 			"type": "object",
 			"additionalProperties": false,
