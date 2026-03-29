@@ -67,4 +67,9 @@ MIT
 ## Contact
 
 [ATProto](https://pds.ls/at://stevedylan.dev)
+
 [Email](mailto:contact@stavedylan.dev)
+
+<a href="https://ko-fi.com/stevedylandev" target="_blank" rel="noreferrer">
+  <img width="200" src="https://files.stevedylan.dev/support_me_on_kofi_dark.png" alt="ko-fi badge" />
+</a>
