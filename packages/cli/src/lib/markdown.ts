@@ -18,7 +18,8 @@ export function parseFrontmatter(
 	// --- (YAML) - Jekyll, Astro, most SSGs
 	// +++ (TOML) - Hugo
 	// *** - Alternative format
-	const frontmatterRegex = /^(---|\+\+\+|\*\*\*)\r?\n([\s\S]*?)\r?\n\1\r?\n([\s\S]*)$/;
+	const frontmatterRegex =
+		/^(---|\+\+\+|\*\*\*)\r?\n([\s\S]*?)\r?\n\1\r?\n([\s\S]*)$/;
 	const match = content.match(frontmatterRegex);
 
 	if (!match) {
