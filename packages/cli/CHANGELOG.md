@@ -1,10 +1,21 @@
+## [0.5.3] - 2026-04-04
+
+### 🐛 Bug Fixes
+
+- Fixed frontmatter regex to account for windows carriage return
+
+### ⚙️ Miscellaneous Tasks
+
+- Update changelog
+- Lint and format
+- Version bump
+
 ## [0.5.2] - 2026-03-22
 
 ### ⚙️ Miscellaneous Tasks
 
 - Add auto sync to publishing
 - Format and bump version
-
 ## [0.5.1] - 2026-03-11
 
 ### 🚀 Features
