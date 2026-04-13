@@ -341,7 +341,7 @@ export const initCommand = command({
 			imagesDir: siteConfig.imagesDir || undefined,
 			publicDir: siteConfig.publicDir || "./public",
 			outputDir: siteConfig.outputDir || "./dist",
-			pathPrefix: siteConfig.pathPrefix || "/posts",
+			pathPrefix: siteConfig.pathPrefix ?? "/posts",
 			publicationUri,
 			pdsUrl,
 			frontmatter: frontmatterMapping,

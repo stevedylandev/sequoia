@@ -231,8 +231,8 @@ export function resolvePostPath(
 	if (pathTemplate) {
 		return resolvePathTemplate(pathTemplate, post);
 	}
-	const prefix = pathPrefix || "/posts";
-	return `${prefix}/${post.slug}`;
+	const prefix = pathPrefix ?? "/posts";
+	return prefix ? `${prefix}/${post.slug}` : `/${post.slug}`;
 }
 
 export async function getContentHash(content: string): Promise<string> {
