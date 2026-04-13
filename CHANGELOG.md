@@ -1,3 +1,37 @@
+## [0.5.4] - 2026-04-13
+
+### 🐛 Bug Fixes
+
+- Corrected behavior for empty string in pathPrefix
+
+### ⚙️ Miscellaneous Tasks
+
+- Update changelog
+- Release 0.5.4
+
+## [0.5.3] - 2026-04-04
+
+### 🐛 Bug Fixes
+
+- Fixed frontmatter regex to account for windows carriage return
+
+### ⚙️ Miscellaneous Tasks
+
+- Update changelog
+- Update .github
+- Update README
+- Lint and format
+- Version bump
+
+## [0.5.2] - 2026-03-22
+
+### ⚙️ Miscellaneous Tasks
+
+- Updated changelog
+- Add auto sync to publishing
+- Update docs
+- Format and bump version
+
 ## [0.5.1] - 2026-03-11
 
 ### 🚀 Features
@@ -22,7 +56,6 @@
 - Applied formatting
 - Updated docs
 - Version bump
-
 ## [0.5.0] - 2026-02-27
 
 ### 🚀 Features
