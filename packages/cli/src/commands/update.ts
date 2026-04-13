@@ -70,7 +70,7 @@ async function updateConfigFlow(
 	const configSummary = [
 		`Site URL: ${config.siteUrl}`,
 		`Content Dir: ${config.contentDir}`,
-		`Path Prefix: ${config.pathPrefix || "/posts"}`,
+		`Path Prefix: ${config.pathPrefix ?? "/posts"}`,
 		`Publication URI: ${config.publicationUri}`,
 		config.imagesDir ? `Images Dir: ${config.imagesDir}` : null,
 		config.outputDir ? `Output Dir: ${config.outputDir}` : null,
@@ -194,14 +194,14 @@ async function editSiteSettings(
 	const pathPrefix = exitOnCancel(
 		await text({
 			message: "URL path prefix for posts:",
-			initialValue: config.pathPrefix || "/posts",
+			initialValue: config.pathPrefix ?? "/posts",
 		}),
 	);
 
 	return {
 		...config,
 		siteUrl,
-		pathPrefix: pathPrefix || undefined,
+		pathPrefix,
 	};
 }
 

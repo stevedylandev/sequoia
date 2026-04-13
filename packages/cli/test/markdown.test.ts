@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { parseFrontmatter } from "../src/lib/markdown";
+import { parseFrontmatter, resolvePostPath } from "../src/lib/markdown";
+import type { BlogPost } from "../src/lib/types";
 
 describe("parseFrontmatter", () => {
 	describe("delimiters", () => {
@@ -383,5 +384,34 @@ title: Post
 			const { body } = parseFrontmatter(content);
 			expect(body).toBe("");
 		});
+	});
+});
+
+describe("resolvePostPath", () => {
+	const post: BlogPost = {
+		filePath: "/tmp/hello.md",
+		slug: "hello-world",
+		frontmatter: { title: "Hello" } as BlogPost["frontmatter"],
+		content: "",
+		rawContent: "",
+		rawFrontmatter: {},
+	};
+
+	it("defaults to /posts when pathPrefix is undefined", () => {
+		expect(resolvePostPath(post)).toBe("/posts/hello-world");
+	});
+
+	it("uses custom prefix when provided", () => {
+		expect(resolvePostPath(post, "/blog")).toBe("/blog/hello-world");
+	});
+
+	it("omits prefix when pathPrefix is an empty string", () => {
+		expect(resolvePostPath(post, "")).toBe("/hello-world");
+	});
+
+	it("pathTemplate overrides pathPrefix", () => {
+		expect(resolvePostPath(post, "", "/custom/{slug}")).toBe(
+			"/custom/hello-world",
+		);
 	});
 });
