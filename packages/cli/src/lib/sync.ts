@@ -138,11 +138,14 @@ export async function syncStateFromPDS(
 				contentHash = await getContentHash(localPost.rawContent);
 			}
 
-			// Update state
+			// Update state (preserve bskyPostRef from prior publishes)
+			const existing = state.posts[relativeFilePath];
 			state.posts[relativeFilePath] = {
 				contentHash,
 				atUri: doc.uri,
 				lastPublished: doc.value.publishedAt,
+				slug: localPost.slug,
+				...(existing?.bskyPostRef ? { bskyPostRef: existing.bskyPostRef } : {}),
 			};
 		} else {
 			unmatchedCount++;
