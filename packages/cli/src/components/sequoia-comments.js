@@ -260,15 +260,15 @@ const styles = `
 	white-space: nowrap;
 }
 
+.sequoia-comment-handle::after {
+  content: "·";
+	margin-left: 0.5rem;
+}
+
 .sequoia-comment-time {
 	font-size: 0.875rem;
 	color: var(--sequoia-secondary-color, #6b7280);
 	flex-shrink: 0;
-}
-
-.sequoia-comment-time::before {
-	content: "·";
-	margin-right: 0.5rem;
 }
 
 .sequoia-comment-text {
@@ -973,8 +973,7 @@ class SequoiaComments extends BaseElement {
 
     const quotesHtml = quotes
       .map((post) => {
-        const quotePostUrl = buildBskyAppUrl(post.uri);
-        return `<div class="sequoia-thread">${this.renderComment(post, false, 0, quotePostUrl)}</div>`;
+        return `<div class="sequoia-thread">${this.renderComment(post, false, 0)}</div>`;
       })
       .join("");
 
@@ -993,9 +992,8 @@ class SequoiaComments extends BaseElement {
    * @param {any} post - Post data
    * @param {boolean} showThreadLine - Whether to show the connecting thread line
    * @param {number} _index - Index in the flattened thread (0 = top-level)
-   * @param {string|null} postUrl - Optional URL to link the timestamp to (used for quote posts)
    */
-  renderComment(post, showThreadLine = false, _index = 0, postUrl = null) {
+  renderComment(post, showThreadLine = false, _index = 0) {
     const author = post.author;
     const displayName = author.displayName || author.handle;
     const avatarHtml = author.avatar
@@ -1005,9 +1003,7 @@ class SequoiaComments extends BaseElement {
     const profileUrl = `https://bsky.app/profile/${author.did}`;
     const textHtml = renderTextWithFacets(post.record.text, post.record.facets);
     const timeAgo = formatRelativeTime(post.record.createdAt);
-    const timeHtml = postUrl
-      ? `<a href="${escapeHtml(postUrl)}" target="_blank" rel="noopener noreferrer" class="sequoia-comment-time">${timeAgo}</a>`
-      : `<span class="sequoia-comment-time">${timeAgo}</span>`;
+    const timeHtml = `<a href="${escapeHtml(buildBskyAppUrl(post.uri))}" target="_blank" rel="noopener noreferrer" class="sequoia-comment-time">${timeAgo}</a>`;
     const threadLineHtml = showThreadLine
       ? '<div class="sequoia-thread-line"></div>'
       : "";
