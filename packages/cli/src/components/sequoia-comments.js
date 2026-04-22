@@ -12,6 +12,7 @@
  *   2. A <link rel="site.standard.document" href="at://..."> tag in the document head
  *
  * Attributes:
+ *   - post-uri: Bluesky post as AT-URI (at://...) or bsky.app URL — skips PDS document lookup
  *   - document-uri: AT Protocol URI for the document (optional if link tag exists)
  *   - depth: Maximum depth of nested replies to fetch (default: 6)
  *   - hide: Set to "auto" to hide if no document link is detected
@@ -614,6 +615,40 @@ function isThreadViewPost(post) {
  * @param {string} postUri - AT Protocol URI for the post
  * @returns {Promise<Array>} Array of PostView objects
  */
+/**
+ * Normalise a user-supplied post reference to an AT-URI.
+ * Accepts:
+ *   - AT-URIs as-is:          at://did:plc:.../app.bsky.feed.post/rkey
+ *   - bsky.app post URLs:     https://bsky.app/profile/<handle-or-did>/post/<rkey>
+ * When the profile segment is already a DID no network request is made.
+ * @param {string} uriOrUrl
+ * @returns {Promise<string>} AT-URI
+ */
+async function resolvePostUri(uriOrUrl) {
+	if (uriOrUrl.startsWith("at://")) return uriOrUrl;
+
+	const match = uriOrUrl.match(
+		/bsky\.app\/profile\/([^/?#]+)\/post\/([^/?#]+)/,
+	);
+	if (!match) throw new Error(`Cannot parse Bluesky URL: ${uriOrUrl}`);
+
+	const [, handleOrDid, rkey] = match;
+
+	let did = handleOrDid;
+	if (!handleOrDid.startsWith("did:")) {
+		const url = new URL(
+			"https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle",
+		);
+		url.searchParams.set("handle", handleOrDid);
+		const response = await fetch(url.toString());
+		if (!response.ok)
+			throw new Error(`Failed to resolve handle: ${response.status}`);
+		did = (await response.json()).did;
+	}
+
+	return `at://${did}/app.bsky.feed.post/${rkey}`;
+}
+
 async function getQuotes(postUri) {
 	const quotes = [];
 	let cursor;
@@ -676,7 +711,7 @@ class SequoiaComments extends BaseElement {
 	}
 
 	static get observedAttributes() {
-		return ["document-uri", "depth", "hide"];
+		return ["post-uri", "document-uri", "depth", "hide"];
 	}
 
 	connectedCallback() {
@@ -726,31 +761,36 @@ class SequoiaComments extends BaseElement {
 		this.state = { type: "loading" };
 		this.render();
 
-		const docUri = this.documentUri;
-		if (!docUri) {
-			this.state = { type: "no-document" };
-			this.render();
-			return;
-		}
-
 		try {
-			// Fetch the document record
-			const document = await getDocument(docUri);
+			// Resolve the post URI — either directly from the attribute or via the
+			// document record (which requires a PDS roundtrip)
+			const rawPostUri = this.getAttribute("post-uri");
+			let postUri = rawPostUri ? await resolvePostUri(rawPostUri) : null;
+			if (!postUri) {
+				const docUri = this.documentUri;
+				if (!docUri) {
+					this.state = { type: "no-document" };
+					this.render();
+					return;
+				}
 
-			// Check if document has a Bluesky post reference
-			if (!document.bskyPostRef) {
-				this.state = { type: "no-comments-enabled" };
-				this.render();
-				return;
+				const document = await getDocument(docUri);
+				if (!document.bskyPostRef) {
+					this.state = { type: "no-comments-enabled" };
+					this.render();
+					return;
+				}
+
+				postUri = document.bskyPostRef.uri;
 			}
 
-			const postUrl = buildBskyAppUrl(document.bskyPostRef.uri);
-			const blackskyPostUrl = buildBlackskyAppUrl(document.bskyPostRef.uri);
+			const postUrl = buildBskyAppUrl(postUri);
+			const blackskyPostUrl = buildBlackskyAppUrl(postUri);
 
 			// Fetch thread and quotes in parallel; quote failures degrade gracefully
 			const [threadResult, quotesResult] = await Promise.allSettled([
-				getPostThread(document.bskyPostRef.uri, this.depth),
-				getQuotes(document.bskyPostRef.uri),
+				getPostThread(postUri, this.depth),
+				getQuotes(postUri),
 			]);
 
 			if (threadResult.status === "rejected") {
