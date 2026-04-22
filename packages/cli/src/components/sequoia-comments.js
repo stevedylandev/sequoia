@@ -11,6 +11,14 @@
  *   1. The `document-uri` attribute on the element
  *   2. A <link rel="site.standard.document" href="at://..."> tag in the document head
  *
+ * Custom reply button:
+ *   Place any element with slot="reply-button" to replace the default Bluesky/Blacksky buttons.
+ *   It stays in the light DOM, so your page CSS applies to it normally.
+ *   Only practical with post-uri, since that's the only time the URL is known at authoring time:
+ *     <sequoia-comments post-uri="https://bsky.app/profile/.../post/...">
+ *       <a slot="reply-button" href="https://bsky.app/profile/.../post/...">Reply</a>
+ *     </sequoia-comments>
+ *
  * Attributes:
  *   - post-uri: Bluesky post as AT-URI (at://...) or bsky.app URL — skips PDS document lookup
  *   - document-uri: AT Protocol URI for the document (optional if link tag exists)
@@ -853,14 +861,7 @@ class SequoiaComments extends BaseElement {
 				this.commentsContainer.innerHTML = `
 					<div class="sequoia-comments-header">
 						<h3 class="sequoia-comments-title">Comments</h3>
-						<div>
-							<a href="${this.state.postUrl}" target="_blank" rel="noopener noreferrer" class="sequoia-reply-button sequoia-reply-bluesky">
-								${BLUESKY_ICON}
-							</a>
-							<a href="${this.state.blackskyPostUrl}" target="_blank" rel="noopener noreferrer" class="sequoia-reply-button sequoia-reply-blacksky">
-								${BLACKSKY_ICON}
-							</a>
-						</div>
+						<div>${this.renderReplyButtons(this.state.postUrl, this.state.blackskyPostUrl)}</div>
 					</div>
 					<div class="sequoia-empty">
 						No comments yet. Be the first to reply on Bluesky!
@@ -893,14 +894,7 @@ class SequoiaComments extends BaseElement {
 				this.commentsContainer.innerHTML = `
 					<div class="sequoia-comments-header">
 						<h3 class="sequoia-comments-title">${titleText}</h3>
-						<div>
-							<a href="${this.state.postUrl}" target="_blank" rel="noopener noreferrer" class="sequoia-reply-button sequoia-reply-bluesky">
-								${BLUESKY_ICON}
-							</a>
-							<a href="${this.state.blackskyPostUrl}" target="_blank" rel="noopener noreferrer" class="sequoia-reply-button sequoia-reply-blacksky">
-								${BLACKSKY_ICON}
-							</a>
-						</div>
+						<div>${this.renderReplyButtons(this.state.postUrl, this.state.blackskyPostUrl)}</div>
 					</div>
 					<div class="sequoia-comments-list">
 						${threadsHtml}
@@ -932,6 +926,24 @@ class SequoiaComments extends BaseElement {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Render the reply-button slot. Any element with slot="reply-button" in the
+	 * light DOM is projected here and remains styleable by external CSS.
+	 * The default Bluesky/Blacksky buttons are used as fallback content.
+	 */
+	renderReplyButtons(postUrl, blackskyPostUrl) {
+		return `
+			<slot name="reply-button">
+				<a href="${escapeHtml(postUrl)}" target="_blank" rel="noopener noreferrer" class="sequoia-reply-button sequoia-reply-bluesky">
+					${BLUESKY_ICON}
+				</a>
+				<a href="${escapeHtml(blackskyPostUrl)}" target="_blank" rel="noopener noreferrer" class="sequoia-reply-button sequoia-reply-blacksky">
+					${BLACKSKY_ICON}
+				</a>
+			</slot>
+		`;
 	}
 
 	/**
