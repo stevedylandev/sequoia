@@ -23,6 +23,7 @@
  *   - --sequoia-border-color: Border color (default: #e5e7eb)
  *   - --sequoia-accent-color: Accent/link color (default: #2563eb)
  *   - --sequoia-secondary-color: Secondary text color (default: #6b7280)
+ *   - --sequoia-font-family: Font family (default: system-ui stack)
  *   - --sequoia-border-radius: Border radius (default: 8px)
  */
 
@@ -33,7 +34,7 @@
 const styles = `
 :host {
 	display: block;
-	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	font-family: var(--sequoia-font-family, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
 	color: var(--sequoia-fg-color, #1f2937);
 	line-height: 1.5;
 }
