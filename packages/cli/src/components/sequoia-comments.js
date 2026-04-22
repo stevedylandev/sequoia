@@ -326,36 +326,36 @@ a.sequoia-comment-time:hover {
  * @returns {string} Formatted relative time
  */
 function formatRelativeTime(dateString) {
-	const date = new Date(dateString);
-	const now = new Date();
-	const diffMs = now.getTime() - date.getTime();
-	const diffSeconds = Math.floor(diffMs / 1000);
-	const diffMinutes = Math.floor(diffSeconds / 60);
-	const diffHours = Math.floor(diffMinutes / 60);
-	const diffDays = Math.floor(diffHours / 24);
-	const diffWeeks = Math.floor(diffDays / 7);
-	const diffMonths = Math.floor(diffDays / 30);
-	const diffYears = Math.floor(diffDays / 365);
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  const diffWeeks = Math.floor(diffDays / 7);
+  const diffMonths = Math.floor(diffDays / 30);
+  const diffYears = Math.floor(diffDays / 365);
 
-	if (diffSeconds < 60) {
-		return "just now";
-	}
-	if (diffMinutes < 60) {
-		return `${diffMinutes}m ago`;
-	}
-	if (diffHours < 24) {
-		return `${diffHours}h ago`;
-	}
-	if (diffDays < 7) {
-		return `${diffDays}d ago`;
-	}
-	if (diffWeeks < 4) {
-		return `${diffWeeks}w ago`;
-	}
-	if (diffMonths < 12) {
-		return `${diffMonths}mo ago`;
-	}
-	return `${diffYears}y ago`;
+  if (diffSeconds < 60) {
+    return "just now";
+  }
+  if (diffMinutes < 60) {
+    return `${diffMinutes}m ago`;
+  }
+  if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  }
+  if (diffDays < 7) {
+    return `${diffDays}d ago`;
+  }
+  if (diffWeeks < 4) {
+    return `${diffWeeks}w ago`;
+  }
+  if (diffMonths < 12) {
+    return `${diffMonths}mo ago`;
+  }
+  return `${diffYears}y ago`;
 }
 
 /**
@@ -364,9 +364,9 @@ function formatRelativeTime(dateString) {
  * @returns {string} Escaped HTML
  */
 function escapeHtml(text) {
-	const div = document.createElement("div");
-	div.textContent = text;
-	return div.innerHTML;
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 /**
@@ -376,62 +376,62 @@ function escapeHtml(text) {
  * @returns {string} HTML string with links
  */
 function renderTextWithFacets(text, facets) {
-	if (!facets || facets.length === 0) {
-		return escapeHtml(text);
-	}
+  if (!facets || facets.length === 0) {
+    return escapeHtml(text);
+  }
 
-	// Convert text to bytes for proper indexing
-	const encoder = new TextEncoder();
-	const decoder = new TextDecoder();
-	const textBytes = encoder.encode(text);
+  // Convert text to bytes for proper indexing
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  const textBytes = encoder.encode(text);
 
-	// Sort facets by start index
-	const sortedFacets = [...facets].sort(
-		(a, b) => a.index.byteStart - b.index.byteStart,
-	);
+  // Sort facets by start index
+  const sortedFacets = [...facets].sort(
+    (a, b) => a.index.byteStart - b.index.byteStart,
+  );
 
-	let result = "";
-	let lastEnd = 0;
+  let result = "";
+  let lastEnd = 0;
 
-	for (const facet of sortedFacets) {
-		const { byteStart, byteEnd } = facet.index;
+  for (const facet of sortedFacets) {
+    const { byteStart, byteEnd } = facet.index;
 
-		// Add text before this facet
-		if (byteStart > lastEnd) {
-			const beforeBytes = textBytes.slice(lastEnd, byteStart);
-			result += escapeHtml(decoder.decode(beforeBytes));
-		}
+    // Add text before this facet
+    if (byteStart > lastEnd) {
+      const beforeBytes = textBytes.slice(lastEnd, byteStart);
+      result += escapeHtml(decoder.decode(beforeBytes));
+    }
 
-		// Get the facet text
-		const facetBytes = textBytes.slice(byteStart, byteEnd);
-		const facetText = decoder.decode(facetBytes);
+    // Get the facet text
+    const facetBytes = textBytes.slice(byteStart, byteEnd);
+    const facetText = decoder.decode(facetBytes);
 
-		// Find the first renderable feature
-		const feature = facet.features[0];
-		if (feature) {
-			if (feature.$type === "app.bsky.richtext.facet#link") {
-				result += `<a href="${escapeHtml(feature.uri)}" target="_blank" rel="noopener noreferrer">${escapeHtml(facetText)}</a>`;
-			} else if (feature.$type === "app.bsky.richtext.facet#mention") {
-				result += `<a href="https://bsky.app/profile/${escapeHtml(feature.did)}" target="_blank" rel="noopener noreferrer">${escapeHtml(facetText)}</a>`;
-			} else if (feature.$type === "app.bsky.richtext.facet#tag") {
-				result += `<a href="https://bsky.app/hashtag/${escapeHtml(feature.tag)}" target="_blank" rel="noopener noreferrer">${escapeHtml(facetText)}</a>`;
-			} else {
-				result += escapeHtml(facetText);
-			}
-		} else {
-			result += escapeHtml(facetText);
-		}
+    // Find the first renderable feature
+    const feature = facet.features[0];
+    if (feature) {
+      if (feature.$type === "app.bsky.richtext.facet#link") {
+        result += `<a href="${escapeHtml(feature.uri)}" target="_blank" rel="noopener noreferrer">${escapeHtml(facetText)}</a>`;
+      } else if (feature.$type === "app.bsky.richtext.facet#mention") {
+        result += `<a href="https://bsky.app/profile/${escapeHtml(feature.did)}" target="_blank" rel="noopener noreferrer">${escapeHtml(facetText)}</a>`;
+      } else if (feature.$type === "app.bsky.richtext.facet#tag") {
+        result += `<a href="https://bsky.app/hashtag/${escapeHtml(feature.tag)}" target="_blank" rel="noopener noreferrer">${escapeHtml(facetText)}</a>`;
+      } else {
+        result += escapeHtml(facetText);
+      }
+    } else {
+      result += escapeHtml(facetText);
+    }
 
-		lastEnd = byteEnd;
-	}
+    lastEnd = byteEnd;
+  }
 
-	// Add remaining text
-	if (lastEnd < textBytes.length) {
-		const remainingBytes = textBytes.slice(lastEnd);
-		result += escapeHtml(decoder.decode(remainingBytes));
-	}
+  // Add remaining text
+  if (lastEnd < textBytes.length) {
+    const remainingBytes = textBytes.slice(lastEnd);
+    result += escapeHtml(decoder.decode(remainingBytes));
+  }
 
-	return result;
+  return result;
 }
 
 /**
@@ -440,11 +440,11 @@ function renderTextWithFacets(text, facets) {
  * @returns {string} Initials (1-2 characters)
  */
 function getInitials(name) {
-	const parts = name.trim().split(/\s+/);
-	if (parts.length >= 2) {
-		return (parts[0][0] + parts[1][0]).toUpperCase();
-	}
-	return name.substring(0, 2).toUpperCase();
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
 }
 
 // ============================================================================
@@ -458,13 +458,13 @@ function getInitials(name) {
  * @returns {{did: string, collection: string, rkey: string} | null} Parsed components or null
  */
 function parseAtUri(atUri) {
-	const match = atUri.match(/^at:\/\/([^/]+)\/([^/]+)\/(.+)$/);
-	if (!match) return null;
-	return {
-		did: match[1],
-		collection: match[2],
-		rkey: match[3],
-	};
+  const match = atUri.match(/^at:\/\/([^/]+)\/([^/]+)\/(.+)$/);
+  if (!match) return null;
+  return {
+    did: match[1],
+    collection: match[2],
+    rkey: match[3],
+  };
 }
 
 /**
@@ -474,45 +474,45 @@ function parseAtUri(atUri) {
  * @returns {Promise<string>} PDS URL
  */
 async function resolvePDS(did) {
-	let pdsUrl;
+  let pdsUrl;
 
-	if (did.startsWith("did:plc:")) {
-		// Fetch DID document from plc.directory
-		const didDocUrl = `https://plc.directory/${did}`;
-		const didDocResponse = await fetch(didDocUrl);
-		if (!didDocResponse.ok) {
-			throw new Error(`Could not fetch DID document: ${didDocResponse.status}`);
-		}
-		const didDoc = await didDocResponse.json();
+  if (did.startsWith("did:plc:")) {
+    // Fetch DID document from plc.directory
+    const didDocUrl = `https://plc.directory/${did}`;
+    const didDocResponse = await fetch(didDocUrl);
+    if (!didDocResponse.ok) {
+      throw new Error(`Could not fetch DID document: ${didDocResponse.status}`);
+    }
+    const didDoc = await didDocResponse.json();
 
-		// Find the PDS service endpoint
-		const pdsService = didDoc.service?.find(
-			(s) => s.id === "#atproto_pds" || s.type === "AtprotoPersonalDataServer",
-		);
-		pdsUrl = pdsService?.serviceEndpoint;
-	} else if (did.startsWith("did:web:")) {
-		// For did:web, fetch the DID document from the domain
-		const domain = did.replace("did:web:", "");
-		const didDocUrl = `https://${domain}/.well-known/did.json`;
-		const didDocResponse = await fetch(didDocUrl);
-		if (!didDocResponse.ok) {
-			throw new Error(`Could not fetch DID document: ${didDocResponse.status}`);
-		}
-		const didDoc = await didDocResponse.json();
+    // Find the PDS service endpoint
+    const pdsService = didDoc.service?.find(
+      (s) => s.id === "#atproto_pds" || s.type === "AtprotoPersonalDataServer",
+    );
+    pdsUrl = pdsService?.serviceEndpoint;
+  } else if (did.startsWith("did:web:")) {
+    // For did:web, fetch the DID document from the domain
+    const domain = did.replace("did:web:", "");
+    const didDocUrl = `https://${domain}/.well-known/did.json`;
+    const didDocResponse = await fetch(didDocUrl);
+    if (!didDocResponse.ok) {
+      throw new Error(`Could not fetch DID document: ${didDocResponse.status}`);
+    }
+    const didDoc = await didDocResponse.json();
 
-		const pdsService = didDoc.service?.find(
-			(s) => s.id === "#atproto_pds" || s.type === "AtprotoPersonalDataServer",
-		);
-		pdsUrl = pdsService?.serviceEndpoint;
-	} else {
-		throw new Error(`Unsupported DID method: ${did}`);
-	}
+    const pdsService = didDoc.service?.find(
+      (s) => s.id === "#atproto_pds" || s.type === "AtprotoPersonalDataServer",
+    );
+    pdsUrl = pdsService?.serviceEndpoint;
+  } else {
+    throw new Error(`Unsupported DID method: ${did}`);
+  }
 
-	if (!pdsUrl) {
-		throw new Error("Could not find PDS URL for user");
-	}
+  if (!pdsUrl) {
+    throw new Error("Could not find PDS URL for user");
+  }
 
-	return pdsUrl;
+  return pdsUrl;
 }
 
 /**
@@ -523,20 +523,20 @@ async function resolvePDS(did) {
  * @returns {Promise<any>} Record value
  */
 async function getRecord(did, collection, rkey) {
-	const pdsUrl = await resolvePDS(did);
+  const pdsUrl = await resolvePDS(did);
 
-	const url = new URL(`${pdsUrl}/xrpc/com.atproto.repo.getRecord`);
-	url.searchParams.set("repo", did);
-	url.searchParams.set("collection", collection);
-	url.searchParams.set("rkey", rkey);
+  const url = new URL(`${pdsUrl}/xrpc/com.atproto.repo.getRecord`);
+  url.searchParams.set("repo", did);
+  url.searchParams.set("collection", collection);
+  url.searchParams.set("rkey", rkey);
 
-	const response = await fetch(url.toString());
-	if (!response.ok) {
-		throw new Error(`Failed to fetch record: ${response.status}`);
-	}
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Failed to fetch record: ${response.status}`);
+  }
 
-	const data = await response.json();
-	return data.value;
+  const data = await response.json();
+  return data.value;
 }
 
 /**
@@ -545,12 +545,12 @@ async function getRecord(did, collection, rkey) {
  * @returns {Promise<{$type: string, title: string, site: string, path: string, textContent: string, publishedAt: string, canonicalUrl?: string, description?: string, tags?: string[], bskyPostRef?: {uri: string, cid: string}}>} Document record
  */
 async function getDocument(atUri) {
-	const parsed = parseAtUri(atUri);
-	if (!parsed) {
-		throw new Error(`Invalid AT URI: ${atUri}`);
-	}
+  const parsed = parseAtUri(atUri);
+  if (!parsed) {
+    throw new Error(`Invalid AT URI: ${atUri}`);
+  }
 
-	return getRecord(parsed.did, parsed.collection, parsed.rkey);
+  return getRecord(parsed.did, parsed.collection, parsed.rkey);
 }
 
 /**
@@ -560,24 +560,24 @@ async function getDocument(atUri) {
  * @returns {Promise<ThreadViewPost>} Thread view post
  */
 async function getPostThread(postUri, depth = 6) {
-	const url = new URL(
-		"https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread",
-	);
-	url.searchParams.set("uri", postUri);
-	url.searchParams.set("depth", depth.toString());
+  const url = new URL(
+    "https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread",
+  );
+  url.searchParams.set("uri", postUri);
+  url.searchParams.set("depth", depth.toString());
 
-	const response = await fetch(url.toString());
-	if (!response.ok) {
-		throw new Error(`Failed to fetch post thread: ${response.status}`);
-	}
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Failed to fetch post thread: ${response.status}`);
+  }
 
-	const data = await response.json();
+  const data = await response.json();
 
-	if (data.thread.$type !== "app.bsky.feed.defs#threadViewPost") {
-		throw new Error("Post not found or blocked");
-	}
+  if (data.thread.$type !== "app.bsky.feed.defs#threadViewPost") {
+    throw new Error("Post not found or blocked");
+  }
 
-	return data.thread;
+  return data.thread;
 }
 
 /**
@@ -586,12 +586,12 @@ async function getPostThread(postUri, depth = 6) {
  * @returns {string} Bluesky app URL
  */
 function buildBskyAppUrl(postUri) {
-	const parsed = parseAtUri(postUri);
-	if (!parsed) {
-		throw new Error(`Invalid post URI: ${postUri}`);
-	}
+  const parsed = parseAtUri(postUri);
+  if (!parsed) {
+    throw new Error(`Invalid post URI: ${postUri}`);
+  }
 
-	return `https://bsky.app/profile/${parsed.did}/post/${parsed.rkey}`;
+  return `https://bsky.app/profile/${parsed.did}/post/${parsed.rkey}`;
 }
 
 /**
@@ -600,12 +600,12 @@ function buildBskyAppUrl(postUri) {
  * @returns {string} Blacksky app URL
  */
 function buildBlackskyAppUrl(postUri) {
-	const parsed = parseAtUri(postUri);
-	if (!parsed) {
-		throw new Error(`Invalid post URI: ${postUri}`);
-	}
+  const parsed = parseAtUri(postUri);
+  if (!parsed) {
+    throw new Error(`Invalid post URI: ${postUri}`);
+  }
 
-	return `https://blacksky.community/profile/${parsed.did}/post/${parsed.rkey}`;
+  return `https://blacksky.community/profile/${parsed.did}/post/${parsed.rkey}`;
 }
 
 /**
@@ -614,7 +614,7 @@ function buildBlackskyAppUrl(postUri) {
  * @returns {boolean} True if post is a ThreadViewPost
  */
 function isThreadViewPost(post) {
-	return post?.$type === "app.bsky.feed.defs#threadViewPost";
+  return post?.$type === "app.bsky.feed.defs#threadViewPost";
 }
 
 /**
@@ -634,53 +634,53 @@ function isThreadViewPost(post) {
  * @returns {Promise<string>} AT-URI
  */
 async function resolvePostUri(uriOrUrl) {
-	if (uriOrUrl.startsWith("at://")) return uriOrUrl;
+  if (uriOrUrl.startsWith("at://")) return uriOrUrl;
 
-	const match = uriOrUrl.match(
-		/bsky\.app\/profile\/([^/?#]+)\/post\/([^/?#]+)/,
-	);
-	if (!match) throw new Error(`Cannot parse Bluesky URL: ${uriOrUrl}`);
+  const match = uriOrUrl.match(
+    /bsky\.app\/profile\/([^/?#]+)\/post\/([^/?#]+)/,
+  );
+  if (!match) throw new Error(`Cannot parse Bluesky URL: ${uriOrUrl}`);
 
-	const [, handleOrDid, rkey] = match;
+  const [, handleOrDid, rkey] = match;
 
-	let did = handleOrDid;
-	if (!handleOrDid.startsWith("did:")) {
-		const url = new URL(
-			"https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle",
-		);
-		url.searchParams.set("handle", handleOrDid);
-		const response = await fetch(url.toString());
-		if (!response.ok)
-			throw new Error(`Failed to resolve handle: ${response.status}`);
-		did = (await response.json()).did;
-	}
+  let did = handleOrDid;
+  if (!handleOrDid.startsWith("did:")) {
+    const url = new URL(
+      "https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle",
+    );
+    url.searchParams.set("handle", handleOrDid);
+    const response = await fetch(url.toString());
+    if (!response.ok)
+      throw new Error(`Failed to resolve handle: ${response.status}`);
+    did = (await response.json()).did;
+  }
 
-	return `at://${did}/app.bsky.feed.post/${rkey}`;
+  return `at://${did}/app.bsky.feed.post/${rkey}`;
 }
 
 async function getQuotes(postUri) {
-	const quotes = [];
-	let cursor;
+  const quotes = [];
+  let cursor;
 
-	do {
-		const url = new URL(
-			"https://public.api.bsky.app/xrpc/app.bsky.feed.getQuotes",
-		);
-		url.searchParams.set("uri", postUri);
-		url.searchParams.set("limit", "100");
-		if (cursor) url.searchParams.set("cursor", cursor);
+  do {
+    const url = new URL(
+      "https://public.api.bsky.app/xrpc/app.bsky.feed.getQuotes",
+    );
+    url.searchParams.set("uri", postUri);
+    url.searchParams.set("limit", "100");
+    if (cursor) url.searchParams.set("cursor", cursor);
 
-		const response = await fetch(url.toString());
-		if (!response.ok) {
-			throw new Error(`Failed to fetch quotes: ${response.status}`);
-		}
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      throw new Error(`Failed to fetch quotes: ${response.status}`);
+    }
 
-		const data = await response.json();
-		quotes.push(...(data.posts ?? []));
-		cursor = data.cursor;
-	} while (cursor);
+    const data = await response.json();
+    quotes.push(...(data.posts ?? []));
+    cursor = data.cursor;
+  } while (cursor);
 
-	return quotes;
+  return quotes;
 }
 
 // ============================================================================
@@ -691,7 +691,7 @@ const BLUESKY_ICON = `<svg class="sequoia-bsky-logo" viewBox="0 0 600 530" fill=
   <path d="m135.72 44.03c66.496 49.921 138.02 151.14 164.28 205.46 26.262-54.316 97.782-155.54 164.28-205.46 47.98-36.021 125.72-63.892 125.72 24.795 0 17.712-10.155 148.79-16.111 170.07-20.703 73.984-96.144 92.854-163.25 81.433 117.3 19.964 147.14 86.092 82.697 152.22-122.39 125.59-175.91-31.511-189.63-71.766-2.514-7.3797-3.6904-10.832-3.7077-7.8964-0.0174-2.9357-1.1937 0.51669-3.7077 7.8964-13.714 40.255-67.233 197.36-189.63 71.766-64.444-66.128-34.605-132.26 82.697-152.22-67.108 11.421-142.55-7.4491-163.25-81.433-5.9562-21.282-16.111-152.36-16.111-170.07 0-88.687 77.742-60.816 125.72-24.795z"/>
 </svg>`;
 const BLACKSKY_ICON =
-	'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.0620117 0.348442 87.9941 74.9653"><path d="M41.9565 74.9643L24.0161 74.9653L41.9565 74.9643ZM63.8511 74.9653H45.9097L63.8501 74.9643V57.3286H63.8511V74.9653ZM45.9097 44.5893C45.9099 49.2737 49.7077 53.0707 54.3921 53.0707H63.8501V57.3286H54.3921C49.7077 57.3286 45.9099 61.1257 45.9097 65.81V74.9643H41.9565V65.81C41.9563 61.1258 38.1593 57.3287 33.4751 57.3286H24.0161V53.0707H33.4741C38.1587 53.0707 41.9565 49.2729 41.9565 44.5883V35.1303H45.9097V44.5893ZM63.8511 53.0707H63.8501V35.1303H63.8511V53.0707Z" fill="white"></path><path d="M52.7272 9.83198C49.4148 13.1445 49.4148 18.5151 52.7272 21.8275L59.4155 28.5158L56.4051 31.5262L49.7169 24.8379C46.4044 21.5254 41.0338 21.5254 37.7213 24.8379L31.2482 31.3111L28.4527 28.5156L34.9259 22.0424C38.2383 18.7299 38.2383 13.3594 34.9259 10.0469L28.2378 3.35883L31.2482 0.348442L37.9365 7.03672C41.2489 10.3492 46.6195 10.3492 49.932 7.03672L56.6203 0.348442L59.4155 3.14371L52.7272 9.83198Z" fill="white"/><path d="M24.3831 23.2335C23.1706 27.7584 25.8559 32.4095 30.3808 33.6219L39.5172 36.07L38.4154 40.182L29.2793 37.734C24.7544 36.5215 20.1033 39.2068 18.8909 43.7317L16.5215 52.5745L12.7028 51.5513L15.0721 42.7088C16.2846 38.1839 13.5993 33.5328 9.07434 32.3204L-0.0620117 29.8723L1.03987 25.76L10.1762 28.2081C14.7011 29.4206 19.3522 26.7352 20.5647 22.2103L23.0127 13.074L26.8311 14.0971L24.3831 23.2335Z" fill="white"/><path d="M67.3676 22.0297C68.5801 26.5546 73.2311 29.2399 77.756 28.0275L86.8923 25.5794L87.9941 29.6914L78.8578 32.1394C74.3329 33.3519 71.6476 38.003 72.86 42.5279L75.2294 51.3707L71.411 52.3938L69.0417 43.5513C67.8293 39.0264 63.1782 36.3411 58.6533 37.5535L49.5169 40.0016L48.415 35.8894L57.5514 33.4413C62.0763 32.2288 64.7616 27.5778 63.5492 23.0528L61.1011 13.9165L64.9195 12.8934L67.3676 22.0297Z" fill="white"/></svg>';
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.0620117 0.348442 87.9941 74.9653"><path d="M41.9565 74.9643L24.0161 74.9653L41.9565 74.9643ZM63.8511 74.9653H45.9097L63.8501 74.9643V57.3286H63.8511V74.9653ZM45.9097 44.5893C45.9099 49.2737 49.7077 53.0707 54.3921 53.0707H63.8501V57.3286H54.3921C49.7077 57.3286 45.9099 61.1257 45.9097 65.81V74.9643H41.9565V65.81C41.9563 61.1258 38.1593 57.3287 33.4751 57.3286H24.0161V53.0707H33.4741C38.1587 53.0707 41.9565 49.2729 41.9565 44.5883V35.1303H45.9097V44.5893ZM63.8511 53.0707H63.8501V35.1303H63.8511V53.0707Z" fill="white"></path><path d="M52.7272 9.83198C49.4148 13.1445 49.4148 18.5151 52.7272 21.8275L59.4155 28.5158L56.4051 31.5262L49.7169 24.8379C46.4044 21.5254 41.0338 21.5254 37.7213 24.8379L31.2482 31.3111L28.4527 28.5156L34.9259 22.0424C38.2383 18.7299 38.2383 13.3594 34.9259 10.0469L28.2378 3.35883L31.2482 0.348442L37.9365 7.03672C41.2489 10.3492 46.6195 10.3492 49.932 7.03672L56.6203 0.348442L59.4155 3.14371L52.7272 9.83198Z" fill="white"/><path d="M24.3831 23.2335C23.1706 27.7584 25.8559 32.4095 30.3808 33.6219L39.5172 36.07L38.4154 40.182L29.2793 37.734C24.7544 36.5215 20.1033 39.2068 18.8909 43.7317L16.5215 52.5745L12.7028 51.5513L15.0721 42.7088C16.2846 38.1839 13.5993 33.5328 9.07434 32.3204L-0.0620117 29.8723L1.03987 25.76L10.1762 28.2081C14.7011 29.4206 19.3522 26.7352 20.5647 22.2103L23.0127 13.074L26.8311 14.0971L24.3831 23.2335Z" fill="white"/><path d="M67.3676 22.0297C68.5801 26.5546 73.2311 29.2399 77.756 28.0275L86.8923 25.5794L87.9941 29.6914L78.8578 32.1394C74.3329 33.3519 71.6476 38.003 72.86 42.5279L75.2294 51.3707L71.411 52.3938L69.0417 43.5513C67.8293 39.0264 63.1782 36.3411 58.6533 37.5535L49.5169 40.0016L48.415 35.8894L57.5514 33.4413C62.0763 32.2288 64.7616 27.5778 63.5492 23.0528L61.1011 13.9165L64.9195 12.8934L67.3676 22.0297Z" fill="white"/></svg>';
 
 // ============================================================================
 // Web Component
@@ -701,164 +701,168 @@ const BLACKSKY_ICON =
 const BaseElement = typeof HTMLElement !== "undefined" ? HTMLElement : class {};
 
 class SequoiaComments extends BaseElement {
-	constructor() {
-		super();
-		const shadow = this.attachShadow({ mode: "open" });
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open" });
 
-		const styleTag = document.createElement("style");
-		shadow.appendChild(styleTag);
-		styleTag.innerText = styles;
+    const styleTag = document.createElement("style");
+    shadow.appendChild(styleTag);
+    styleTag.innerText = styles;
 
-		const container = document.createElement("div");
-		shadow.appendChild(container);
-		container.className = "sequoia-comments-container";
-		container.part = "container";
+    const container = document.createElement("div");
+    shadow.appendChild(container);
+    container.className = "sequoia-comments-container";
+    container.part = "container";
 
-		this.commentsContainer = container;
-		this.state = { type: "loading" };
-		this.abortController = null;
-	}
+    this.commentsContainer = container;
+    this.state = { type: "loading" };
+    this.abortController = null;
+  }
 
-	static get observedAttributes() {
-		return ["post-uri", "document-uri", "depth", "hide"];
-	}
+  static get observedAttributes() {
+    return ["post-uri", "document-uri", "depth", "hide"];
+  }
 
-	connectedCallback() {
-		this.render();
-		this.loadComments();
-	}
+  connectedCallback() {
+    this.initialized = true;
+    this.render();
+    this.loadComments();
+  }
 
-	disconnectedCallback() {
-		this.abortController?.abort();
-	}
+  disconnectedCallback() {
+    this.abortController?.abort();
+  }
 
-	attributeChangedCallback() {
-		if (this.isConnected) {
-			this.loadComments();
-		}
-	}
+  attributeChangedCallback() {
+    // attributeChangedCallback fires for pre-existing attributes during
+    // element upgrade, *before* connectedCallback — skip until we've done
+    // the initial load, otherwise every attribute triggers a duplicate fetch.
+    if (this.initialized) {
+      this.loadComments();
+    }
+  }
 
-	get documentUri() {
-		// First check attribute
-		const attrUri = this.getAttribute("document-uri");
-		if (attrUri) {
-			return attrUri;
-		}
+  get documentUri() {
+    // First check attribute
+    const attrUri = this.getAttribute("document-uri");
+    if (attrUri) {
+      return attrUri;
+    }
 
-		// Then scan for link tag in document head
-		const linkTag = document.querySelector(
-			'link[rel="site.standard.document"]',
-		);
-		return linkTag?.href ?? null;
-	}
+    // Then scan for link tag in document head
+    const linkTag = document.querySelector(
+      'link[rel="site.standard.document"]',
+    );
+    return linkTag?.href ?? null;
+  }
 
-	get depth() {
-		const depthAttr = this.getAttribute("depth");
-		return depthAttr ? parseInt(depthAttr, 10) : 6;
-	}
+  get depth() {
+    const depthAttr = this.getAttribute("depth");
+    return depthAttr ? parseInt(depthAttr, 10) : 6;
+  }
 
-	get hide() {
-		const hideAttr = this.getAttribute("hide");
-		return hideAttr === "auto";
-	}
+  get hide() {
+    const hideAttr = this.getAttribute("hide");
+    return hideAttr === "auto";
+  }
 
-	async loadComments() {
-		// Cancel any in-flight request
-		this.abortController?.abort();
-		this.abortController = new AbortController();
+  async loadComments() {
+    // Cancel any in-flight request
+    this.abortController?.abort();
+    this.abortController = new AbortController();
 
-		this.state = { type: "loading" };
-		this.render();
+    this.state = { type: "loading" };
+    this.render();
 
-		try {
-			// Resolve the post URI — either directly from the attribute or via the
-			// document record (which requires a PDS roundtrip)
-			const rawPostUri = this.getAttribute("post-uri");
-			let postUri = rawPostUri ? await resolvePostUri(rawPostUri) : null;
-			if (!postUri) {
-				const docUri = this.documentUri;
-				if (!docUri) {
-					this.state = { type: "no-document" };
-					this.render();
-					return;
-				}
+    try {
+      // Resolve the post URI — either directly from the attribute or via the
+      // document record (which requires a PDS roundtrip)
+      const rawPostUri = this.getAttribute("post-uri");
+      let postUri = rawPostUri ? await resolvePostUri(rawPostUri) : null;
+      if (!postUri) {
+        const docUri = this.documentUri;
+        if (!docUri) {
+          this.state = { type: "no-document" };
+          this.render();
+          return;
+        }
 
-				const document = await getDocument(docUri);
-				if (!document.bskyPostRef) {
-					this.state = { type: "no-comments-enabled" };
-					this.render();
-					return;
-				}
+        const document = await getDocument(docUri);
+        if (!document.bskyPostRef) {
+          this.state = { type: "no-comments-enabled" };
+          this.render();
+          return;
+        }
 
-				postUri = document.bskyPostRef.uri;
-			}
+        postUri = document.bskyPostRef.uri;
+      }
 
-			const postUrl = buildBskyAppUrl(postUri);
-			const blackskyPostUrl = buildBlackskyAppUrl(postUri);
+      const postUrl = buildBskyAppUrl(postUri);
+      const blackskyPostUrl = buildBlackskyAppUrl(postUri);
 
-			// Fetch thread and quotes in parallel; quote failures degrade gracefully
-			const [threadResult, quotesResult] = await Promise.allSettled([
-				getPostThread(postUri, this.depth),
-				getQuotes(postUri),
-			]);
+      // Fetch thread and quotes in parallel; quote failures degrade gracefully
+      const [threadResult, quotesResult] = await Promise.allSettled([
+        getPostThread(postUri, this.depth),
+        getQuotes(postUri),
+      ]);
 
-			if (threadResult.status === "rejected") {
-				throw threadResult.reason;
-			}
+      if (threadResult.status === "rejected") {
+        throw threadResult.reason;
+      }
 
-			const thread = threadResult.value;
-			const quotes =
-				quotesResult.status === "fulfilled" ? quotesResult.value : [];
+      const thread = threadResult.value;
+      const quotes =
+        quotesResult.status === "fulfilled" ? quotesResult.value : [];
 
-			const replies = thread.replies?.filter(isThreadViewPost) ?? [];
-			if (replies.length === 0 && quotes.length === 0) {
-				this.state = { type: "empty", postUrl, blackskyPostUrl };
-				this.render();
-				return;
-			}
+      const replies = thread.replies?.filter(isThreadViewPost) ?? [];
+      if (replies.length === 0 && quotes.length === 0) {
+        this.state = { type: "empty", postUrl, blackskyPostUrl };
+        this.render();
+        return;
+      }
 
-			this.state = { type: "loaded", thread, quotes, postUrl, blackskyPostUrl };
-			this.render();
-		} catch (error) {
-			const message =
-				error instanceof Error ? error.message : "Failed to load comments";
-			this.state = { type: "error", message };
-			this.render();
-		}
-	}
+      this.state = { type: "loaded", thread, quotes, postUrl, blackskyPostUrl };
+      this.render();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to load comments";
+      this.state = { type: "error", message };
+      this.render();
+    }
+  }
 
-	render() {
-		switch (this.state.type) {
-			case "loading":
-				this.commentsContainer.innerHTML = `
+  render() {
+    switch (this.state.type) {
+      case "loading":
+        this.commentsContainer.innerHTML = `
 					<div class="sequoia-loading">
 						<span class="sequoia-loading-spinner"></span>
 						Loading comments...
 					</div>
 				`;
-				break;
+        break;
 
-			case "no-document":
-				this.commentsContainer.innerHTML = `
+      case "no-document":
+        this.commentsContainer.innerHTML = `
 					<div class="sequoia-warning">
 						No document found. Add a <code>&lt;link rel="site.standard.document" href="at://..."&gt;</code> tag to your page.
 					</div>
 				`;
-				if (this.hide) {
-					this.commentsContainer.style.display = "none";
-				}
-				break;
+        if (this.hide) {
+          this.commentsContainer.style.display = "none";
+        }
+        break;
 
-			case "no-comments-enabled":
-				this.commentsContainer.innerHTML = `
+      case "no-comments-enabled":
+        this.commentsContainer.innerHTML = `
 					<div class="sequoia-empty">
 						Comments are not enabled for this post.
 					</div>
 				`;
-				break;
+        break;
 
-			case "empty":
-				this.commentsContainer.innerHTML = `
+      case "empty":
+        this.commentsContainer.innerHTML = `
 					<div class="sequoia-comments-header">
 						<h3 class="sequoia-comments-title">Comments</h3>
 						<div>${this.renderReplyButtons(this.state.postUrl, this.state.blackskyPostUrl)}</div>
@@ -867,31 +871,31 @@ class SequoiaComments extends BaseElement {
 						No comments yet. Be the first to reply on Bluesky!
 					</div>
 				`;
-				break;
+        break;
 
-			case "error":
-				this.commentsContainer.innerHTML = `
+      case "error":
+        this.commentsContainer.innerHTML = `
 					<div class="sequoia-error">
 						Failed to load comments: ${escapeHtml(this.state.message)}
 					</div>
 				`;
-				break;
+        break;
 
-			case "loaded": {
-				const replies =
-					this.state.thread.replies?.filter(isThreadViewPost) ?? [];
-				const quotes = this.state.quotes ?? [];
-				const threadsHtml = replies
-					.map((reply) => this.renderThread(reply))
-					.join("");
-				const commentCount = this.countComments(replies);
-				const titleText =
-					commentCount > 0
-						? `${commentCount} Comment${commentCount !== 1 ? "s" : ""}`
-						: "Comments";
-				const quotesHtml = this.renderQuotesSection(quotes);
+      case "loaded": {
+        const replies =
+          this.state.thread.replies?.filter(isThreadViewPost) ?? [];
+        const quotes = this.state.quotes ?? [];
+        const threadsHtml = replies
+          .map((reply) => this.renderThread(reply))
+          .join("");
+        const commentCount = this.countComments(replies);
+        const titleText =
+          commentCount > 0
+            ? `${commentCount} Comment${commentCount !== 1 ? "s" : ""}`
+            : "Comments";
+        const quotesHtml = this.renderQuotesSection(quotes);
 
-				this.commentsContainer.innerHTML = `
+        this.commentsContainer.innerHTML = `
 					<div class="sequoia-comments-header">
 						<h3 class="sequoia-comments-title">${titleText}</h3>
 						<div>${this.renderReplyButtons(this.state.postUrl, this.state.blackskyPostUrl)}</div>
@@ -901,40 +905,40 @@ class SequoiaComments extends BaseElement {
 					</div>
 					${quotesHtml}
 				`;
-				break;
-			}
-		}
-	}
+        break;
+      }
+    }
+  }
 
-	/**
-	 * Flatten a thread into a linear list of comments
-	 * @param {ThreadViewPost} thread - Thread to flatten
-	 * @returns {Array<{post: any, hasMoreReplies: boolean}>} Flattened comments
-	 */
-	flattenThread(thread) {
-		const result = [];
-		const nestedReplies = thread.replies?.filter(isThreadViewPost) ?? [];
+  /**
+   * Flatten a thread into a linear list of comments
+   * @param {ThreadViewPost} thread - Thread to flatten
+   * @returns {Array<{post: any, hasMoreReplies: boolean}>} Flattened comments
+   */
+  flattenThread(thread) {
+    const result = [];
+    const nestedReplies = thread.replies?.filter(isThreadViewPost) ?? [];
 
-		result.push({
-			post: thread.post,
-			hasMoreReplies: nestedReplies.length > 0,
-		});
+    result.push({
+      post: thread.post,
+      hasMoreReplies: nestedReplies.length > 0,
+    });
 
-		// Recursively flatten nested replies
-		for (const reply of nestedReplies) {
-			result.push(...this.flattenThread(reply));
-		}
+    // Recursively flatten nested replies
+    for (const reply of nestedReplies) {
+      result.push(...this.flattenThread(reply));
+    }
 
-		return result;
-	}
+    return result;
+  }
 
-	/**
-	 * Render the reply-button slot. Any element with slot="reply-button" in the
-	 * light DOM is projected here and remains styleable by external CSS.
-	 * The default Bluesky/Blacksky buttons are used as fallback content.
-	 */
-	renderReplyButtons(postUrl, blackskyPostUrl) {
-		return `
+  /**
+   * Render the reply-button slot. Any element with slot="reply-button" in the
+   * light DOM is projected here and remains styleable by external CSS.
+   * The default Bluesky/Blacksky buttons are used as fallback content.
+   */
+  renderReplyButtons(postUrl, blackskyPostUrl) {
+    return `
 			<slot name="reply-button">
 				<a href="${escapeHtml(postUrl)}" target="_blank" rel="noopener noreferrer" class="sequoia-reply-button sequoia-reply-bluesky">
 					${BLUESKY_ICON}
@@ -944,37 +948,37 @@ class SequoiaComments extends BaseElement {
 				</a>
 			</slot>
 		`;
-	}
+  }
 
-	/**
-	 * Render a complete thread (top-level comment + all nested replies)
-	 */
-	renderThread(thread) {
-		const flatComments = this.flattenThread(thread);
-		const commentsHtml = flatComments
-			.map((item, index) =>
-				this.renderComment(item.post, item.hasMoreReplies, index),
-			)
-			.join("");
+  /**
+   * Render a complete thread (top-level comment + all nested replies)
+   */
+  renderThread(thread) {
+    const flatComments = this.flattenThread(thread);
+    const commentsHtml = flatComments
+      .map((item, index) =>
+        this.renderComment(item.post, item.hasMoreReplies, index),
+      )
+      .join("");
 
-		return `<div class="sequoia-thread">${commentsHtml}</div>`;
-	}
+    return `<div class="sequoia-thread">${commentsHtml}</div>`;
+  }
 
-	/**
-	 * Render a section of quote posts below the replies
-	 * @param {Array} quotes - Array of PostView objects from getQuotes
-	 */
-	renderQuotesSection(quotes) {
-		if (quotes.length === 0) return "";
+  /**
+   * Render a section of quote posts below the replies
+   * @param {Array} quotes - Array of PostView objects from getQuotes
+   */
+  renderQuotesSection(quotes) {
+    if (quotes.length === 0) return "";
 
-		const quotesHtml = quotes
-			.map((post) => {
-				const quotePostUrl = buildBskyAppUrl(post.uri);
-				return `<div class="sequoia-thread">${this.renderComment(post, false, 0, quotePostUrl)}</div>`;
-			})
-			.join("");
+    const quotesHtml = quotes
+      .map((post) => {
+        const quotePostUrl = buildBskyAppUrl(post.uri);
+        return `<div class="sequoia-thread">${this.renderComment(post, false, 0, quotePostUrl)}</div>`;
+      })
+      .join("");
 
-		return `
+    return `
 			<div class="sequoia-quotes-section">
 				<h4 class="sequoia-quotes-header">Quotes (${quotes.length})</h4>
 				<div class="sequoia-comments-list">
@@ -982,33 +986,33 @@ class SequoiaComments extends BaseElement {
 				</div>
 			</div>
 		`;
-	}
+  }
 
-	/**
-	 * Render a single comment
-	 * @param {any} post - Post data
-	 * @param {boolean} showThreadLine - Whether to show the connecting thread line
-	 * @param {number} _index - Index in the flattened thread (0 = top-level)
-	 * @param {string|null} postUrl - Optional URL to link the timestamp to (used for quote posts)
-	 */
-	renderComment(post, showThreadLine = false, _index = 0, postUrl = null) {
-		const author = post.author;
-		const displayName = author.displayName || author.handle;
-		const avatarHtml = author.avatar
-			? `<img class="sequoia-comment-avatar" src="${escapeHtml(author.avatar)}" alt="${escapeHtml(displayName)}" loading="lazy" />`
-			: `<div class="sequoia-comment-avatar-placeholder">${getInitials(displayName)}</div>`;
+  /**
+   * Render a single comment
+   * @param {any} post - Post data
+   * @param {boolean} showThreadLine - Whether to show the connecting thread line
+   * @param {number} _index - Index in the flattened thread (0 = top-level)
+   * @param {string|null} postUrl - Optional URL to link the timestamp to (used for quote posts)
+   */
+  renderComment(post, showThreadLine = false, _index = 0, postUrl = null) {
+    const author = post.author;
+    const displayName = author.displayName || author.handle;
+    const avatarHtml = author.avatar
+      ? `<img class="sequoia-comment-avatar" src="${escapeHtml(author.avatar)}" alt="${escapeHtml(displayName)}" loading="lazy" />`
+      : `<div class="sequoia-comment-avatar-placeholder">${getInitials(displayName)}</div>`;
 
-		const profileUrl = `https://bsky.app/profile/${author.did}`;
-		const textHtml = renderTextWithFacets(post.record.text, post.record.facets);
-		const timeAgo = formatRelativeTime(post.record.createdAt);
-		const timeHtml = postUrl
-			? `<a href="${escapeHtml(postUrl)}" target="_blank" rel="noopener noreferrer" class="sequoia-comment-time">${timeAgo}</a>`
-			: `<span class="sequoia-comment-time">${timeAgo}</span>`;
-		const threadLineHtml = showThreadLine
-			? '<div class="sequoia-thread-line"></div>'
-			: "";
+    const profileUrl = `https://bsky.app/profile/${author.did}`;
+    const textHtml = renderTextWithFacets(post.record.text, post.record.facets);
+    const timeAgo = formatRelativeTime(post.record.createdAt);
+    const timeHtml = postUrl
+      ? `<a href="${escapeHtml(postUrl)}" target="_blank" rel="noopener noreferrer" class="sequoia-comment-time">${timeAgo}</a>`
+      : `<span class="sequoia-comment-time">${timeAgo}</span>`;
+    const threadLineHtml = showThreadLine
+      ? '<div class="sequoia-thread-line"></div>'
+      : "";
 
-		return `
+    return `
 			<div class="sequoia-comment">
 				<div class="sequoia-comment-avatar-column">
 					${avatarHtml}
@@ -1026,22 +1030,22 @@ class SequoiaComments extends BaseElement {
 				</div>
 			</div>
 		`;
-	}
+  }
 
-	countComments(replies) {
-		let count = 0;
-		for (const reply of replies) {
-			count += 1;
-			const nested = reply.replies?.filter(isThreadViewPost) ?? [];
-			count += this.countComments(nested);
-		}
-		return count;
-	}
+  countComments(replies) {
+    let count = 0;
+    for (const reply of replies) {
+      count += 1;
+      const nested = reply.replies?.filter(isThreadViewPost) ?? [];
+      count += this.countComments(nested);
+    }
+    return count;
+  }
 }
 
 // Register the custom element
 if (typeof customElements !== "undefined") {
-	customElements.define("sequoia-comments", SequoiaComments);
+  customElements.define("sequoia-comments", SequoiaComments);
 }
 
 // Export for module usage
