@@ -280,6 +280,30 @@ const styles = `
 	width: 1rem;
 	height: 1rem;
 }
+
+.sequoia-quotes-section {
+	margin-top: 1.75rem;
+}
+
+.sequoia-quotes-header {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--sequoia-secondary-color, #6b7280);
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	margin: 0;
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid var(--sequoia-border-color, #e5e7eb);
+}
+
+a.sequoia-comment-time {
+	text-decoration: none;
+	color: var(--sequoia-secondary-color, #6b7280);
+}
+
+a.sequoia-comment-time:hover {
+	text-decoration: underline;
+}
 `;
 
 // ============================================================================
@@ -583,6 +607,38 @@ function isThreadViewPost(post) {
 	return post?.$type === "app.bsky.feed.defs#threadViewPost";
 }
 
+/**
+ * Fetch all quote posts for a given post URI, paginating through all results.
+ * Uses the public Bluesky AppView — gaps are expected for posts from
+ * less-connected PDS instances.
+ * @param {string} postUri - AT Protocol URI for the post
+ * @returns {Promise<Array>} Array of PostView objects
+ */
+async function getQuotes(postUri) {
+	const quotes = [];
+	let cursor;
+
+	do {
+		const url = new URL(
+			"https://public.api.bsky.app/xrpc/app.bsky.feed.getQuotes",
+		);
+		url.searchParams.set("uri", postUri);
+		url.searchParams.set("limit", "100");
+		if (cursor) url.searchParams.set("cursor", cursor);
+
+		const response = await fetch(url.toString());
+		if (!response.ok) {
+			throw new Error(`Failed to fetch quotes: ${response.status}`);
+		}
+
+		const data = await response.json();
+		quotes.push(...(data.posts ?? []));
+		cursor = data.cursor;
+	} while (cursor);
+
+	return quotes;
+}
+
 // ============================================================================
 // Bluesky Icon
 // ============================================================================
@@ -691,18 +747,28 @@ class SequoiaComments extends BaseElement {
 			const postUrl = buildBskyAppUrl(document.bskyPostRef.uri);
 			const blackskyPostUrl = buildBlackskyAppUrl(document.bskyPostRef.uri);
 
-			// Fetch the post thread
-			const thread = await getPostThread(document.bskyPostRef.uri, this.depth);
+			// Fetch thread and quotes in parallel; quote failures degrade gracefully
+			const [threadResult, quotesResult] = await Promise.allSettled([
+				getPostThread(document.bskyPostRef.uri, this.depth),
+				getQuotes(document.bskyPostRef.uri),
+			]);
 
-			// Check if there are any replies
+			if (threadResult.status === "rejected") {
+				throw threadResult.reason;
+			}
+
+			const thread = threadResult.value;
+			const quotes =
+				quotesResult.status === "fulfilled" ? quotesResult.value : [];
+
 			const replies = thread.replies?.filter(isThreadViewPost) ?? [];
-			if (replies.length === 0) {
+			if (replies.length === 0 && quotes.length === 0) {
 				this.state = { type: "empty", postUrl, blackskyPostUrl };
 				this.render();
 				return;
 			}
 
-			this.state = { type: "loaded", thread, postUrl, blackskyPostUrl };
+			this.state = { type: "loaded", thread, quotes, postUrl, blackskyPostUrl };
 			this.render();
 		} catch (error) {
 			const message =
@@ -772,14 +838,20 @@ class SequoiaComments extends BaseElement {
 			case "loaded": {
 				const replies =
 					this.state.thread.replies?.filter(isThreadViewPost) ?? [];
+				const quotes = this.state.quotes ?? [];
 				const threadsHtml = replies
 					.map((reply) => this.renderThread(reply))
 					.join("");
 				const commentCount = this.countComments(replies);
+				const titleText =
+					commentCount > 0
+						? `${commentCount} Comment${commentCount !== 1 ? "s" : ""}`
+						: "Comments";
+				const quotesHtml = this.renderQuotesSection(quotes);
 
 				this.commentsContainer.innerHTML = `
 					<div class="sequoia-comments-header">
-						<h3 class="sequoia-comments-title">${commentCount} Comment${commentCount !== 1 ? "s" : ""}</h3>
+						<h3 class="sequoia-comments-title">${titleText}</h3>
 						<div>
 							<a href="${this.state.postUrl}" target="_blank" rel="noopener noreferrer" class="sequoia-reply-button sequoia-reply-bluesky">
 								${BLUESKY_ICON}
@@ -792,6 +864,7 @@ class SequoiaComments extends BaseElement {
 					<div class="sequoia-comments-list">
 						${threadsHtml}
 					</div>
+					${quotesHtml}
 				`;
 				break;
 			}
@@ -835,12 +908,37 @@ class SequoiaComments extends BaseElement {
 	}
 
 	/**
+	 * Render a section of quote posts below the replies
+	 * @param {Array} quotes - Array of PostView objects from getQuotes
+	 */
+	renderQuotesSection(quotes) {
+		if (quotes.length === 0) return "";
+
+		const quotesHtml = quotes
+			.map((post) => {
+				const quotePostUrl = buildBskyAppUrl(post.uri);
+				return `<div class="sequoia-thread">${this.renderComment(post, false, 0, quotePostUrl)}</div>`;
+			})
+			.join("");
+
+		return `
+			<div class="sequoia-quotes-section">
+				<h4 class="sequoia-quotes-header">Quotes (${quotes.length})</h4>
+				<div class="sequoia-comments-list">
+					${quotesHtml}
+				</div>
+			</div>
+		`;
+	}
+
+	/**
 	 * Render a single comment
 	 * @param {any} post - Post data
 	 * @param {boolean} showThreadLine - Whether to show the connecting thread line
 	 * @param {number} _index - Index in the flattened thread (0 = top-level)
+	 * @param {string|null} postUrl - Optional URL to link the timestamp to (used for quote posts)
 	 */
-	renderComment(post, showThreadLine = false, _index = 0) {
+	renderComment(post, showThreadLine = false, _index = 0, postUrl = null) {
 		const author = post.author;
 		const displayName = author.displayName || author.handle;
 		const avatarHtml = author.avatar
@@ -850,6 +948,9 @@ class SequoiaComments extends BaseElement {
 		const profileUrl = `https://bsky.app/profile/${author.did}`;
 		const textHtml = renderTextWithFacets(post.record.text, post.record.facets);
 		const timeAgo = formatRelativeTime(post.record.createdAt);
+		const timeHtml = postUrl
+			? `<a href="${escapeHtml(postUrl)}" target="_blank" rel="noopener noreferrer" class="sequoia-comment-time">${timeAgo}</a>`
+			: `<span class="sequoia-comment-time">${timeAgo}</span>`;
 		const threadLineHtml = showThreadLine
 			? '<div class="sequoia-thread-line"></div>'
 			: "";
@@ -866,7 +967,7 @@ class SequoiaComments extends BaseElement {
 							${escapeHtml(displayName)}
 						</a>
 						<span class="sequoia-comment-handle">@${escapeHtml(author.handle)}</span>
-						<span class="sequoia-comment-time">${timeAgo}</span>
+						${timeHtml}
 					</div>
 					<p class="sequoia-comment-text">${textHtml}</p>
 				</div>
