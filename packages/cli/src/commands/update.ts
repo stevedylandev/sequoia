@@ -10,7 +10,7 @@ import {
 	spinner,
 	log,
 } from "@clack/prompts";
-import { findConfig, loadConfig, generateConfigTemplate } from "../lib/config";
+import { findConfig, loadConfig } from "../lib/config";
 import {
 	loadCredentials,
 	listAllCredentials,
@@ -147,24 +147,7 @@ async function updateConfigFlow(
 	);
 
 	if (shouldSave) {
-		const configContent = generateConfigTemplate({
-			siteUrl: configUpdated.siteUrl,
-			contentDir: configUpdated.contentDir,
-			imagesDir: configUpdated.imagesDir,
-			publicDir: configUpdated.publicDir,
-			outputDir: configUpdated.outputDir,
-			pathPrefix: configUpdated.pathPrefix,
-			publicationUri: configUpdated.publicationUri,
-			pdsUrl: configUpdated.pdsUrl,
-			frontmatter: configUpdated.frontmatter,
-			ignore: configUpdated.ignore,
-			removeIndexFromSlug: configUpdated.removeIndexFromSlug,
-			stripDatePrefix: configUpdated.stripDatePrefix,
-			pathTemplate: configUpdated.pathTemplate,
-			textContentField: configUpdated.textContentField,
-			publishContent: configUpdated.publishContent,
-			bluesky: configUpdated.bluesky,
-		});
+		const configContent = JSON.stringify(configUpdated, null, 2);
 
 		await fs.writeFile(configPath, configContent);
 		log.success("Configuration saved!");
