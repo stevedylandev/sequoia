@@ -1,3 +1,34 @@
+## [0.5.6] - 2026-04-25
+
+### 🐛 Bug Fixes
+
+- Sequoia update
+- Updated type guard to allow textContent to be null
+
+### ⚙️ Miscellaneous Tasks
+
+- Release 0.5.6
+- Bumped printed version
+## [0.5.5] - 2026-04-15
+
+### 🐛 Bug Fixes
+
+- Include slug and bskyPostRef in local state
+
+### ⚙️ Miscellaneous Tasks
+
+- Release v0.5.5
+## [0.5.4] - 2026-04-13
+
+### 🐛 Bug Fixes
+
+- Corrected behavior for empty string in pathPrefix
+
+### ⚙️ Miscellaneous Tasks
+
+- Update changelog
+- Release 0.5.4
+
 ## [0.5.3] - 2026-04-04
 
 ### 🐛 Bug Fixes
@@ -9,7 +40,6 @@
 - Update changelog
 - Lint and format
 - Version bump
-
 ## [0.5.2] - 2026-03-22
 
 ### ⚙️ Miscellaneous Tasks
