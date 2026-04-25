@@ -25,7 +25,7 @@ function isDocumentRecord(value: unknown): value is DocumentRecord {
 		typeof v.title === "string" &&
 		typeof v.site === "string" &&
 		typeof v.path === "string" &&
-		typeof v.textContent === "string" &&
+		(v.textContent === undefined || typeof v.textContent === "string") &&
 		typeof v.publishedAt === "string" &&
 		(v.updatedAt === undefined || typeof v.updatedAt === "string")
 	);
