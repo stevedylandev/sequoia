@@ -1,3 +1,9 @@
+## [0.5.7]
+
+### 🚀 Features
+
+- Validate cover image is < 1MB
+
 ## [0.5.6] - 2026-04-25
 
 ### 🐛 Bug Fixes

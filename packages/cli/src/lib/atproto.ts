@@ -14,6 +14,9 @@ import type {
 } from "./types";
 import { isAppPasswordCredentials, isOAuthCredentials } from "./types";
 
+// https://standard.site/docs/lexicons/document/#optional-properties
+export const COVER_IMAGE_MAX_SIZE = 1024 * 1024 - 1;
+
 /**
  * Type guard to check if a record value is a DocumentRecord
  */
@@ -189,7 +192,7 @@ export async function resolveImagePath(
 	ogImage: string,
 	imagesDir: string | undefined,
 	contentDir: string,
-): Promise<string | null> {
+): Promise<string | undefined> {
 	// Try multiple resolution strategies
 
 	// 1. If imagesDir is specified, look there

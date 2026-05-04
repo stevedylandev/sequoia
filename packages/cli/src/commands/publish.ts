@@ -2,7 +2,7 @@ import * as fs from "node:fs/promises";
 import { command, flag } from "cmd-ts";
 import { select, spinner, log } from "@clack/prompts";
 import * as path from "node:path";
-import { loadConfig, loadState, saveState, findConfig } from "../lib/config";
+import { CONFIG_FILENAME, loadConfig, loadState, saveState, findConfig } from "../lib/config";
 import {
 	loadCredentials,
 	listAllCredentials,
@@ -17,6 +17,7 @@ import {
 	resolveImagePath,
 	createBlueskyPost,
 	addBskyPostRefToDocument,
+    COVER_IMAGE_MAX_SIZE,
 } from "../lib/atproto";
 import {
 	scanContentDirectory,
@@ -52,7 +53,7 @@ export const publishCommand = command({
 		// Load config
 		const configPath = await findConfig();
 		if (!configPath) {
-			log.error("No publisher.config.ts found. Run 'publisher init' first.");
+			log.error(`No ${CONFIG_FILENAME} found. Run 'sequoia init' first.`);
 			process.exit(1);
 		}
 
@@ -261,10 +262,19 @@ export const publishCommand = command({
 		const cutoffDate = new Date();
 		cutoffDate.setDate(cutoffDate.getDate() - maxAgeDays);
 
+		let isValid = true;
 		for (const { post, action, reason } of postsToPublish) {
 			const icon = action === "create" ? "+" : "~";
 			const relativeFilePath = path.relative(configDir, post.filePath);
 			const existingBskyPostRef = state.posts[relativeFilePath]?.bskyPostRef;
+
+			if (post.frontmatter.ogImage) {
+				post.coverImagePath = await resolveImagePath(
+					post.frontmatter.ogImage,
+					imagesDir,
+					contentDir,
+				);
+			}
 
 			let bskyNote = "";
 			if (blueskyEnabled) {
@@ -292,6 +302,13 @@ export const publishCommand = command({
 			log.message(
 				`  ${icon} ${post.frontmatter.title} (${reason})${bskyNote}${postUrl}`,
 			);
+
+			const postValid = await validatePost(post);
+			isValid &&= postValid;
+		}
+
+		if (!isValid) {
+			return;
 		}
 
 		if (dryRun) {
@@ -329,22 +346,14 @@ export const publishCommand = command({
 			try {
 				// Handle cover image upload
 				let coverImage: BlobObject | undefined;
-				if (post.frontmatter.ogImage) {
-					const imagePath = await resolveImagePath(
-						post.frontmatter.ogImage,
-						imagesDir,
-						contentDir,
-					);
-
-					if (imagePath) {
-						log.info(`  Uploading cover image: ${path.basename(imagePath)}`);
-						coverImage = await uploadImage(agent, imagePath);
-						if (coverImage) {
-							log.info(`  Uploaded image blob: ${coverImage.ref.$link}`);
-						}
-					} else {
-						log.warn(`  Cover image not found: ${post.frontmatter.ogImage}`);
+				if (post.coverImagePath) {
+					log.info(`  Uploading cover image: ${path.basename(post.coverImagePath)}`);
+					coverImage = await uploadImage(agent, post.coverImagePath);
+					if (coverImage) {
+						log.info(`  Uploaded image blob: ${coverImage.ref.$link}`);
 					}
+				} else {
+					log.warn(`  Cover image not found: ${post.frontmatter.ogImage}`);
 				}
 
 				// Track atUri, content for state saving, and bskyPostRef
@@ -372,6 +381,8 @@ export const publishCommand = command({
 					contentForHash = updatedContent;
 					publishedCount++;
 				} else {
+
+					// Validate post.
 					atUri = post.frontmatter.atUri!;
 					await updateDocument(agent, post, atUri, config, coverImage);
 					s.stop(`Updated: ${atUri}`);
@@ -455,3 +466,16 @@ export const publishCommand = command({
 		}
 	},
 });
+
+async function validatePost(post: BlogPost): Promise<boolean> {
+	if (post.coverImagePath) {
+		const stat = await fs.stat(post.coverImagePath);
+		if (stat.size >= COVER_IMAGE_MAX_SIZE) {
+			log.error(`  Cover image "${post.coverImagePath}" must be less than 1MB`);
+			return false;
+		}
+	}
+
+	return true;
+}
+

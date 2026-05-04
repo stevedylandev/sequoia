@@ -7,7 +7,7 @@ import type {
 	BlueskyConfig,
 } from "./types";
 
-const CONFIG_FILENAME = "sequoia.json";
+export const CONFIG_FILENAME = "sequoia.json";
 const STATE_FILENAME = ".sequoia-state.json";
 
 async function fileExists(filePath: string): Promise<boolean> {

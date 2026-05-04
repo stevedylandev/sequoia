@@ -106,6 +106,7 @@ export interface BlogPost {
 	content: string;
 	rawContent: string;
 	rawFrontmatter: Record<string, unknown>; // For accessing custom fields like textContentField
+	coverImagePath?: string;
 }
 
 export interface BlobRef {
