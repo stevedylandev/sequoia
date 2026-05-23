@@ -174,13 +174,14 @@ export async function uploadImage(
 			},
 		);
 
+		const blob = response.data.blob;
 		return {
 			$type: "blob",
 			ref: {
-				$link: response.data.blob.ref.toString(),
+				$link: blob.ref.toString(),
 			},
-			mimeType,
-			size: imageBuffer.byteLength,
+			mimeType: blob.mimeType,
+			size: blob.size,
 		};
 	} catch (error) {
 		console.error(`Error uploading image ${imagePath}:`, error);
