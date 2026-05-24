@@ -65,5 +65,5 @@ Visit [site-validator.fly.dev](https://site-validator.fly.dev/) and paste in the
 ## Troubleshooting
 
 - Make sure that you are either using `sequoia inject` or manually handling the required `<link>` tags for each post. Read [workflows](/workflows) for a clear order of operations to publish, inject, and deploy.
--
+- If `<link>` tags are not added to your `<head>` tag, check if you configured your site to use a `pathTemplate`. If you did, you'll need to add `<link>` tags to your page templates yourself. See [document verification](#document-verification) for examples.
 - Make sure that the `.well-known` publication record is present in your public/static folder, and that it's populating to your build folder (e.g. `dist`). There are some SSGs that will not automatically include dot files or directories.
