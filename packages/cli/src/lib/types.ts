@@ -120,7 +120,10 @@ export interface BlobObject {
 	size: number;
 }
 
+export interface PublicationState extends StrongRef {}
+
 export interface PublisherState {
+	publication?: PublicationState;
 	posts: Record<string, PostState>;
 }
 

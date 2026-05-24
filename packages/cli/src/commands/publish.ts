@@ -2,7 +2,13 @@ import * as fs from "node:fs/promises";
 import { command, flag } from "cmd-ts";
 import { select, spinner, log } from "@clack/prompts";
 import * as path from "node:path";
-import { CONFIG_FILENAME, loadConfig, loadState, saveState, findConfig } from "../lib/config";
+import {
+	CONFIG_FILENAME,
+	loadConfig,
+	loadState,
+	saveState,
+	findConfig,
+} from "../lib/config";
 import {
 	loadCredentials,
 	listAllCredentials,
@@ -17,7 +23,8 @@ import {
 	resolveImagePath,
 	createBlueskyPost,
 	addBskyPostRefToDocument,
-    COVER_IMAGE_MAX_SIZE,
+	COVER_IMAGE_MAX_SIZE,
+	getPublication,
 } from "../lib/atproto";
 import {
 	scanContentDirectory,
@@ -26,7 +33,7 @@ import {
 	resolvePostPath,
 } from "../lib/markdown";
 import type { BlogPost, BlobObject, StrongRef } from "../lib/types";
-import { syncStateFromPDS } from "../lib/sync";
+import { syncPublication, syncStateFromPDS } from "../lib/sync";
 import { exitOnCancel } from "../lib/prompts";
 
 export const publishCommand = command({
@@ -155,7 +162,7 @@ export const publishCommand = command({
 
 		if (
 			config.autoSync !== false &&
-			Object.keys(state.posts).length === 0 &&
+			(!state.publication || Object.keys(state.posts).length === 0) &&
 			!dryRun
 		) {
 			// Create agent early for sync (will be reused for publishing)
@@ -334,6 +341,15 @@ export const publishCommand = command({
 			}
 		}
 
+		// Make sure publication state is available for enhanced links.
+		if (!state.publication) {
+			state.publication = await syncPublication(
+				agent,
+				config.publicationUri,
+				false,
+			);
+		}
+
 		// Publish posts
 		let publishedCount = 0;
 		let updatedCount = 0;
@@ -347,7 +363,9 @@ export const publishCommand = command({
 				// Handle cover image upload
 				let coverImage: BlobObject | undefined;
 				if (post.coverImagePath) {
-					log.info(`  Uploading cover image: ${path.basename(post.coverImagePath)}`);
+					log.info(
+						`  Uploading cover image: ${path.basename(post.coverImagePath)}`,
+					);
 					coverImage = await uploadImage(agent, post.coverImagePath);
 					if (coverImage) {
 						log.info(`  Uploaded image blob: ${coverImage.ref.$link}`);
@@ -357,7 +375,7 @@ export const publishCommand = command({
 				}
 
 				// Track atUri, content for state saving, and bskyPostRef
-				let atUri: string;
+				let documentRef: StrongRef;
 				let contentForHash: string;
 				let bskyPostRef: StrongRef | undefined;
 				const relativeFilePath = path.relative(configDir, post.filePath);
@@ -366,13 +384,13 @@ export const publishCommand = command({
 				const existingBskyPostRef = state.posts[relativeFilePath]?.bskyPostRef;
 
 				if (action === "create") {
-					atUri = await createDocument(agent, post, config, coverImage);
-					s.stop(`Created: ${atUri}`);
+					documentRef = await createDocument(agent, post, config, coverImage);
+					s.stop(`Created: ${documentRef.uri}`);
 
 					// Update frontmatter with atUri
 					const updatedContent = updateFrontmatterWithAtUri(
 						post.rawContent,
-						atUri,
+						documentRef.uri,
 					);
 					await fs.writeFile(post.filePath, updatedContent);
 					log.info(`  Updated frontmatter in ${path.basename(post.filePath)}`);
@@ -381,11 +399,16 @@ export const publishCommand = command({
 					contentForHash = updatedContent;
 					publishedCount++;
 				} else {
-
 					// Validate post.
-					atUri = post.frontmatter.atUri!;
-					await updateDocument(agent, post, atUri, config, coverImage);
-					s.stop(`Updated: ${atUri}`);
+					const atUri = post.frontmatter.atUri!;
+					documentRef = await updateDocument(
+						agent,
+						post,
+						atUri,
+						config,
+						coverImage,
+					);
+					s.stop(`Updated: ${documentRef.uri}`);
 
 					// For updates, rawContent already has atUri
 					contentForHash = post.rawContent;
@@ -414,12 +437,18 @@ export const publishCommand = command({
 									description: post.frontmatter.description,
 									bskyPost: post.frontmatter.bskyPost,
 									canonicalUrl,
+									documentRef,
+									publicationRef: state.publication,
 									coverImage,
 									publishedAt: post.frontmatter.publishDate,
 								});
 
 								// Update document record with bskyPostRef
-								await addBskyPostRefToDocument(agent, atUri, bskyPostRef);
+								await addBskyPostRefToDocument(
+									agent,
+									documentRef.uri,
+									bskyPostRef,
+								);
 								log.info(`  Created Bluesky post: ${bskyPostRef.uri}`);
 								bskyPostCount++;
 							} catch (bskyError) {
@@ -437,7 +466,7 @@ export const publishCommand = command({
 				const contentHash = await getContentHash(contentForHash);
 				state.posts[relativeFilePath] = {
 					contentHash,
-					atUri,
+					atUri: documentRef.uri,
 					lastPublished: new Date().toISOString(),
 					slug: post.slug,
 					bskyPostRef,
@@ -478,4 +507,3 @@ async function validatePost(post: BlogPost): Promise<boolean> {
 
 	return true;
 }
-

@@ -130,34 +130,27 @@ export const injectCommand = command({
 			// Read the HTML file
 			let content = await fs.readFile(htmlPath, "utf-8");
 
-			// Check if link tag already exists
-			const linkTag = `<link rel="site.standard.document" href="${atUri}">`;
-			if (content.includes('rel="site.standard.document"')) {
-				alreadyHasCount++;
-				continue;
+			// Inject the tags
+			let injected = injectLinkTags(
+				dryRun,
+				relativePath,
+				content,
+				atUri,
+				config.publicationUri,
+			);
+			switch (injected) {
+				case Injected.AlreadyPresent:
+					alreadyHasCount++;
+					continue;
+				case Injected.Skipped:
+					skippedCount++;
+					continue;
+				case Injected.Faked:
+					injectedCount++;
+					continue;
+				default:
+					content = injected;
 			}
-
-			// Find </head> and inject before it
-			const headCloseIndex = content.indexOf("</head>");
-			if (headCloseIndex === -1) {
-				log.warn(`  No </head> found in ${relativePath}, skipping`);
-				skippedCount++;
-				continue;
-			}
-
-			if (dryRun) {
-				log.message(`  Would inject into: ${relativePath}`);
-				log.message(`    ${linkTag}`);
-				injectedCount++;
-				continue;
-			}
-
-			// Inject the link tag
-			const indent = "  "; // Standard indentation
-			content =
-				content.slice(0, headCloseIndex) +
-				`${indent}${linkTag}\n${indent}` +
-				content.slice(headCloseIndex);
 
 			await fs.writeFile(htmlPath, content);
 			log.success(`  Injected into: ${relativePath}`);
@@ -180,3 +173,65 @@ export const injectCommand = command({
 		}
 	},
 });
+
+export enum Injected {
+	AlreadyPresent = 0,
+	Skipped,
+	Faked,
+}
+
+export function injectLinkTags(
+	dryRun: boolean,
+	relativePath: string,
+	content: string,
+	atUri: string,
+	publicationUri: string,
+): string | Injected {
+	// Check if link tags already exist
+	let documentLinkTag: string | undefined =
+		`<link rel="site.standard.document" href="${atUri}">`;
+	let publicationLinkTag: string | undefined =
+		`<link rel="site.standard.publication" href="${publicationUri}">`;
+	if (content.includes('rel="site.standard.document"')) {
+		documentLinkTag = undefined;
+	}
+	if (content.includes('rel="site.standard.publication"')) {
+		publicationLinkTag = undefined;
+	}
+
+	if (!documentLinkTag && !publicationLinkTag) {
+		return Injected.AlreadyPresent;
+	}
+
+	// Find </head> and inject before it
+	const headCloseIndex = content.indexOf("</head>");
+	if (headCloseIndex === -1) {
+		log.warn(`  No </head> found in ${relativePath}, skipping`);
+		return Injected.Skipped;
+	}
+
+	if (dryRun) {
+		log.message(`  Would inject into: ${relativePath}`);
+		if (documentLinkTag) {
+			log.message(`    ${documentLinkTag}`);
+		}
+		if (publicationLinkTag) {
+			log.message(`    ${publicationLinkTag}`);
+		}
+		return Injected.Faked;
+	}
+
+	// Inject the link tags
+	const indent = "  "; // Standard indentation
+	const after = content.slice(headCloseIndex);
+	content = content.slice(0, headCloseIndex);
+	if (documentLinkTag) {
+		content += `${indent}${documentLinkTag}\n${indent}`;
+	}
+	if (publicationLinkTag) {
+		content += `${indent}${publicationLinkTag}\n${indent}`;
+	}
+	content += after;
+
+	return content;
+}

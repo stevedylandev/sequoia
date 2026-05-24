@@ -241,7 +241,7 @@ export async function resolveImagePath(
 		}
 	}
 
-	return null;
+	return undefined;
 }
 
 export async function createDocument(
@@ -249,7 +249,7 @@ export async function createDocument(
 	post: BlogPost,
 	config: PublisherConfig,
 	coverImage?: BlobObject,
-): Promise<string> {
+): Promise<StrongRef> {
 	const postPath = resolvePostPath(
 		post,
 		config.pathPrefix,
@@ -307,7 +307,10 @@ export async function createDocument(
 		record,
 	});
 
-	return response.data.uri;
+	return {
+		cid: response.data.cid,
+		uri: response.data.uri,
+	};
 }
 
 export async function updateDocument(
@@ -316,7 +319,7 @@ export async function updateDocument(
 	atUri: string,
 	config: PublisherConfig,
 	coverImage?: BlobObject,
-): Promise<void> {
+): Promise<StrongRef> {
 	// Parse the atUri to get the collection and rkey
 	// Format: at://did:plc:xxx/collection/rkey
 	const uriMatch = atUri.match(/^at:\/\/([^/]+)\/([^/]+)\/(.+)$/);
@@ -385,12 +388,17 @@ export async function updateDocument(
 		record.tags = post.frontmatter.tags;
 	}
 
-	await agent.com.atproto.repo.putRecord({
+	const response = await agent.com.atproto.repo.putRecord({
 		repo: agent.did!,
 		collection: collection!,
 		rkey: rkey!,
 		record,
 	});
+
+	return {
+		cid: response.data.cid,
+		uri: response.data.uri,
+	};
 }
 
 export function parseAtUri(
@@ -467,7 +475,7 @@ export async function listDocuments(
 export async function createPublication(
 	agent: Agent,
 	options: CreatePublicationOptions,
-): Promise<string> {
+): Promise<StrongRef> {
 	let icon: BlobObject | undefined;
 
 	if (options.iconPath) {
@@ -501,7 +509,10 @@ export async function createPublication(
 		record,
 	});
 
-	return response.data.uri;
+	return {
+		cid: response.data.cid,
+		uri: response.data.uri,
+	};
 }
 
 export interface GetPublicationResult {
@@ -607,6 +618,8 @@ export interface CreateBlueskyPostOptions {
 	description?: string;
 	bskyPost?: string;
 	canonicalUrl: string;
+	documentRef: StrongRef;
+	publicationRef: StrongRef;
 	coverImage?: BlobObject;
 	publishedAt: string; // Used as createdAt for the post
 }
@@ -654,6 +667,8 @@ export async function createBlueskyPost(
 		description,
 		bskyPost,
 		canonicalUrl,
+		documentRef,
+		publicationRef,
 		coverImage,
 		publishedAt,
 	} = options;
@@ -704,6 +719,20 @@ export async function createBlueskyPost(
 			uri: canonicalUrl,
 			title: title.substring(0, 500), // Max 500 chars for title
 			description: (description || "").substring(0, 1000), // Max 1000 chars for description
+			associatedRefs: [
+				{
+					// site.standard.document
+					$type: "com.atproto.repo.strongRef",
+					cid: documentRef.cid,
+					uri: documentRef.uri,
+				},
+				{
+					// site.standard.publication
+					$type: "com.atproto.repo.strongRef",
+					cid: publicationRef.cid,
+					uri: publicationRef.uri,
+				},
+			],
 		},
 	};
 
