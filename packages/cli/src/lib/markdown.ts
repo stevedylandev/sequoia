@@ -388,5 +388,8 @@ export function stripMarkdownForText(markdown: string): string {
 		.replace(/`([^`]+)`/g, "$1") // Remove inline code formatting
 		.replace(/!\[.*?\]\(.*?\)/g, "") // Remove images
 		.replace(/\n{3,}/g, "\n\n") // Normalize multiple newlines
+		.replace(/~~([^~]+)~~/g, "$1") // Remove strikethrough
+		.replace(/<!--([^]+)-->/g, "") // Remove any html comments
+		.replace(/^\s*\[\^[^\]]+\]:[^\r\n]*(?:\r?\n[ \t]+[^\r\n]*)*/gm, "") // Remove any footnotes
 		.trim();
 }
