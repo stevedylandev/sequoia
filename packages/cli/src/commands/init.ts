@@ -264,13 +264,14 @@ export const initCommand = command({
 
 			s.start("Creating publication...");
 			try {
-				publicationUri = await createPublication(agent, {
+				const publicationRef = await createPublication(agent, {
 					url: siteConfig.siteUrl,
 					name: publicationConfig.name,
 					description: publicationConfig.description || undefined,
 					iconPath: publicationConfig.iconPath || undefined,
 					showInDiscover: publicationConfig.showInDiscover,
 				});
+				publicationUri = publicationRef.uri;
 				s.stop(`Publication created: ${publicationUri}`);
 			} catch (error) {
 				s.stop("Failed to create publication");

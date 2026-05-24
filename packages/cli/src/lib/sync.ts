@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { log } from "@clack/prompts";
-import { listDocuments, type createAgent } from "./atproto";
+import { getPublication, listDocuments, type createAgent } from "./atproto";
 import { loadState, saveState } from "./config";
 import {
 	scanContentDirectory,
@@ -9,7 +9,7 @@ import {
 	updateFrontmatterWithAtUri,
 	resolvePostPath,
 } from "./markdown";
-import type { PublisherConfig, PublisherState } from "./types";
+import type { PublisherConfig, PublisherState, StrongRef } from "./types";
 
 export interface SyncOptions {
 	updateFrontmatter?: boolean;
@@ -80,6 +80,15 @@ export async function syncStateFromPDS(
 
 	// Load existing state
 	const state = await loadState(configDir);
+
+	// Update the publication information for enhanced links.
+	if (!state.publication) {
+		state.publication = await syncPublication(
+			agent,
+			config.publicationUri,
+			quiet,
+		);
+	}
 
 	// Track changes
 	let matchedCount = 0;
@@ -200,4 +209,25 @@ export async function syncStateFromPDS(
 	}
 
 	return { state, matchedCount, unmatchedCount, frontmatterUpdatesApplied };
+}
+
+export async function syncPublication(
+	agent: Awaited<ReturnType<typeof createAgent>>,
+	publicationUri: string,
+	quiet: boolean,
+): Promise<StrongRef> {
+	const publicationRef = await getPublication(agent, publicationUri);
+	if (!publicationRef) {
+		if (!quiet) {
+			log.error(
+				`Publication ${publicationUri} not found. Update your publication record and try again.`,
+			);
+		}
+		process.exit(1);
+	}
+
+	return {
+		cid: publicationRef.cid,
+		uri: publicationRef.uri,
+	};
 }
