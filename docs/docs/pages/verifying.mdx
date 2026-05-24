@@ -21,7 +21,7 @@ Every document or blog post that is published needs a `<link>` tag in the `<head
 The content of that link tag needs to be the AT URI for the record we just published on your PDS, and an optional publication URI for enhanced links in Bluesky posts if enabled.
 There are two ways you can handle these:
 
-- `sequoia inject` (recommended) - By running this command after publishing, and after building the site with your SSG, Sequoia will inject the link tags into your finished HTML.
+- `sequoia inject` - By running this command after publishing, and after building the site with your SSG, Sequoia will inject the link tags into your finished HTML.
   This way you don't have to manually edit it or mess with an SSG config to set it up.
   Just deploy the build folder after you have run `sequoia inject`!
 
@@ -31,6 +31,18 @@ There are two ways you can handle these:
   This approach gives you full control over the HTML files but will take a bit more skill.
 
   :::code-group
+
+  ```html [Astro]
+  ---
+  import type { SiteMeta } from "@/data/siteMeta";
+  import siteConfig from "@/site-config";
+  type Props = SiteMeta;
+  const { title, description, ogImage, articleDate, atUri } = Astro.props;
+  ---
+
+  <!-- Standard.site document verification -->
+  {atUri && <link rel="site.standard.document" href={atUri} />}
+  ```
 
   ```html [Hugo]
   <!-- layouts/_partials/head.html -->
