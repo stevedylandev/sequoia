@@ -1,5 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import { parseFrontmatter, resolvePostPath } from "../src/lib/markdown";
+import {
+	parseFrontmatter,
+	resolvePostPath,
+	stripMarkdownForText,
+} from "../src/lib/markdown";
 import type { BlogPost } from "../src/lib/types";
 
 describe("parseFrontmatter", () => {
@@ -413,5 +417,78 @@ describe("resolvePostPath", () => {
 		expect(resolvePostPath(post, "", "/custom/{slug}")).toBe(
 			"/custom/hello-world",
 		);
+	});
+});
+
+describe("stripMarkdownForText", () => {
+	it("removes h1 through h6 headers", () => {
+		expect(
+			stripMarkdownForText("# H1\n## H2\n### H3\n#### H4\n##### H5\n###### H6"),
+		).toBe("H1\nH2\nH3\nH4\nH5\nH6");
+	});
+
+	it("removes bold formatting", () => {
+		expect(stripMarkdownForText("This is **bold** text.")).toBe(
+			"This is bold text.",
+		);
+	});
+
+	it("removes italic formatting", () => {
+		expect(stripMarkdownForText("This is *italic* text.")).toBe(
+			"This is italic text.",
+		);
+	});
+
+	it("removes links but keeps link text", () => {
+		expect(stripMarkdownForText("[click here](https://example.com)")).toBe(
+			"click here",
+		);
+	});
+
+	it("removes fenced code blocks", () => {
+		const input = "before\n```\nconst x = 1;\n```\nafter";
+		expect(stripMarkdownForText(input)).toBe("before\n\nafter");
+	});
+
+	it("removes inline code formatting", () => {
+		expect(stripMarkdownForText("Run `npm install` to install.")).toBe(
+			"Run npm install to install.",
+		);
+	});
+
+	it("removes images", () => {
+		expect(stripMarkdownForText("before ![alt text](image.png) after")).toBe(
+			"before  after",
+		);
+	});
+
+	it("normalizes three or more consecutive newlines to two", () => {
+		expect(stripMarkdownForText("line 1\n\n\n\nline 2")).toBe(
+			"line 1\n\nline 2",
+		);
+	});
+
+	it("removes single tilde strikethrough", () => {
+		expect(stripMarkdownForText("~strikethrough~")).toBe("strikethrough");
+	});
+
+	it("removes double tilde strikethrough", () => {
+		expect(stripMarkdownForText("~~strikethrough~~")).toBe("strikethrough");
+	});
+
+	it("removes HTML comments but preserves -- outside comments", () => {
+		expect(stripMarkdownForText("a -- b <!-- c -- d --> e -- f")).toBe(
+			"a -- b  e -- f",
+		);
+	});
+
+	it("removes footnote definitions but not inline references", () => {
+		const input =
+			"Text with[^1] a reference.\n\n[^1]: The footnote definition.";
+		expect(stripMarkdownForText(input)).toBe("Text with[^1] a reference.");
+	});
+
+	it("trims leading and trailing whitespace", () => {
+		expect(stripMarkdownForText("\n\nhello\n\n")).toBe("hello");
 	});
 });

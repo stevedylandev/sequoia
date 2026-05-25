@@ -24,7 +24,6 @@ import {
 	createBlueskyPost,
 	addBskyPostRefToDocument,
 	COVER_IMAGE_MAX_SIZE,
-	getPublication,
 } from "../lib/atproto";
 import {
 	scanContentDirectory,

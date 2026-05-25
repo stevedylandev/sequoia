@@ -161,6 +161,7 @@ function storeSubscriberDid(did) {
 		const expires = new Date(
 			Date.now() + 365 * 24 * 60 * 60 * 1000,
 		).toUTCString();
+		// biome-ignore lint/suspicious/noDocumentCookie: back-compat with older browsers
 		document.cookie = `sequoia_did=${encodeURIComponent(did)}; Expires=${expires}; Path=/; SameSite=Lax; Secure`;
 	} catch {
 		// Cookie write may fail in some embedded contexts
@@ -200,6 +201,7 @@ function getStoredSubscriberDid() {
  */
 function clearSubscriberDid() {
 	try {
+		// biome-ignore lint/suspicious/noDocumentCookie: back-compat with older browsers
 		document.cookie =
 			"sequoia_did=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; SameSite=Lax; Secure";
 	} catch {
@@ -229,7 +231,7 @@ function consumeReturnParams() {
 		changed = true;
 	}
 
-	if (did && did.startsWith("did:")) {
+	if (did?.startsWith("did:")) {
 		storeSubscriberDid(did);
 		url.searchParams.delete("sequoia_did");
 		changed = true;

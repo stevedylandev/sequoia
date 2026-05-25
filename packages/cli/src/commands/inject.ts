@@ -131,7 +131,7 @@ export const injectCommand = command({
 			let content = await fs.readFile(htmlPath, "utf-8");
 
 			// Inject the tags
-			let injected = injectLinkTags(
+			const injected = injectLinkTags(
 				dryRun,
 				relativePath,
 				content,

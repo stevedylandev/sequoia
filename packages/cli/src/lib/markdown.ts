@@ -379,17 +379,20 @@ export function updateFrontmatterWithAtUri(
 }
 
 export function stripMarkdownForText(markdown: string): string {
-	return markdown
-		.replace(/#{1,6}\s/g, "") // Remove headers
-		.replace(/\*\*([^*]+)\*\*/g, "$1") // Remove bold
-		.replace(/\*([^*]+)\*/g, "$1") // Remove italic
-		.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Remove links, keep text
-		.replace(/`{3}[\s\S]*?`{3}/g, "") // Remove code blocks
-		.replace(/`([^`]+)`/g, "$1") // Remove inline code formatting
-		.replace(/!\[.*?\]\(.*?\)/g, "") // Remove images
-		.replace(/\n{3,}/g, "\n\n") // Normalize multiple newlines
-		.replace(/(~{1,2})([^~]+?)\1/g, "$2") // Remove strikethrough for ~text~ and ~~text~~
-		.replace(/<!--([^]+)-->/g, "") // Remove any html comments
-		.replace(/^\s*\[\^[^\]]+\]:[^\r\n]*(?:\r?\n[ \t]+[^\r\n]*)*/gm, "") // Remove any footnotes
-		.trim();
+	return (
+		markdown
+			.replace(/#{1,6}\s/g, "") // Remove headers
+			.replace(/\*\*([^*]+)\*\*/g, "$1") // Remove bold
+			.replace(/\*([^*]+)\*/g, "$1") // Remove italic
+			// Must run before link regex: image syntax ![alt](url) shares [alt](url) with links
+			.replace(/!\[.*?\]\(.*?\)/g, "") // Remove images
+			.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Remove links, keep text
+			.replace(/`{3}[\s\S]*?`{3}/g, "") // Remove code blocks
+			.replace(/`([^`]+)`/g, "$1") // Remove inline code formatting
+			.replace(/\n{3,}/g, "\n\n") // Normalize multiple newlines
+			.replace(/(~{1,2})([^~]+?)\1/g, "$2") // Remove strikethrough for ~text~ and ~~text~~
+			.replace(/<!--(.+)-->/g, "") // Remove any html comments
+			.replace(/^\s*\[\^[^\]]+\]:[^\r\n]*(?:\r?\n[ \t]+[^\r\n]*)*/gm, "") // Remove any footnotes
+			.trim()
+	);
 }
