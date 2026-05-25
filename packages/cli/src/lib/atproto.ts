@@ -280,7 +280,7 @@ export async function createDocument(
 		title: post.frontmatter.title,
 		site: config.publicationUri,
 		path: postPath,
-		textContent: textContent?.slice(0, 10000),
+		textContent: textContent,
 		publishedAt: publishDate.toISOString(),
 		canonicalUrl: `${config.siteUrl}${postPath}`,
 	};
@@ -367,7 +367,7 @@ export async function updateDocument(
 		title: post.frontmatter.title,
 		site: config.publicationUri,
 		path: postPath,
-		textContent: textContent?.slice(0, 10000),
+		textContent: textContent,
 		publishedAt: publishDate.toISOString(),
 		canonicalUrl: `${config.siteUrl}${postPath}`,
 	};
