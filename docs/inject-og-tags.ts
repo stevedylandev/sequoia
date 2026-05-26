@@ -28,7 +28,7 @@ function findHtmlFiles(dir: string): string[] {
 // Function to inject OG image meta tags
 async function injectOgImageTags(filePath: string) {
 	const file = Bun.file(filePath);
-	let content = await file.text();
+	const content = await file.text();
 
 	// Check if og:image already exists
 	if (content.includes('property="og:image"')) {

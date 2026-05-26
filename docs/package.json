@@ -22,7 +22,7 @@
 		"vocs": "latest"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.3.13",
+		"@biomejs/biome": "2.3.6",
 		"@cloudflare/workers-types": "latest",
 		"@types/react": "latest",
 		"typescript": "latest",

@@ -33,8 +33,8 @@ export function createOAuthClient(
 			application_type: "web",
 			dpop_bound_access_tokens: true,
 		},
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- @atproto Key class mismatch across packages
 		runtimeImplementation: {
+			// biome-ignore lint/suspicious/noExplicitAny: key class mismatch across packages
 			createKey: (algs: string[]) => JoseKey.generate(algs) as any,
 			getRandomValues: (length: number) =>
 				crypto.getRandomValues(new Uint8Array(length)),

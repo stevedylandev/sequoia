@@ -352,10 +352,10 @@ subscribe.get("/check", async (c) => {
 
 subscribe.post("/login", async (c) => {
 	const body = await c.req.parseBody();
-	const handle = (body["handle"] as string | undefined)?.trim();
-	const publicationUri = body["publicationUri"] as string | undefined;
-	const formReturnTo = (body["returnTo"] as string | undefined) || undefined;
-	const formAction = (body["action"] as string | undefined) || undefined;
+	const handle = (body.handle as string | undefined)?.trim();
+	const publicationUri = body.publicationUri as string | undefined;
+	const formReturnTo = (body.returnTo as string | undefined) || undefined;
+	const formAction = (body.action as string | undefined) || undefined;
 
 	if (!handle || !publicationUri) {
 		const styleHref = await getVocsStyleHref(c.env.ASSETS, c.req.url);

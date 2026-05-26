@@ -10,7 +10,7 @@
 		"start": "bun run src/index.ts"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.3.13"
+		"@biomejs/biome": "2.3.6"
 	},
 	"dependencies": {
 		"@atproto/api": "^0.13.21",

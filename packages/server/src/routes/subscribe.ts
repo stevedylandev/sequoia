@@ -294,10 +294,10 @@ subscribe.post("/login", async (c) => {
 	const env = c.get("env");
 
 	const body = await c.req.parseBody();
-	const handle = (body["handle"] as string | undefined)?.trim();
-	const publicationUri = body["publicationUri"] as string | undefined;
-	const formReturnTo = (body["returnTo"] as string | undefined) || undefined;
-	const formAction = (body["action"] as string | undefined) || undefined;
+	const handle = (body.handle as string | undefined)?.trim();
+	const publicationUri = body.publicationUri as string | undefined;
+	const formReturnTo = (body.returnTo as string | undefined) || undefined;
+	const formAction = (body.action as string | undefined) || undefined;
 
 	if (!handle || !publicationUri) {
 		return c.html(renderError("Missing handle or publication URI."), 400);

@@ -23,7 +23,7 @@
 		"deploy": "bun run build && rm -f dist/*.map && bun publish"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.3.13",
+		"@biomejs/biome": "2.3.6",
 		"@types/js-yaml": "^4.0.9",
 		"@types/mime-types": "^3.0.1",
 		"@types/node": "^20"

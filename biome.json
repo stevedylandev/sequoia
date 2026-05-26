@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.3.13/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.3.6/schema.json",
 	"root": true,
 	"vcs": {
 		"enabled": true,
@@ -7,7 +7,9 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**"]
+		"includes": [
+			"**"
+		]
 	},
 	"formatter": {
 		"enabled": true,
