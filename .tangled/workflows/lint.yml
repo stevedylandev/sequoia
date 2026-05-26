@@ -16,6 +16,8 @@ dependencies:
 steps:
   - name: "Install dependencies"
     command: "bun install"
+  - name: "List biome directories"
+    command: "find /tangled/workspace/node_modules/.bun/ -name '*biome*'"
   - name: "Lint check"
     command: "cd packages/cli && bun run biome lint ."
   - name: "Format check"
