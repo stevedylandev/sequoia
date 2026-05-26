@@ -9,7 +9,6 @@ engine: "nixery"
 dependencies:
   nixpkgs:
     - bun
-    - biome
 
 steps:
   - name: "Install dependencies"
