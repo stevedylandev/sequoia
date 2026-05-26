@@ -391,8 +391,9 @@ export function stripMarkdownForText(markdown: string): string {
 			.replace(/`([^`]+)`/g, "$1") // Remove inline code formatting
 			.replace(/\n{3,}/g, "\n\n") // Normalize multiple newlines
 			.replace(/(~{1,2})([^~]+?)\1/g, "$2") // Remove strikethrough for ~text~ and ~~text~~
-			.replace(/<!--(.+)-->/g, "") // Remove any html comments
-			.replace(/^\s*\[\^[^\]]+\]:[^\r\n]*(?:\r?\n[ \t]+[^\r\n]*)*/gm, "") // Remove any footnotes
+			.replace(/<!--[\s\S]*?-->/g, "") // Remove any html comments
+			.replace(/^\s*\[\^[^\]]+\]:[^\r\n]*(?:\r?\n[ \t]+[^\r\n]*)*/gm, "") // Remove footnote definitions
+			.replace(/\[\^\S+\]/g, "") // Remove footnote references (we do after definitions so that those can be matched first)
 			.trim()
 	);
 }

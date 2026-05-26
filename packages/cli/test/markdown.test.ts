@@ -482,10 +482,10 @@ describe("stripMarkdownForText", () => {
 		);
 	});
 
-	it("removes footnote definitions but not inline references", () => {
+	it("removes footnote definitions and inline references", () => {
 		const input =
 			"Text with[^1] a reference.\n\n[^1]: The footnote definition.";
-		expect(stripMarkdownForText(input)).toBe("Text with[^1] a reference.");
+		expect(stripMarkdownForText(input)).toBe("Text with a reference.");
 	});
 
 	it("trims leading and trailing whitespace", () => {
