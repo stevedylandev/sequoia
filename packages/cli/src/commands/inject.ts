@@ -3,7 +3,12 @@ import { command, flag, option, optional, string } from "cmd-ts";
 import { glob } from "glob";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { findConfig, loadConfig, loadState } from "../lib/config";
+import {
+	findConfig,
+	loadConfig,
+	loadState,
+	DEFAULT_PUBLISHER_CONFIG,
+} from "../lib/config";
 
 export const injectCommand = command({
 	name: "inject",
@@ -33,7 +38,8 @@ export const injectCommand = command({
 		const configDir = path.dirname(configPath);
 
 		// Determine output directory
-		const outputDir = outputDirArg || config.outputDir || "./dist";
+		const outputDir =
+			outputDirArg || config.outputDir || DEFAULT_PUBLISHER_CONFIG.outputDir;
 		const resolvedOutputDir = path.isAbsolute(outputDir)
 			? outputDir
 			: path.join(configDir, outputDir);

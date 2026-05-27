@@ -26,6 +26,12 @@ export interface UIConfig {
 	components: string; // Directory to install UI components (default: src/components)
 }
 
+/**
+ * Publisher configuration.
+ *
+ * Any field with a documented default must be kept in sync with
+ * `DEFAULT_PUBLISHER_CONFIG` in `config.ts`, and vice versa.
+ */
 export interface PublisherConfig {
 	siteUrl: string;
 	contentDir: string;

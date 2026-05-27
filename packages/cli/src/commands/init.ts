@@ -12,7 +12,11 @@ import {
 	group,
 } from "@clack/prompts";
 import * as path from "node:path";
-import { findConfig, generateConfigTemplate } from "../lib/config";
+import {
+	findConfig,
+	generateConfigTemplate,
+	DEFAULT_PUBLISHER_CONFIG,
+} from "../lib/config";
 import { loadCredentials, listAllCredentials } from "../lib/credentials";
 import { createAgent, createPublication } from "../lib/atproto";
 import { selectCredential } from "../lib/credential-select";
@@ -340,9 +344,9 @@ export const initCommand = command({
 			siteUrl: siteConfig.siteUrl,
 			contentDir: siteConfig.contentDir || "./content",
 			imagesDir: siteConfig.imagesDir || undefined,
-			publicDir: siteConfig.publicDir || "./public",
-			outputDir: siteConfig.outputDir || "./dist",
-			pathPrefix: siteConfig.pathPrefix ?? "/posts",
+			publicDir: siteConfig.publicDir || DEFAULT_PUBLISHER_CONFIG.publicDir,
+			outputDir: siteConfig.outputDir || DEFAULT_PUBLISHER_CONFIG.outputDir,
+			pathPrefix: siteConfig.pathPrefix ?? DEFAULT_PUBLISHER_CONFIG.pathPrefix,
 			publicationUri,
 			pdsUrl,
 			frontmatter: frontmatterMapping,
@@ -356,7 +360,8 @@ export const initCommand = command({
 		log.success(`Configuration saved to ${configPath}`);
 
 		// Create .well-known/site.standard.publication file
-		const publicDir = siteConfig.publicDir || "./public";
+		const publicDir =
+			siteConfig.publicDir || DEFAULT_PUBLISHER_CONFIG.publicDir;
 		const resolvedPublicDir = path.isAbsolute(publicDir)
 			? publicDir
 			: path.join(process.cwd(), publicDir);

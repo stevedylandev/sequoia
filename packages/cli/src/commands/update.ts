@@ -10,7 +10,11 @@ import {
 	spinner,
 	log,
 } from "@clack/prompts";
-import { findConfig, loadConfig } from "../lib/config";
+import {
+	findConfig,
+	loadConfig,
+	DEFAULT_PUBLISHER_CONFIG,
+} from "../lib/config";
 import {
 	loadCredentials,
 	listAllCredentials,
@@ -70,7 +74,7 @@ async function updateConfigFlow(
 	const configSummary = [
 		`Site URL: ${config.siteUrl}`,
 		`Content Dir: ${config.contentDir}`,
-		`Path Prefix: ${config.pathPrefix ?? "/posts"}`,
+		`Path Prefix: ${config.pathPrefix ?? DEFAULT_PUBLISHER_CONFIG.pathPrefix}`,
 		`Publication URI: ${config.publicationUri}`,
 		config.imagesDir ? `Images Dir: ${config.imagesDir}` : null,
 		config.outputDir ? `Output Dir: ${config.outputDir}` : null,
@@ -177,7 +181,7 @@ async function editSiteSettings(
 	const pathPrefix = exitOnCancel(
 		await text({
 			message: "URL path prefix for posts:",
-			initialValue: config.pathPrefix ?? "/posts",
+			initialValue: config.pathPrefix ?? DEFAULT_PUBLISHER_CONFIG.pathPrefix,
 		}),
 	);
 
@@ -211,14 +215,14 @@ async function editDirectories(
 	const publicDir = exitOnCancel(
 		await text({
 			message: "Public/static directory:",
-			initialValue: config.publicDir || "./public",
+			initialValue: config.publicDir || DEFAULT_PUBLISHER_CONFIG.publicDir,
 		}),
 	);
 
 	const outputDir = exitOnCancel(
 		await text({
 			message: "Build output directory:",
-			initialValue: config.outputDir || "./dist",
+			initialValue: config.outputDir || DEFAULT_PUBLISHER_CONFIG.outputDir,
 		}),
 	);
 
@@ -360,7 +364,8 @@ async function editAdvanced(config: PublisherConfig): Promise<PublisherConfig> {
 	const publishContent = exitOnCancel(
 		await confirm({
 			message: "Publish the post content on the standard.site document?",
-			initialValue: config.publishContent ?? true,
+			initialValue:
+				config.publishContent ?? DEFAULT_PUBLISHER_CONFIG.publishContent,
 		}),
 	);
 
@@ -388,7 +393,7 @@ async function editAdvanced(config: PublisherConfig): Promise<PublisherConfig> {
 		removeIndexFromSlug: removeIndexFromSlug || undefined,
 		stripDatePrefix: stripDatePrefix || undefined,
 		textContentField: textContentField || undefined,
-		publishContent: publishContent ?? true,
+		publishContent: publishContent ?? DEFAULT_PUBLISHER_CONFIG.publishContent,
 	};
 }
 

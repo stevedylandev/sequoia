@@ -10,6 +10,20 @@ import type {
 export const CONFIG_FILENAME = "sequoia.json";
 const STATE_FILENAME = ".sequoia-state.json";
 
+/**
+ * Default values for optional `PublisherConfig` fields that have documented defaults.
+ * Must be kept in sync with the field comments on `PublisherConfig` in `types.ts`.
+ */
+export const DEFAULT_PUBLISHER_CONFIG = {
+	publicDir: "./public",
+	outputDir: "./dist",
+	pathPrefix: "/posts",
+	publishContent: true,
+	removeIndexFromSlug: false,
+	stripDatePrefix: false,
+	autoSync: true,
+} satisfies Partial<PublisherConfig>;
+
 async function fileExists(filePath: string): Promise<boolean> {
 	try {
 		await fs.access(filePath);
@@ -61,7 +75,7 @@ export async function loadConfig(
 		if (!config.publicationUri)
 			throw new Error("publicationUri is required in config");
 
-		return config;
+		return { ...DEFAULT_PUBLISHER_CONFIG, ...config };
 	} catch (error) {
 		if (error instanceof Error && error.message.includes("required")) {
 			throw error;
@@ -141,7 +155,7 @@ export function generateConfigTemplate(options: {
 		config.textContentField = options.textContentField;
 	}
 
-	if (options.publishContent) {
+	if (options.publishContent !== undefined) {
 		config.publishContent = options.publishContent;
 	}
 
