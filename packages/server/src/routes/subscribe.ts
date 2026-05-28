@@ -3,62 +3,20 @@ import { Hono } from "hono";
 import type { Database } from "bun:sqlite";
 import { createOAuthClient } from "../lib/oauth-client";
 import { getSessionDid, setReturnToCookie } from "../lib/session";
-import { page, escapeHtml } from "../lib/theme";
 import type { Env } from "../env";
+import {
+	findExistingRecord,
+	renderError,
+	renderHandleForm,
+	renderSuccess,
+	withReturnToParam,
+} from "./lib";
 
 type Variables = { env: Env; db: Database };
 
 const subscribe = new Hono<{ Variables: Variables }>();
 
 const COLLECTION = "site.standard.graph.subscription";
-const REDIRECT_DELAY_SECONDS = 5;
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function withReturnToParam(
-	returnTo: string | undefined,
-	key: string,
-	value: string,
-): string | undefined {
-	if (!returnTo) return undefined;
-	try {
-		const url = new URL(returnTo);
-		url.searchParams.set(key, value);
-		return url.toString();
-	} catch {
-		return returnTo;
-	}
-}
-
-async function findExistingSubscription(
-	agent: Agent,
-	did: string,
-	publicationUri: string,
-): Promise<string | null> {
-	let cursor: string | undefined;
-
-	do {
-		const result = await agent.com.atproto.repo.listRecords({
-			repo: did,
-			collection: COLLECTION,
-			limit: 100,
-			cursor,
-		});
-
-		for (const record of result.data.records) {
-			const value = record.value as { publication?: string };
-			if (value.publication === publicationUri) {
-				return record.uri;
-			}
-		}
-
-		cursor = result.data.cursor;
-	} while (cursor);
-
-	return null;
-}
 
 // ============================================================================
 // POST /subscribe
@@ -91,9 +49,11 @@ subscribe.post("/", async (c) => {
 		const session = await client.restore(did);
 		const agent = new Agent(session);
 
-		const existingUri = await findExistingSubscription(
+		const existingUri = await findExistingRecord(
 			agent,
 			did,
+			COLLECTION,
+			"publication",
 			publicationUri,
 		);
 		if (existingUri) {
@@ -152,7 +112,17 @@ subscribe.get("/", async (c) => {
 	const did = getSessionDid(c);
 	if (!did) {
 		return c.html(
-			renderHandleForm(publicationUri, returnTo, undefined, action),
+			renderHandleForm({
+				resourceUri: publicationUri,
+				resourceField: "publicationUri",
+				loginPath: "/subscribe/login",
+				title: "Subscribe on Sequoia",
+				description:
+					"Enter your Bluesky handle to subscribe to this publication.",
+				buttonLabel: "Continue on Bluesky",
+				returnTo,
+				action,
+			}),
 		);
 	}
 
@@ -162,9 +132,11 @@ subscribe.get("/", async (c) => {
 		const agent = new Agent(session);
 
 		if (action === "unsubscribe") {
-			const existingUri = await findExistingSubscription(
+			const existingUri = await findExistingRecord(
 				agent,
 				did,
+				COLLECTION,
+				"publication",
 				publicationUri,
 			);
 			if (existingUri) {
@@ -188,34 +160,42 @@ subscribe.get("/", async (c) => {
 			}
 
 			return c.html(
-				renderSuccess(
-					publicationUri,
-					null,
-					"Unsubscribed",
-					existingUri
+				renderSuccess({
+					resourceUri: publicationUri,
+					resourceLabel: "Publication",
+					recordUri: null,
+					heading: "Unsubscribed",
+					msg: existingUri
 						? "You've successfully unsubscribed!"
 						: "You weren't subscribed to this publication.",
-					withReturnToParam(cleanReturnTo, "sequoia_unsubscribed", "1"),
-				),
+					returnTo: withReturnToParam(
+						cleanReturnTo,
+						"sequoia_unsubscribed",
+						"1",
+					),
+				}),
 			);
 		}
 
-		const existingUri = await findExistingSubscription(
+		const existingUri = await findExistingRecord(
 			agent,
 			did,
+			COLLECTION,
+			"publication",
 			publicationUri,
 		);
 		const returnToWithDid = withReturnToParam(returnTo, "sequoia_did", did);
 
 		if (existingUri) {
 			return c.html(
-				renderSuccess(
-					publicationUri,
-					existingUri,
-					"Subscribed",
-					"You're already subscribed to this publication.",
-					returnToWithDid,
-				),
+				renderSuccess({
+					resourceUri: publicationUri,
+					resourceLabel: "Publication",
+					recordUri: existingUri,
+					heading: "Subscribed",
+					msg: "You're already subscribed to this publication.",
+					returnTo: returnToWithDid,
+				}),
 			);
 		}
 
@@ -229,23 +209,30 @@ subscribe.get("/", async (c) => {
 		});
 
 		return c.html(
-			renderSuccess(
-				publicationUri,
-				result.data.uri,
-				"Subscribed",
-				"You've successfully subscribed!",
-				returnToWithDid,
-			),
+			renderSuccess({
+				resourceUri: publicationUri,
+				resourceLabel: "Publication",
+				recordUri: result.data.uri,
+				heading: "Subscribed",
+				msg: "You've successfully subscribed!",
+				returnTo: returnToWithDid,
+			}),
 		);
 	} catch (error) {
 		console.error("Subscribe GET error:", error);
 		return c.html(
-			renderHandleForm(
-				publicationUri,
+			renderHandleForm({
+				resourceUri: publicationUri,
+				resourceField: "publicationUri",
+				loginPath: "/subscribe/login",
+				title: "Subscribe on Sequoia",
+				description:
+					"Enter your Bluesky handle to subscribe to this publication.",
+				buttonLabel: "Continue on Bluesky",
 				returnTo,
-				"Session expired. Please sign in again.",
+				error: "Session expired. Please sign in again.",
 				action,
-			),
+			}),
 		);
 	}
 });
@@ -273,9 +260,11 @@ subscribe.get("/check", async (c) => {
 		const client = createOAuthClient(db, env.CLIENT_URL, env.CLIENT_NAME);
 		const session = await client.restore(did);
 		const agent = new Agent(session);
-		const recordUri = await findExistingSubscription(
+		const recordUri = await findExistingRecord(
 			agent,
 			did,
+			COLLECTION,
+			"publication",
 			publicationUri,
 		);
 		return recordUri
@@ -313,107 +302,5 @@ subscribe.post("/login", async (c) => {
 		`${env.CLIENT_URL}/oauth/login?handle=${encodeURIComponent(handle)}`,
 	);
 });
-
-// ============================================================================
-// HTML rendering
-// ============================================================================
-
-function renderHandleForm(
-	publicationUri: string,
-	returnTo?: string,
-	error?: string,
-	action?: string,
-): string {
-	const errorHtml = error ? `<p class="error">${escapeHtml(error)}</p>` : "";
-	const returnToInput = returnTo
-		? `<input type="hidden" name="returnTo" value="${escapeHtml(returnTo)}" />`
-		: "";
-	const actionInput = action
-		? `<input type="hidden" name="action" value="${escapeHtml(action)}" />`
-		: "";
-
-	return page(`
-		<h1>Subscribe on Bluesky</h1>
-		<p>Enter your Bluesky handle to subscribe to this publication.</p>
-		${errorHtml}
-		<form method="POST" action="/subscribe/login">
-			<input type="hidden" name="publicationUri" value="${escapeHtml(publicationUri)}" />
-			${returnToInput}
-			${actionInput}
-			<input
-				type="text"
-				name="handle"
-				placeholder="you.bsky.social"
-				autocomplete="username"
-				required
-				autofocus
-			/>
-			<button type="submit">Continue on Bluesky</button>
-		</form>
-	`);
-}
-
-function renderSuccess(
-	publicationUri: string,
-	recordUri: string | null,
-	heading: string,
-	msg: string,
-	returnTo?: string,
-): string {
-	const escapedPublicationUri = escapeHtml(publicationUri);
-	const escapedReturnTo = returnTo ? escapeHtml(returnTo) : "";
-
-	const redirectHtml = returnTo
-		? `<p id="redirect-msg">Redirecting to <a href="${escapedReturnTo}">${escapedReturnTo}</a> in <span id="countdown">${REDIRECT_DELAY_SECONDS}</span>\u00a0seconds\u2026</p>
-		<script>
-		(function(){
-			var secs = ${REDIRECT_DELAY_SECONDS};
-			var el = document.getElementById('countdown');
-			var iv = setInterval(function(){
-				secs--;
-				if (el) el.textContent = String(secs);
-				if (secs <= 0) { clearInterval(iv); location.href = ${JSON.stringify(returnTo)}; }
-			}, 1000);
-		})();
-		</script>`
-		: "";
-	const headExtra = returnTo
-		? `<meta http-equiv="refresh" content="${REDIRECT_DELAY_SECONDS};url=${escapedReturnTo}" />`
-		: "";
-
-	return page(
-		`
-		<h1>${escapeHtml(heading)}</h1>
-		<p>${msg}</p>
-		${redirectHtml}
-		<table>
-			<colgroup><col style="width:7rem;"><col></colgroup>
-			<tbody>
-				<tr>
-					<td>Publication</td>
-					<td>
-						<div><code><a href="https://pds.ls/${escapedPublicationUri}">${escapedPublicationUri}</a></code></div>
-					</td>
-				</tr>
-				${
-					recordUri
-						? `<tr>
-					<td>Record</td>
-					<td>
-						<div><code><a href="https://pds.ls/${escapeHtml(recordUri)}">${escapeHtml(recordUri)}</a></code></div>
-					</td>
-				</tr>`
-						: ""
-				}
-			</tbody>
-		</table>
-	`,
-		headExtra,
-	);
-}
-
-function renderError(message: string): string {
-	return page(`<h1>Error</h1><p class="error">${escapeHtml(message)}</p>`);
-}
 
 export default subscribe;

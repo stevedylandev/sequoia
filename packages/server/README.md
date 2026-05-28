@@ -1,6 +1,6 @@
 # Sequoia Server
 
-Self-hostable AT Protocol OAuth and subscription server. Handles Bluesky login and manages `site.standard.graph.subscription` records on behalf of users. Built with Bun, Hono, and Redis.
+Self-hostable AT Protocol OAuth and subscription/recommendation server. Handles Bluesky login and manages `site.standard.graph.subscription` and `site.standard.graph.recommend` records on behalf of users. Built with Bun, Hono, and Redis.
 
 ## Quickstart
 
@@ -23,10 +23,10 @@ CLIENT_URL=http://localhost:3000 bun run dev
 
 ## How it works
 
-1. A user visits `/subscribe?publicationUri=at://...` and enters their Bluesky handle
+1. A user visits `/subscribe?publicationUri=at://...` or `/recommend?documentUri=at://...` and enters their Bluesky handle
 2. The server initiates an AT Protocol OAuth flow — the user authorizes on Bluesky
-3. After callback, the server creates a `site.standard.graph.subscription` record in the user's repo
-4. The [sequoia-subscribe](https://github.com/standard-schema/sequoia) web component can point to this server for the full flow
+3. After callback, the server creates a `site.standard.graph.subscription` or `site.standard.graph.recommend` record in the user's repo
+4. The [sequoia-subscribe](https://github.com/standard-schema/sequoia) web components can point to this server for the full flow
 
 ### Routes
 
@@ -42,6 +42,10 @@ CLIENT_URL=http://localhost:3000 bun run dev
 | `/subscribe` | POST | Subscribe via API (JSON) |
 | `/subscribe/check` | GET | Check subscription status |
 | `/subscribe/login` | POST | Handle form submission |
+| `/recommend` | GET | Recommend page (HTML) |
+| `/recommend` | POST | Recommend via API (JSON) |
+| `/recommend/check` | GET | Check recommendation status |
+| `/recommend/login` | POST | Handle form submission |
 
 ## Configuration
 
@@ -54,7 +58,7 @@ CLIENT_URL=http://localhost:3000 bun run dev
 
 ### Theming
 
-The subscribe pages use CSS custom properties that can be overridden via environment variables:
+The subscribe and recommend pages use CSS custom properties that can be overridden via environment variables:
 
 | Variable | Default |
 |----------|---------|

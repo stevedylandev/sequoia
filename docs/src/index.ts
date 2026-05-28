@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import auth from "./routes/auth";
 import subscribe from "./routes/subscribe";
+import recommend from "./routes/recommend";
 import "./lib/path-redirect";
 
 type Bindings = {
@@ -29,6 +30,22 @@ app.use(
 
 app.route("/oauth", auth);
 app.route("/subscribe", subscribe);
+
+app.use(
+	"/recommend",
+	cors({
+		origin: (origin) => origin,
+		credentials: true,
+	}),
+);
+app.use(
+	"/recommend/*",
+	cors({
+		origin: (origin) => origin,
+		credentials: true,
+	}),
+);
+app.route("/recommend", recommend);
 
 app.get("/api/health", (c) => {
 	return c.json({ status: "ok" });

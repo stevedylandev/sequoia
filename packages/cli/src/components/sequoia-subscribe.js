@@ -1,24 +1,15 @@
 /**
- * Sequoia Subscribe - An AT Protocol-powered subscribe component
+ * Sequoia Web Components — AT Protocol-powered engagement components
  *
- * A self-contained Web Component that lets users subscribe to a publication
- * via the AT Protocol by creating a site.standard.graph.subscription record.
+ * Self-contained Web Components for subscribing to publications and
+ * recommending documents via the AT Protocol.
  *
- * Usage:
- *   <sequoia-subscribe></sequoia-subscribe>
+ * Both components share:
+ *   - OAuth redirect flow via a hosted callback endpoint
+ *   - DID caching in a cookie (primary) and localStorage (fallback)
+ *   - A common visual style driven by CSS custom properties
  *
- * The component resolves the publication AT URI from the host site's
- * /.well-known/site.standard.publication endpoint.
- *
- * Attributes:
- *   - publication-uri: Override the publication AT URI (optional)
- *   - callback-uri: Redirect URI after OAuth authentication (default: "https://sequoia.pub/subscribe")
- *   - button-type: Branding style — "sequoia" (default), "bluesky", "blacksky", "atmosphere", or "plain"
- *   - label: Override the subscribe button label text
- *   - unsubscribe-label: Override the unsubscribe button label text
- *   - hide: Set to "auto" to hide if no publication URI is detected
- *
- * CSS Custom Properties:
+ * CSS Custom Properties (apply to both components):
  *   - --sequoia-fg-color: Text color (default: #1f2937)
  *   - --sequoia-bg-color: Background color (default: #ffffff)
  *   - --sequoia-border-color: Border color (default: #e5e7eb)
@@ -26,12 +17,6 @@
  *   - --sequoia-secondary-color: Secondary text color (default: #6b7280)
  *   - --sequoia-border-radius: Border radius (default: 8px)
  *   - --sequoia-icon-display: Icon display mode (default: inline-block) — set to "none" to hide
- *
- * Events:
- *   - sequoia-subscribed: Fired when the subscription is created successfully.
- *     detail: { publicationUri: string, recordUri: string }
- *   - sequoia-subscribe-error: Fired when the subscription fails.
- *     detail: { message: string }
  */
 
 // ============================================================================
@@ -50,7 +35,7 @@ const styles = `
 	box-sizing: border-box;
 }
 
-.sequoia-subscribe-button {
+.sequoia-button {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.375rem;
@@ -67,16 +52,16 @@ const styles = `
 	font-family: inherit;
 }
 
-.sequoia-subscribe-button:hover:not(:disabled) {
+.sequoia-button:hover:not(:disabled) {
 	background: color-mix(in srgb, var(--sequoia-accent-color, #2563eb) 85%, black);
 }
 
-.sequoia-subscribe-button:disabled {
+.sequoia-button:disabled {
 	opacity: 0.6;
 	cursor: not-allowed;
 }
 
-.sequoia-subscribe-button svg {
+.sequoia-button svg {
 	display: var(--sequoia-icon-display, inline-block);
 	width: 1rem;
 	height: 1rem;
@@ -146,6 +131,47 @@ const BUTTON_TYPES = {
 		unsubscribe: "Unsubscribe",
 	},
 	plain: { icon: "", subscribe: "Subscribe", unsubscribe: "Unsubscribe" },
+};
+
+// ============================================================================
+// Recommend Icon Configuration
+// ============================================================================
+
+const HEART_PATH =
+	"M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z";
+const HEART_ICON_OUTLINED = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${HEART_PATH}"/></svg>`;
+const HEART_ICON_FILLED = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="${HEART_PATH}"/></svg>`;
+
+const STAR_PATH =
+	"M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z";
+const STAR_ICON_OUTLINED = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="${STAR_PATH}"/></svg>`;
+const STAR_ICON_FILLED = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"><path d="${STAR_PATH}"/></svg>`;
+
+const THUMBS_UP_RECT_PATH = "M1 21h4V9H1v12z";
+const THUMBS_UP_HAND_PATH =
+	"M23 10c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z";
+const THUMBS_UP_ICON_OUTLINED = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="${THUMBS_UP_RECT_PATH}" fill="currentColor"/><path d="${THUMBS_UP_HAND_PATH}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+const THUMBS_UP_ICON_FILLED = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="${THUMBS_UP_RECT_PATH}"/><path d="${THUMBS_UP_HAND_PATH}"/></svg>`;
+
+const RECOMMEND_ICON_TYPES = {
+	heart: {
+		icon: HEART_ICON_OUTLINED,
+		iconActioned: HEART_ICON_FILLED,
+		action: "Recommend",
+		unaction: "Unrecommend",
+	},
+	star: {
+		icon: STAR_ICON_OUTLINED,
+		iconActioned: STAR_ICON_FILLED,
+		action: "Recommend",
+		unaction: "Unrecommend",
+	},
+	"thumbs-up": {
+		icon: THUMBS_UP_ICON_OUTLINED,
+		iconActioned: THUMBS_UP_ICON_FILLED,
+		action: "Recommend",
+		unaction: "Unrecommend",
+	},
 };
 
 // ============================================================================
@@ -289,7 +315,13 @@ async function fetchPublicationUri(origin) {
 // SSR-safe base class - use HTMLElement in browser, empty class in Node.js
 const BaseElement = typeof HTMLElement !== "undefined" ? HTMLElement : class {};
 
-class SequoiaSubscribe extends BaseElement {
+/**
+ * Abstract base class shared by SequoiaSubscribe and SequoiaRecommend.
+ * Handles shadow DOM setup, state management, the OAuth redirect flow,
+ * DID storage, and button rendering. Subclasses implement template methods
+ * to provide resource-specific behaviour.
+ */
+class SequoiaActionBase extends BaseElement {
 	constructor() {
 		super();
 		const shadow = this.attachShadow({ mode: "open" });
@@ -303,26 +335,10 @@ class SequoiaSubscribe extends BaseElement {
 		wrapper.part = "container";
 
 		this.wrapper = wrapper;
-		this.subscribed = false;
+		this.actioned = false;
 		this.state = { type: "idle" };
 		this.abortController = null;
 		this.render();
-	}
-
-	static get observedAttributes() {
-		return [
-			"publication-uri",
-			"callback-uri",
-			"label",
-			"unsubscribe-label",
-			"button-type",
-			"hide",
-		];
-	}
-
-	connectedCallback() {
-		consumeReturnParams();
-		this.checkPublication();
 	}
 
 	disconnectedCallback() {
@@ -330,55 +346,93 @@ class SequoiaSubscribe extends BaseElement {
 	}
 
 	attributeChangedCallback() {
-		if (this.state.type === "error" || this.state.type === "no-publication") {
+		if (this.state.type === "error" || this.state.type === "no-resource") {
 			this.state = { type: "idle" };
 		}
 		this.render();
 	}
 
-	get publicationUri() {
-		return this.getAttribute("publication-uri") ?? null;
-	}
+	// ── Shared getters ───────────────────────────────────────────────────────
 
 	get callbackUri() {
-		return this.getAttribute("callback-uri") ?? "https://sequoia.pub/subscribe";
-	}
-
-	get label() {
-		return this.getAttribute("label") ?? null;
-	}
-
-	get unsubscribeLabel() {
-		return this.getAttribute("unsubscribe-label") ?? null;
-	}
-
-	get buttonType() {
-		const val = this.getAttribute("button-type");
-		return val && val in BUTTON_TYPES ? val : "sequoia";
+		return this.getAttribute("callback-uri") ?? this.defaultCallbackUri;
 	}
 
 	get hide() {
-		const hideAttr = this.getAttribute("hide");
-		return hideAttr === "auto";
+		return this.getAttribute("hide") === "auto";
 	}
 
-	async checkPublication() {
-		this.abortController?.abort();
-		this.abortController = new AbortController();
+	// ── Template methods (override in subclasses) ────────────────────────────
 
-		try {
-			const uri = this.publicationUri ?? (await fetchPublicationUri());
-			this.checkSubscription(uri);
-		} catch {
-			this.state = { type: "no-publication" };
-			this.render();
-		}
+	/** @returns {string} Default callback URI when the attribute is absent */
+	get defaultCallbackUri() {
+		return "";
 	}
 
-	async checkSubscription(publicationUri) {
+	/** @returns {string} Query-parameter name for the resource URI */
+	get resourceParam() {
+		return "resourceUri";
+	}
+
+	/**
+	 * Value of the `action` query-parameter used in the unaction redirect.
+	 * @returns {string}
+	 */
+	get unactionValue() {
+		return "unaction";
+	}
+
+	/** @returns {string} Key in the /check response that signals the action was taken */
+	get actionedKey() {
+		return "actioned";
+	}
+
+	/** @returns {string} CustomEvent name dispatched on success */
+	get actionedEventName() {
+		return "sequoia-actioned";
+	}
+
+	/** @returns {string} CustomEvent name dispatched on error */
+	get errorEventName() {
+		return "sequoia-action-error";
+	}
+
+	/** @returns {string} Fallback error message when the thrown value has no message */
+	get defaultErrorMessage() {
+		return "Action failed";
+	}
+
+	/** @returns {string} SVG string for the button icon */
+	getIcon() {
+		return "";
+	}
+
+	/** @returns {string} Accessible label for the button (defaults to the visible label) */
+	getAriaLabel() {
+		return this.actioned
+			? (this.getUnactionLabel?.() ?? this.getDefaultUnactionLabel?.() ?? "")
+			: (this.label ?? this.getDefaultActionLabel?.() ?? "");
+	}
+
+	/**
+	 * Resolve the resource URI for this action. May perform async network calls.
+	 * @returns {Promise<string>}
+	 */
+	async resolveResourceUri() {
+		throw new Error("resolveResourceUri() must be implemented by subclass");
+	}
+
+	// ── Shared logic ─────────────────────────────────────────────────────────
+
+	/**
+	 * Check whether the current user has already taken this action for the
+	 * given resource URI. Updates this.actioned and re-renders on success.
+	 * @param {string} resourceUri
+	 */
+	async checkStatusFor(resourceUri) {
 		try {
 			const checkUrl = new URL(`${this.callbackUri}/check`);
-			checkUrl.searchParams.set("publicationUri", publicationUri);
+			checkUrl.searchParams.set(this.resourceParam, resourceUri);
 
 			// Pass the stored DID so the server can check without a session cookie
 			const storedDid = getStoredSubscriberDid();
@@ -391,12 +445,12 @@ class SequoiaSubscribe extends BaseElement {
 			});
 			if (!res.ok) return;
 			const data = await res.json();
-			if (data.subscribed) {
-				this.subscribed = true;
+			if (data[this.actionedKey]) {
+				this.actioned = true;
 				this.render();
 			}
 		} catch {
-			// Ignore errors — show default subscribe button
+			// Ignore errors — show default action button
 		}
 	}
 
@@ -405,11 +459,10 @@ class SequoiaSubscribe extends BaseElement {
 			return;
 		}
 
-		// Unsubscribe: redirect to full-page unsubscribe flow
-		if (this.subscribed) {
-			const publicationUri =
-				this.publicationUri ?? (await fetchPublicationUri());
-			window.location.href = `${this.callbackUri}?publicationUri=${encodeURIComponent(publicationUri)}&action=unsubscribe`;
+		// Unaction: redirect to the full-page unaction flow
+		if (this.actioned) {
+			const resourceUri = await this.resolveResourceUri();
+			window.location.href = `${this.callbackUri}?${this.resourceParam}=${encodeURIComponent(resourceUri)}&action=${this.unactionValue}`;
 			return;
 		}
 
@@ -417,28 +470,27 @@ class SequoiaSubscribe extends BaseElement {
 		this.render();
 
 		try {
-			const publicationUri =
-				this.publicationUri ?? (await fetchPublicationUri());
+			const resourceUri = await this.resolveResourceUri();
 
 			const response = await fetch(this.callbackUri, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				credentials: "include",
 				referrerPolicy: "no-referrer-when-downgrade",
-				body: JSON.stringify({ publicationUri }),
+				body: JSON.stringify({ [this.resourceParam]: resourceUri }),
 			});
 
 			const data = await response.json();
 
 			if (response.status === 401 && data.authenticated === false) {
-				// Redirect to the hosted subscribe page to complete OAuth,
+				// Redirect to the hosted action page to complete OAuth,
 				// passing the current page URL (without credentials) as returnTo.
-				const subscribeUrl = new URL(data.subscribeUrl);
+				const actionUrl = new URL(data.subscribeUrl);
 				const pageUrl = new URL(window.location.href);
 				pageUrl.username = "";
 				pageUrl.password = "";
-				subscribeUrl.searchParams.set("returnTo", pageUrl.toString());
-				window.location.href = subscribeUrl.toString();
+				actionUrl.searchParams.set("returnTo", pageUrl.toString());
+				window.location.href = actionUrl.toString();
 				return;
 			}
 
@@ -456,27 +508,27 @@ class SequoiaSubscribe extends BaseElement {
 				}
 			}
 
-			this.subscribed = true;
+			this.actioned = true;
 			this.state = { type: "idle" };
 			this.render();
 
 			this.dispatchEvent(
-				new CustomEvent("sequoia-subscribed", {
+				new CustomEvent(this.actionedEventName, {
 					bubbles: true,
 					composed: true,
-					detail: { publicationUri, recordUri },
+					detail: { [this.resourceParam]: resourceUri, recordUri },
 				}),
 			);
 		} catch (error) {
 			if (this.state.type !== "loading") return;
 
 			const message =
-				error instanceof Error ? error.message : "Failed to subscribe";
+				error instanceof Error ? error.message : this.defaultErrorMessage;
 			this.state = { type: "error", message };
 			this.render();
 
 			this.dispatchEvent(
-				new CustomEvent("sequoia-subscribe-error", {
+				new CustomEvent(this.errorEventName, {
 					bubbles: true,
 					composed: true,
 					detail: { message },
@@ -488,7 +540,7 @@ class SequoiaSubscribe extends BaseElement {
 	render() {
 		const { type } = this.state;
 
-		if (type === "no-publication") {
+		if (type === "no-resource") {
 			if (this.hide) {
 				this.wrapper.innerHTML = "";
 				this.wrapper.style.display = "none";
@@ -497,15 +549,15 @@ class SequoiaSubscribe extends BaseElement {
 		}
 
 		const isLoading = type === "loading";
-		const config = BUTTON_TYPES[this.buttonType] ?? BUTTON_TYPES.sequoia;
-
 		const icon = isLoading
 			? `<span class="sequoia-loading-spinner"></span>`
-			: config.icon;
+			: this.getIcon();
 
-		const label = this.subscribed
-			? (this.unsubscribeLabel ?? config.unsubscribe)
-			: (this.label ?? config.subscribe);
+		const label = this.actioned
+			? (this.getUnactionLabel?.() ?? this.getDefaultUnactionLabel?.() ?? "")
+			: (this.label ?? this.getDefaultActionLabel?.() ?? "");
+
+		const ariaLabel = this.getAriaLabel();
 
 		const errorHtml =
 			type === "error"
@@ -514,11 +566,11 @@ class SequoiaSubscribe extends BaseElement {
 
 		this.wrapper.innerHTML = `
 			<button
-				class="sequoia-subscribe-button"
+				class="sequoia-button"
 				type="button"
 				part="button"
 				${isLoading ? "disabled" : ""}
-				aria-label="${label}"
+				aria-label="${ariaLabel}"
 			>
 				${icon}
 				${label}
@@ -528,6 +580,197 @@ class SequoiaSubscribe extends BaseElement {
 
 		const btn = this.wrapper.querySelector("button");
 		btn?.addEventListener("click", () => this.handleClick());
+	}
+}
+
+class SequoiaSubscribe extends SequoiaActionBase {
+	static get observedAttributes() {
+		return [
+			"publication-uri",
+			"callback-uri",
+			"label",
+			"unsubscribe-label",
+			"button-type",
+			"hide",
+		];
+	}
+
+	connectedCallback() {
+		consumeReturnParams();
+		this.checkPublication();
+	}
+
+	get publicationUri() {
+		return this.getAttribute("publication-uri") ?? null;
+	}
+
+	get label() {
+		return this.getAttribute("label") ?? null;
+	}
+
+	get buttonType() {
+		const val = this.getAttribute("button-type");
+		return val && val in BUTTON_TYPES ? val : "sequoia";
+	}
+
+	get unsubscribeLabel() {
+		return this.getAttribute("unsubscribe-label") ?? null;
+	}
+
+	// ── Template method overrides ────────────────────────────────────────────
+
+	get defaultCallbackUri() {
+		return "https://sequoia.pub/subscribe";
+	}
+	get resourceParam() {
+		return "publicationUri";
+	}
+	get unactionValue() {
+		return "unsubscribe";
+	}
+	get actionedKey() {
+		return "subscribed";
+	}
+	get actionedEventName() {
+		return "sequoia-subscribed";
+	}
+	get errorEventName() {
+		return "sequoia-subscribe-error";
+	}
+	get defaultErrorMessage() {
+		return "Failed to subscribe";
+	}
+
+	getDefaultActionLabel() {
+		return (BUTTON_TYPES[this.buttonType] ?? BUTTON_TYPES.sequoia).subscribe;
+	}
+
+	getDefaultUnactionLabel() {
+		return (BUTTON_TYPES[this.buttonType] ?? BUTTON_TYPES.sequoia).unsubscribe;
+	}
+
+	getUnactionLabel() {
+		return this.unsubscribeLabel;
+	}
+
+	getIcon() {
+		return (BUTTON_TYPES[this.buttonType] ?? BUTTON_TYPES.sequoia).icon;
+	}
+
+	async resolveResourceUri() {
+		return this.publicationUri ?? (await fetchPublicationUri());
+	}
+
+	// ── SequoiaSubscribe-specific logic ──────────────────────────────────────
+
+	/** @returns {boolean} Whether the user is currently subscribed. Alias for this.actioned. */
+	get subscribed() {
+		return this.actioned;
+	}
+
+	/**
+	 * Check whether the current user is subscribed to the given publication URI.
+	 * Forwards to the shared checkStatusFor() method.
+	 * @param {string} publicationUri
+	 */
+	checkSubscription(publicationUri) {
+		return this.checkStatusFor(publicationUri);
+	}
+
+	async checkPublication() {
+		this.abortController?.abort();
+		this.abortController = new AbortController();
+
+		try {
+			const uri = await this.resolveResourceUri();
+			this.checkStatusFor(uri);
+		} catch {
+			this.state = { type: "no-resource" };
+			this.render();
+		}
+	}
+}
+
+class SequoiaRecommend extends SequoiaActionBase {
+	static get observedAttributes() {
+		return ["document-uri", "callback-uri", "button-type", "hide"];
+	}
+
+	connectedCallback() {
+		consumeReturnParams();
+		this.checkDocument();
+	}
+
+	get documentUri() {
+		const attrUri = this.getAttribute("document-uri");
+		if (attrUri) return attrUri;
+		const linkTag = document.querySelector(
+			'link[rel="site.standard.document"]',
+		);
+		return linkTag?.href ?? null;
+	}
+
+	get buttonType() {
+		const val = this.getAttribute("button-type");
+		return val && val in RECOMMEND_ICON_TYPES ? val : "heart";
+	}
+
+	// ── Template method overrides ────────────────────────────────────────────
+
+	get defaultCallbackUri() {
+		return "https://sequoia.pub/recommend";
+	}
+	get resourceParam() {
+		return "documentUri";
+	}
+	get unactionValue() {
+		return "remove";
+	}
+	get actionedKey() {
+		return "recommended";
+	}
+	get actionedEventName() {
+		return "sequoia-recommended";
+	}
+	get errorEventName() {
+		return "sequoia-recommend-error";
+	}
+	get defaultErrorMessage() {
+		return "Failed to recommend";
+	}
+
+	getAriaLabel() {
+		const config =
+			RECOMMEND_ICON_TYPES[this.buttonType] ?? RECOMMEND_ICON_TYPES.heart;
+		return this.actioned ? config.unaction : config.action;
+	}
+
+	getIcon() {
+		const config =
+			RECOMMEND_ICON_TYPES[this.buttonType] ?? RECOMMEND_ICON_TYPES.heart;
+		return this.actioned ? config.iconActioned : config.icon;
+	}
+
+	async resolveResourceUri() {
+		const uri = this.documentUri;
+		if (!uri) throw new Error("No document URI found");
+		return uri;
+	}
+
+	// ── SequoiaRecommend-specific logic ──────────────────────────────────────
+
+	async checkDocument() {
+		this.abortController?.abort();
+		this.abortController = new AbortController();
+
+		const uri = this.documentUri;
+		if (!uri) {
+			this.state = { type: "no-resource" };
+			this.render();
+			return;
+		}
+
+		this.checkStatusFor(uri);
 	}
 }
 
@@ -544,10 +787,62 @@ function escapeHtml(text) {
 		.replace(/"/g, "&quot;");
 }
 
-// Register the custom element
+// Register the custom elements
 if (typeof customElements !== "undefined") {
 	customElements.define("sequoia-subscribe", SequoiaSubscribe);
+	customElements.define("sequoia-recommend", SequoiaRecommend);
 }
 
-// Export for module usage
+/**
+ * Sequoia Subscribe - An AT Protocol-powered subscribe component
+ *
+ * A self-contained Web Component that lets users subscribe to a publication
+ * via the AT Protocol by creating a site.standard.graph.subscription record.
+ *
+ * Usage:
+ *   <sequoia-subscribe></sequoia-subscribe>
+ *
+ * The component resolves the publication AT URI from the host site's
+ * /.well-known/site.standard.publication endpoint.
+ *
+ * Attributes:
+ *   - publication-uri: Override the publication AT URI (optional)
+ *   - callback-uri: Redirect URI after OAuth authentication (default: "https://sequoia.pub/subscribe")
+ *   - button-type: Branding style — "sequoia" (default), "bluesky", "blacksky", "atmosphere", or "plain"
+ *   - label: Override the subscribe button label text
+ *   - unsubscribe-label: Override the unsubscribe button label text
+ *   - hide: Set to "auto" to hide if no publication URI is detected
+ *
+ * Events:
+ *   - sequoia-subscribed: Fired when the subscription is created successfully.
+ *     detail: { publicationUri: string, recordUri: string }
+ *   - sequoia-subscribe-error: Fired when the subscription fails.
+ *     detail: { message: string }
+ */
 export { SequoiaSubscribe };
+
+/**
+ * Sequoia Recommend - An AT Protocol-powered recommend component
+ *
+ * A self-contained Web Component that lets users recommend a document
+ * via the AT Protocol by creating a site.standard.graph.recommend record.
+ *
+ * Usage:
+ *   <sequoia-recommend></sequoia-recommend>
+ *
+ * The component resolves the document AT URI from the `document-uri` attribute
+ * or a <link rel="site.standard.document" href="at://..."> tag in the page head.
+ *
+ * Attributes:
+ *   - document-uri: AT Protocol URI of the document to recommend (optional if link tag present)
+ *   - callback-uri: Redirect URI after OAuth authentication (default: "https://sequoia.pub/recommend")
+ *   - button-type: Icon style — "heart" (default), "star", or "thumbs-up"
+ *   - hide: Set to "auto" to hide if no document URI is detected
+ *
+ * Events:
+ *   - sequoia-recommended: Fired when the recommendation is created successfully.
+ *     detail: { documentUri: string, recordUri: string }
+ *   - sequoia-recommend-error: Fired when the recommendation fails.
+ *     detail: { message: string }
+ */
+export { SequoiaRecommend };

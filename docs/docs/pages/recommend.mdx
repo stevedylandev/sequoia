@@ -1,0 +1,238 @@
+# Recommend
+
+Sequoia provides a recommend button web component that lets your readers recommend a document directly from your site using their AT Protocol account.
+
+## Setup
+
+The recommend component is bundled in the same file as the subscribe component. Run the following command to install it if you haven't already:
+
+```bash [Terminal]
+sequoia add sequoia-subscribe
+```
+
+The component will look for your document AT URI from a `<link rel="site.standard.document">` tag in the page `<head>` automatically, so no additional configuration is required for most setups.
+
+:::tip
+`sequoia-subscribe.js` registers both the `<sequoia-subscribe>` and `<sequoia-recommend>` custom elements. You only need to import it once even if you use both components on the same page.
+:::
+
+## Usage
+
+Since `sequoia-recommend` is a standard Web Component, it works with any framework. Choose your setup below:
+
+:::code-group
+
+```html [HTML]
+<head>
+  <!-- Optional: set the document URI via a link tag -->
+  <link rel="site.standard.document" href="at://did:plc:example/app.bsky.feed.post/rkey" />
+</head>
+<body>
+  <h1>My Post</h1>
+  <!--Content-->
+
+  <sequoia-recommend></sequoia-recommend>
+  <script type="module" src="./src/components/sequoia-subscribe.js"></script>
+</body>
+```
+
+```tsx [React]
+// Import the component (registers both custom elements)
+import './components/sequoia-subscribe.js';
+
+function PostPage() {
+  return (
+    <main>
+      <h1>My Post</h1>
+      {/* Content */}
+      <sequoia-recommend document-uri="at://did:plc:example/app.bsky.feed.post/rkey" />
+    </main>
+  );
+}
+```
+
+```vue [Vue]
+<script setup>
+import './components/sequoia-subscribe.js';
+</script>
+
+<template>
+  <main>
+    <h1>My Post</h1>
+    <!-- Content -->
+    <sequoia-recommend document-uri="at://did:plc:example/app.bsky.feed.post/rkey" />
+  </main>
+</template>
+```
+
+```svelte [Svelte]
+<script>
+  import './components/sequoia-subscribe.js';
+</script>
+
+<main>
+  <h1>My Post</h1>
+  <!-- Content -->
+  <sequoia-recommend document-uri="at://did:plc:example/app.bsky.feed.post/rkey" />
+</main>
+```
+
+```astro [Astro]
+<main>
+  <h1>My Post</h1>
+  <!-- Content -->
+  <sequoia-recommend document-uri="at://did:plc:example/app.bsky.feed.post/rkey" />
+  <script>
+    import './components/sequoia-subscribe.js';
+  </script>
+</main>
+```
+
+:::
+
+### TypeScript Support
+
+If you're using TypeScript with React, add this type declaration to avoid JSX errors:
+
+```ts [custom-elements.d.ts]
+declare namespace JSX {
+  interface IntrinsicElements {
+    'sequoia-recommend': React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLElement> & {
+        'document-uri'?: string;
+        'callback-uri'?: string;
+        'button-type'?: 'heart' | 'star' | 'thumbs-up';
+        hide?: string;
+      },
+      HTMLElement
+    >;
+  }
+}
+```
+
+### Vue Configuration
+
+For Vue, you may need to configure the compiler to recognize custom elements:
+
+```ts [vite.config.ts]
+export default defineConfig({
+  plugins: [
+    vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag) => tag === 'sequoia-recommend'
+        }
+      }
+    })
+  ]
+});
+```
+
+## Configuration
+
+The recommend web component has several configuration options available.
+
+### Attributes
+
+The `<sequoia-recommend>` component accepts the following attributes:
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `document-uri` | `string` | - | AT Protocol URI for the document to recommend. Optional if a `<link rel="site.standard.document">` tag exists in the page `<head>`. |
+| `callback-uri` | `string` | `https://sequoia.pub/recommend` | Redirect URI used for the OAuth authentication flow. |
+| `button-type` | `string` | `heart` | Icon style for the button. Accepted values: `heart`, `star`, `thumbs-up`. |
+| `hide` | `string` | - | Set to `"auto"` to hide the component if no document URI is detected. |
+
+#### Button Types
+
+The `button-type` attribute controls which icon the button uses. Icons are outlined when not yet recommended and filled once recommended.
+
+| Type | Icon | Aria Label |
+|------|------|-----------|
+| `heart` | Heart | Recommend / Unrecommend |
+| `star` | Star | Recommend / Unrecommend |
+| `thumbs-up` | Thumbs up | Recommend / Unrecommend |
+
+```html
+<!-- Default heart icon -->
+<sequoia-recommend></sequoia-recommend>
+
+<!-- Star icon -->
+<sequoia-recommend button-type="star"></sequoia-recommend>
+
+<!-- Thumbs-up icon -->
+<sequoia-recommend button-type="thumbs-up"></sequoia-recommend>
+
+<!-- Explicit document URI -->
+<sequoia-recommend
+  document-uri="at://did:plc:example/app.bsky.feed.post/rkey">
+</sequoia-recommend>
+```
+
+#### Resolving the Document URI
+
+If `document-uri` is not set on the element, the component looks for a `<link>` tag in the page `<head>`:
+
+```html
+<link rel="site.standard.document" href="at://did:plc:example/app.bsky.feed.post/rkey" />
+```
+
+This lets you set the document URI once per page without having to pass it to every component instance.
+
+### Events
+
+The component dispatches custom events you can listen to:
+
+| Event | Description | Detail |
+|-------|-------------|--------|
+| `sequoia-recommended` | Fired when the recommendation is created successfully. | `{ documentUri: string, recordUri: string }` |
+| `sequoia-recommend-error` | Fired when the recommendation fails. | `{ message: string }` |
+
+```js
+const btn = document.querySelector('sequoia-recommend');
+
+btn.addEventListener('sequoia-recommended', (e) => {
+  console.log('Recommended!', e.detail.recordUri);
+});
+
+btn.addEventListener('sequoia-recommend-error', (e) => {
+  console.error('Recommendation failed:', e.detail.message);
+});
+```
+
+### Styling
+
+The component uses the same CSS custom properties as `<sequoia-subscribe>` for theming, plus a `part="button"` attribute for direct CSS targeting:
+
+| CSS Property | Default | Description |
+|--------------|---------|-------------|
+| `--sequoia-fg-color` | `#1f2937` | Text color |
+| `--sequoia-bg-color` | `#ffffff` | Background color |
+| `--sequoia-border-color` | `#e5e7eb` | Border color |
+| `--sequoia-accent-color` | `#2563eb` | Button background color |
+| `--sequoia-secondary-color` | `#6b7280` | Secondary text color |
+| `--sequoia-border-radius` | `8px` | Border radius for the button |
+| `--sequoia-icon-display` | `inline-block` | Set to `none` to hide the button icon |
+
+### Example: Match Site Theme
+
+```css
+:root {
+  --sequoia-accent-color: #3A5A40;
+  --sequoia-border-radius: 6px;
+  --sequoia-bg-color: #F5F3EF;
+  --sequoia-fg-color: #2C2C2C;
+  --sequoia-border-color: #D5D1C8;
+  --sequoia-secondary-color: #8B7355;
+}
+```
+
+### Using Both Components Together
+
+Because `sequoia-subscribe.js` only needs to be imported once, you can use both components on the same page with a single script tag:
+
+```html
+<sequoia-subscribe></sequoia-subscribe>
+<sequoia-recommend></sequoia-recommend>
+<script type="module" src="./src/components/sequoia-subscribe.js"></script>
+```

@@ -5,7 +5,7 @@ import type { Database } from "bun:sqlite";
 import { createStateStore, createSessionStore } from "./stores";
 
 export const OAUTH_SCOPE =
-	"atproto repo:site.standard.graph.subscription?action=create&action=delete";
+	"atproto repo:site.standard.graph.recommend?action=create&action=delete repo:site.standard.graph.subscription?action=create&action=delete";
 
 export function createOAuthClient(
 	db: Database,

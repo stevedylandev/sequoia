@@ -4,7 +4,7 @@ import { AtprotoDohHandleResolver } from "@atproto-labs/handle-resolver";
 import { createStateStore, createSessionStore } from "./kv-stores";
 
 export const OAUTH_SCOPE =
-	"atproto repo:site.standard.graph.subscription?action=create&action=delete";
+	"atproto repo:site.standard.graph.recommend?action=create&action=delete repo:site.standard.graph.subscription?action=create&action=delete";
 
 export function createOAuthClient(kv: KVNamespace, clientUrl: string) {
 	const clientId = `${clientUrl}/oauth/client-metadata.json`;
@@ -22,7 +22,7 @@ export function createOAuthClient(kv: KVNamespace, clientUrl: string) {
 			redirect_uris: [redirectUri],
 			grant_types: ["authorization_code", "refresh_token"],
 			response_types: ["code"],
-			scope: "atproto repo:site.standard.graph.subscription?action=create",
+			scope: OAUTH_SCOPE,
 			token_endpoint_auth_method: "none",
 			application_type: "web",
 			dpop_bound_access_tokens: true,

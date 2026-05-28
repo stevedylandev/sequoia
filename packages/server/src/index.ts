@@ -5,6 +5,7 @@ import type { Env } from "./env";
 import { openDatabase } from "./lib/db";
 import auth from "./routes/auth";
 import subscribe from "./routes/subscribe";
+import recommend from "./routes/recommend";
 
 const env = loadEnv();
 
@@ -43,6 +44,23 @@ app.use(
 	}),
 );
 app.route("/subscribe", subscribe);
+
+// Recommend routes with CORS
+app.use(
+	"/recommend/*",
+	cors({
+		origin: (origin) => origin,
+		credentials: true,
+	}),
+);
+app.use(
+	"/recommend",
+	cors({
+		origin: (origin) => origin,
+		credentials: true,
+	}),
+);
+app.route("/recommend", recommend);
 
 console.log(`Sequoia server listening on port ${env.PORT}`);
 
